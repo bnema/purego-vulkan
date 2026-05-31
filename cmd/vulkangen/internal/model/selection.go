@@ -371,7 +371,7 @@ func (s *selectionState) addExtension(name string, optionalCommands bool, contex
 			s.addCommand(cmdName, optionalCommands, "extension "+name)
 		}
 		for _, enum := range req.Enums {
-			s.addConstant(enum, enum.Extends)
+			s.addResolvedConstant(enum)
 		}
 	}
 }
@@ -396,6 +396,14 @@ func (s *selectionState) addCommand(name string, optional bool, context string) 
 	for _, param := range cmd.Params {
 		s.addType(param.Type, "parameter "+name+"."+param.Name)
 	}
+}
+
+func (s *selectionState) addResolvedConstant(enum EnumDecl) {
+	if resolved, ok := s.idx.featureEnums[enum.Name]; ok {
+		s.addConstant(resolved, resolved.Extends)
+		return
+	}
+	s.addConstant(s.idx.resolveEnumAlias(enum, nil), enum.Extends)
 }
 
 func (s *selectionState) addConstant(enum EnumDecl, defaultExtends string) {

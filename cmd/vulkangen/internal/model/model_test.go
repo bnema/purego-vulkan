@@ -151,6 +151,21 @@ func TestSelectResolvesAliasCommandsAndTypes(t *testing.T) {
 	}
 }
 
+func TestSelectResolvesExtensionAliasConstants(t *testing.T) {
+	reg := testRegistry()
+	sel, err := model.Select(reg, model.SelectionConfig{Extensions: []string{"VK_KHR_get_physical_device_properties2"}})
+	if err != nil {
+		t.Fatalf("Select() error = %v", err)
+	}
+	alias := constantByName(sel, "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR")
+	if alias == nil {
+		t.Fatalf("extension alias constant missing: %+v", sel.Constants)
+	}
+	if alias.Value == "" {
+		t.Fatalf("extension alias constant unresolved: %+v", *alias)
+	}
+}
+
 func TestSelectIncludesExtensionDependsClosure(t *testing.T) {
 	reg := testRegistry()
 	sel, err := model.Select(reg, model.SelectionConfig{Extensions: []string{"VK_EXT_external_memory_dma_buf"}})
@@ -239,7 +254,7 @@ func TestDefaultSelectionOnPinnedRegistryHasNoDuplicateOrBrokenAliasCommands(t *
 			t.Fatalf("%s missing from default selected type closure", name)
 		}
 	}
-	for _, name := range []string{"VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2", "VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO"} {
+	for _, name := range []string{"VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2", "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR", "VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO"} {
 		if !containsConstant(sel, name) {
 			t.Fatalf("feature constant %s missing from default selected constants", name)
 		}
