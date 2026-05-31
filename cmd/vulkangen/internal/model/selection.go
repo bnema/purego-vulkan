@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 )
@@ -111,33 +112,42 @@ func Select(reg *Registry, cfg SelectionConfig) (*SelectedRegistry, error) {
 		commandOptional:  make(map[string]bool),
 		selectedExts:     make(map[string]bool),
 		constantNames:    make(map[string]bool),
+		missingNames:     make(map[string]bool),
 	}
 
 	for _, name := range cfg.RootTypes {
-		state.addType(name)
+		state.addType(name, "configured root type")
 	}
 	for _, name := range cfg.Commands {
-		if _, ok := idx.commands[name]; ok {
-			state.addCommand(name, cfg.CommandOverrides[name].Optional)
+		if _, ok := idx.commands[name]; !ok {
+			state.addMissing("command", name, "configured command")
+			continue
 		}
+		state.addCommand(name, cfg.CommandOverrides[name].Optional, "configured command")
 	}
 	for _, name := range cfg.Extensions {
 		ext, ok := idx.extensions[name]
-		if !ok || ext.Platform != "" || ext.Supported == "disabled" {
+		if !ok {
+			state.addMissing("extension", name, "configured extension")
+			continue
+		}
+		if ext.Platform != "" || ext.Supported == "disabled" {
 			continue
 		}
 		state.selectedExts[name] = true
 		for _, req := range ext.Requires {
 			for _, typeName := range req.Types {
-				state.addType(typeName)
+				state.addType(typeName, "extension "+name)
 			}
 			for _, cmdName := range req.Commands {
-				if _, ok := idx.commands[cmdName]; ok {
-					state.addCommand(cmdName, true)
+				if _, ok := idx.commands[cmdName]; !ok {
+					state.addMissing("command", cmdName, "extension "+name)
+					continue
 				}
+				state.addCommand(cmdName, true, "extension "+name)
 			}
 			for _, enum := range req.Enums {
-				state.addConstant(enum)
+				state.addConstant(enum, enum.Extends)
 			}
 		}
 	}
@@ -146,15 +156,23 @@ func Select(reg *Registry, cfg SelectionConfig) (*SelectedRegistry, error) {
 		name := state.typeQueue[0]
 		state.typeQueue = state.typeQueue[1:]
 		decl := idx.types[name]
-		state.addType(decl.Type)
-		state.addType(decl.Requires)
-		state.addType(decl.Bitvalues)
-		state.addType(decl.Alias)
+		state.addEnumGroupConstants(decl.Name)
+		if decl.Category != "handle" {
+			state.addType(decl.Type, "type "+decl.Name)
+		}
+		state.addType(decl.Requires, "type "+decl.Name)
+		state.addType(decl.Bitvalues, "type "+decl.Name)
+		state.addEnumGroupConstants(decl.Requires)
+		state.addEnumGroupConstants(decl.Bitvalues)
+		state.addType(decl.Alias, "type "+decl.Name)
 		for _, member := range decl.Members {
-			state.addType(member.Type)
+			state.addType(member.Type, "member "+decl.Name+"."+member.Name)
 		}
 	}
 
+	if err := state.missingError(); err != nil {
+		return nil, err
+	}
 	return state.buildSelected()
 }
 
@@ -162,6 +180,7 @@ type registryIndex struct {
 	types      map[string]TypeDecl
 	commands   map[string]CommandDecl
 	extensions map[string]ExtensionDecl
+	enumGroups map[string]EnumGroup
 }
 
 func newIndex(reg *Registry) registryIndex {
@@ -169,6 +188,7 @@ func newIndex(reg *Registry) registryIndex {
 		types:      make(map[string]TypeDecl, len(reg.Types)),
 		commands:   make(map[string]CommandDecl, len(reg.Commands)),
 		extensions: make(map[string]ExtensionDecl, len(reg.Extensions)),
+		enumGroups: make(map[string]EnumGroup, len(reg.EnumGroups)),
 	}
 	for _, t := range reg.Types {
 		idx.types[t.Name] = t
@@ -178,6 +198,9 @@ func newIndex(reg *Registry) registryIndex {
 	}
 	for _, e := range reg.Extensions {
 		idx.extensions[e.Name] = e
+	}
+	for _, g := range reg.EnumGroups {
+		idx.enumGroups[g.Name] = g
 	}
 	return idx
 }
@@ -194,20 +217,23 @@ type selectionState struct {
 	constantNames    map[string]bool
 	constants        []EnumDecl
 	typeQueue        []string
+	missingNames     map[string]bool
+	missing          []error
 }
 
-func (s *selectionState) addType(name string) {
+func (s *selectionState) addType(name, context string) {
 	if name == "" || isBuiltinType(name) || s.selectedTypes[name] {
 		return
 	}
 	if _, ok := s.idx.types[name]; !ok {
+		s.addMissing("type", name, context)
 		return
 	}
 	s.selectedTypes[name] = true
 	s.typeQueue = append(s.typeQueue, name)
 }
 
-func (s *selectionState) addCommand(name string, optional bool) {
+func (s *selectionState) addCommand(name string, optional bool, context string) {
 	if s.selectedCommands[name] {
 		if optional {
 			s.commandOptional[name] = true
@@ -216,24 +242,60 @@ func (s *selectionState) addCommand(name string, optional bool) {
 	}
 	cmd, ok := s.idx.commands[name]
 	if !ok {
+		s.addMissing("command", name, context)
 		return
 	}
 	s.selectedCommands[name] = true
 	if optional || s.cfg.CommandOverrides[name].Optional {
 		s.commandOptional[name] = true
 	}
-	s.addType(cmd.Return)
+	s.addType(cmd.Return, "return type for "+name)
 	for _, param := range cmd.Params {
-		s.addType(param.Type)
+		s.addType(param.Type, "parameter "+name+"."+param.Name)
 	}
 }
 
-func (s *selectionState) addConstant(enum EnumDecl) {
+func (s *selectionState) addConstant(enum EnumDecl, defaultExtends string) {
 	if enum.Name == "" || s.constantNames[enum.Name] {
 		return
 	}
+	if enum.Extends == "" {
+		enum.Extends = defaultExtends
+	}
 	s.constantNames[enum.Name] = true
 	s.constants = append(s.constants, enum)
+}
+
+func (s *selectionState) addEnumGroupConstants(groupName string) {
+	if groupName == "" {
+		return
+	}
+	group, ok := s.idx.enumGroups[groupName]
+	if !ok {
+		return
+	}
+	for _, enum := range group.Enums {
+		s.addConstant(enum, group.Name)
+	}
+}
+
+func (s *selectionState) addMissing(kind, name, context string) {
+	if name == "" || isBuiltinType(name) {
+		return
+	}
+	key := kind + ":" + name + ":" + context
+	if s.missingNames[key] {
+		return
+	}
+	s.missingNames[key] = true
+	s.missing = append(s.missing, fmt.Errorf("missing %s %s referenced by %s", kind, name, context))
+}
+
+func (s *selectionState) missingError() error {
+	if len(s.missing) == 0 {
+		return nil
+	}
+	return fmt.Errorf("select Vulkan subset: %w", errors.Join(s.missing...))
 }
 
 func (s *selectionState) buildSelected() (*SelectedRegistry, error) {

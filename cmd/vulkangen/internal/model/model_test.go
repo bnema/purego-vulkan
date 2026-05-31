@@ -55,6 +55,25 @@ func TestSelectCommandsBuildsDependencyClosure(t *testing.T) {
 	if cmd.Dispatch != model.DispatchGlobal {
 		t.Fatalf("vkCreateInstance dispatch = %q, want global", cmd.Dispatch)
 	}
+	if !containsConstant(sel, "VK_SUCCESS") || !containsConstant(sel, "VK_ERROR_OUT_OF_HOST_MEMORY") {
+		t.Fatalf("expected VkResult constants in dependency closure, got %+v", sel.Constants)
+	}
+}
+
+func TestSelectReportsMissingConfiguredCommandsAndDependencies(t *testing.T) {
+	reg := testRegistry()
+	_, err := model.Select(reg, model.SelectionConfig{Commands: []string{"vkTypoCommand"}})
+	if err == nil {
+		t.Fatal("Select() error = nil for missing configured command")
+	}
+
+	reg = testRegistry()
+	reg.Types = append(reg.Types, model.TypeDecl{Name: "VkBrokenInfo", Category: "struct", Members: []model.MemberDecl{{Name: "missing", Type: "VkMissingType"}}})
+	reg.Commands = append(reg.Commands, model.CommandDecl{Name: "vkBroken", Return: "void", Params: []model.ParamDecl{{Name: "info", Type: "VkBrokenInfo", PointerDepth: 1}}})
+	_, err = model.Select(reg, model.SelectionConfig{Commands: []string{"vkBroken"}})
+	if err == nil {
+		t.Fatal("Select() error = nil for missing dependent type")
+	}
 }
 
 func TestOverridesMarkOptionalExtensionCommands(t *testing.T) {
@@ -85,6 +104,7 @@ func TestSelectionFiltersToLinuxCompositorSubset(t *testing.T) {
 	reg := testRegistry()
 	cfg := overrides.DefaultSelection()
 	cfg.Commands = []string{"vkCreateInstance"}
+	cfg.Extensions = []string{"VK_KHR_external_memory_fd", "VK_KHR_win32_keyed_mutex"}
 	sel, err := model.Select(reg, cfg)
 	if err != nil {
 		t.Fatalf("Select() error = %v", err)
@@ -99,6 +119,15 @@ func TestSelectionFiltersToLinuxCompositorSubset(t *testing.T) {
 	if sel.CommandByName("vkGetMemoryWin32HandleKHR") != nil {
 		t.Fatal("selected win32-only command")
 	}
+}
+
+func containsConstant(sel *model.SelectedRegistry, name string) bool {
+	for _, c := range sel.Constants {
+		if c.Name == name {
+			return true
+		}
+	}
+	return false
 }
 
 func testRegistry() *model.Registry {
@@ -124,6 +153,15 @@ func testRegistry() *model.Registry {
 				{Name: "memory", Type: "VkDeviceMemory"},
 			}},
 			{Name: "VkAllocationCallbacks", Category: "struct"},
+		},
+		EnumGroups: []model.EnumGroup{
+			{Name: "VkResult", Type: "enum", Enums: []model.EnumDecl{
+				{Name: "VK_SUCCESS", Value: "0"},
+				{Name: "VK_ERROR_OUT_OF_HOST_MEMORY", Value: "-1"},
+			}},
+			{Name: "VkStructureType", Type: "enum", Enums: []model.EnumDecl{
+				{Name: "VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO", Value: "1"},
+			}},
 		},
 		Commands: []model.CommandDecl{
 			{Name: "vkCreateInstance", Return: "VkResult", Params: []model.ParamDecl{
