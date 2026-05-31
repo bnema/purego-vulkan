@@ -90,6 +90,32 @@ func TestInitUsesExplicitLibraryPath(t *testing.T) {
 	}
 }
 
+func TestInitReturnsLookupAndCloseErrors(t *testing.T) {
+	resetInitForTest()
+	defer resetInitForTest()
+
+	setRuntimeHooksForTest(runtimeHooks{
+		open: func(candidates []string, open internalloader.OpenFunc) (internalloader.SharedLibrary, error) {
+			return internalloader.SharedLibrary{Handle: 7, Path: "libvulkan.so.1"}, nil
+		},
+		lookup: func(lib internalloader.SharedLibrary, name string, lookup internalloader.LookupFunc) (uintptr, error) {
+			return 0, errors.New("missing symbol")
+		},
+		close: func(lib internalloader.SharedLibrary, close internalloader.CloseFunc) error {
+			return errors.New("close failed")
+		},
+		register: func(fptr any, addr uintptr) {},
+	})
+
+	err := Init()
+	if err == nil {
+		t.Fatal("Init() error = nil")
+	}
+	if !strings.Contains(err.Error(), "missing symbol") || !strings.Contains(err.Error(), "close failed") {
+		t.Fatalf("Init() error = %q", err.Error())
+	}
+}
+
 func TestInitCanRetryAfterFailureWithExplicitLibraryPath(t *testing.T) {
 	resetInitForTest()
 	defer resetInitForTest()

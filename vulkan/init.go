@@ -1,6 +1,7 @@
 package vulkan
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -91,7 +92,9 @@ func initRuntime(cfg config) error {
 
 	addr, err := h.lookup(lib, "vkGetInstanceProcAddr", internalloader.PuregoLookup)
 	if err != nil {
-		_ = h.close(lib, internalloader.PuregoClose)
+		if closeErr := h.close(lib, internalloader.PuregoClose); closeErr != nil {
+			return fmt.Errorf("vulkan: resolve vkGetInstanceProcAddr: %w", errors.Join(err, closeErr))
+		}
 		return fmt.Errorf("vulkan: resolve vkGetInstanceProcAddr: %w", err)
 	}
 	h.register(&vkGetInstanceProcAddr, addr)
