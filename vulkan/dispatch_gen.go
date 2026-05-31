@@ -43,7 +43,7 @@ type DeviceDispatch struct {
 	DeviceWaitIdle                         func(Device) Result
 	AllocateMemory                         func(Device, *MemoryAllocateInfo, *AllocationCallbacks, *DeviceMemory) Result
 	FreeMemory                             func(Device, DeviceMemory, *AllocationCallbacks)
-	MapMemory                              func(Device, DeviceMemory, DeviceSize, DeviceSize, MemoryMapFlags, **unsafe.Pointer) Result
+	MapMemory                              func(Device, DeviceMemory, DeviceSize, DeviceSize, MemoryMapFlags, *unsafe.Pointer) Result
 	UnmapMemory                            func(Device, DeviceMemory)
 	FlushMappedMemoryRanges                func(Device, uint32, *MappedMemoryRange) Result
 	InvalidateMappedMemoryRanges           func(Device, uint32, *MappedMemoryRange) Result

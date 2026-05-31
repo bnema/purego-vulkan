@@ -23,7 +23,7 @@ var VkQueueWaitIdle func(Queue) Result
 var VkDeviceWaitIdle func(Device) Result
 var VkAllocateMemory func(Device, *MemoryAllocateInfo, *AllocationCallbacks, *DeviceMemory) Result
 var VkFreeMemory func(Device, DeviceMemory, *AllocationCallbacks)
-var VkMapMemory func(Device, DeviceMemory, DeviceSize, DeviceSize, MemoryMapFlags, **unsafe.Pointer) Result
+var VkMapMemory func(Device, DeviceMemory, DeviceSize, DeviceSize, MemoryMapFlags, *unsafe.Pointer) Result
 var VkUnmapMemory func(Device, DeviceMemory)
 var VkFlushMappedMemoryRanges func(Device, uint32, *MappedMemoryRange) Result
 var VkInvalidateMappedMemoryRanges func(Device, uint32, *MappedMemoryRange) Result

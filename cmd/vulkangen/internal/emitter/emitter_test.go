@@ -79,6 +79,7 @@ func TestEmitCommands(t *testing.T) {
 		"var VkCreateInstance func(*InstanceCreateInfo, *AllocationCallbacks, *Instance) Result",
 		"var VkDestroyInstance func(Instance, *AllocationCallbacks)",
 		"var VkGetMemoryFdKHR func(Device, *MemoryGetFdInfoKHR, *int32) Result",
+		"var VkMapMemory func(Device, DeviceMemory, DeviceSize, DeviceSize, MemoryMapFlags, *unsafe.Pointer) Result",
 		"func globalCommandPointers() map[string]any",
 		`"vkCreateInstance": &VkCreateInstance`,
 		"func deviceCommandPointers() map[string]any",
@@ -103,6 +104,7 @@ func TestEmitDispatch(t *testing.T) {
 		"type DeviceDispatch struct",
 		"Device         Device",
 		"GetMemoryFdKHR func(Device, *MemoryGetFdInfoKHR, *int32) Result",
+		"MapMemory      func(Device, DeviceMemory, DeviceSize, DeviceSize, MemoryMapFlags, *unsafe.Pointer) Result",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("EmitDispatch() missing %q\n%s", want, out)
@@ -117,10 +119,13 @@ func testSelectedRegistry() *model.SelectedRegistry {
 			{Name: "VkPhysicalDevice", GoName: "PhysicalDevice", GoType: "uintptr", Category: "handle", Dispatchable: true},
 			{Name: "VkDevice", GoName: "Device", GoType: "uintptr", Category: "handle", Dispatchable: true},
 			{Name: "VkImage", GoName: "Image", GoType: "uint64", Category: "handle"},
+			{Name: "VkDeviceMemory", GoName: "DeviceMemory", GoType: "uint64", Category: "handle"},
 			{Name: "VkBool32", GoName: "Bool32", GoType: "uint32", Category: "basetype"},
 			{Name: "VkResult", GoName: "Result", GoType: "int32", Category: "basetype"},
 			{Name: "VkStructureType", GoName: "StructureType", GoType: "int32", Category: "enum"},
 			{Name: "PFN_vkVoidFunction", GoName: "PFN_vkVoidFunction", GoType: "uintptr", Category: "funcpointer"},
+			{Name: "VkDeviceSize", GoName: "DeviceSize", GoType: "uint64", Category: "basetype"},
+			{Name: "VkMemoryMapFlags", GoName: "MemoryMapFlags", GoType: "uint32", Category: "bitmask"},
 			{Name: "VkAccessFlags2", GoName: "AccessFlags2", GoType: "uint64", Category: "bitmask"},
 			{Name: "VkAccessFlags2KHR", GoName: "AccessFlags2KHR", GoType: "uint64", Category: "bitmask", Source: model.TypeDecl{Alias: "VkAccessFlags2"}},
 			{Name: "VkAllocationCallbacks", GoName: "AllocationCallbacks", Category: "struct"},
@@ -183,6 +188,14 @@ func testSelectedRegistry() *model.SelectedRegistry {
 				{Name: "device", Type: "VkDevice"},
 				{Name: "pGetFdInfo", Type: "VkMemoryGetFdInfoKHR", Const: true, PointerDepth: 1},
 				{Name: "pFd", Type: "int", PointerDepth: 1},
+			}},
+			{Name: "vkMapMemory", GoName: "MapMemory", Return: "VkResult", Dispatch: model.DispatchDevice, Params: []model.ParamDecl{
+				{Name: "device", Type: "VkDevice"},
+				{Name: "memory", Type: "VkDeviceMemory"},
+				{Name: "offset", Type: "VkDeviceSize"},
+				{Name: "size", Type: "VkDeviceSize"},
+				{Name: "flags", Type: "VkMemoryMapFlags"},
+				{Name: "ppData", Type: "void", PointerDepth: 2},
 			}},
 		},
 	}

@@ -272,9 +272,6 @@ func quotedNames(names []string) string {
 
 func commandsNeedUnsafe(commands []model.SelectedCommand) bool {
 	for _, cmd := range commands {
-		if cmd.Return == "void" {
-			return true
-		}
 		for _, param := range cmd.Params {
 			if param.Type == "void" {
 				return true
@@ -311,6 +308,9 @@ func resultSignature(ret string) string {
 
 func goParamType(p model.ParamDecl) string {
 	base := goTypeName(p.Type)
+	if p.Type == "void" && p.PointerDepth > 0 {
+		return voidPointerType(p.PointerDepth)
+	}
 	if len(p.ArrayLens) > 0 {
 		for i := len(p.ArrayLens) - 1; i >= 0; i-- {
 			base = "[" + arrayLenName(p.ArrayLens[i]) + "]" + base
@@ -322,14 +322,18 @@ func goParamType(p model.ParamDecl) string {
 	return base
 }
 
+func voidPointerType(pointerDepth int) string {
+	base := "unsafe.Pointer"
+	for i := 1; i < pointerDepth; i++ {
+		base = "*" + base
+	}
+	return base
+}
+
 func goFieldType(m model.MemberDecl) string {
 	base := goTypeName(m.Type)
 	if m.Type == "void" && m.PointerDepth > 0 {
-		base = "unsafe.Pointer"
-		for i := 1; i < m.PointerDepth; i++ {
-			base = "*" + base
-		}
-		return base
+		return voidPointerType(m.PointerDepth)
 	}
 	if len(m.ArrayLens) > 0 {
 		for i := len(m.ArrayLens) - 1; i >= 0; i-- {

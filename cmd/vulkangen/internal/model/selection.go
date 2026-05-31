@@ -743,7 +743,8 @@ func (s *selectionState) buildSelected() (*SelectedRegistry, error) {
 			continue
 		}
 		seenTypes[decl.Name] = true
-		out.Types = append(out.Types, s.selectType(decl))
+		selectedDecl := s.idx.types[decl.Name]
+		out.Types = append(out.Types, s.selectType(selectedDecl))
 	}
 	for _, enum := range s.constants {
 		out.Constants = append(out.Constants, SelectedConstant{Name: enum.Name, Value: enum.Value, Extends: enum.Extends, Source: enum})

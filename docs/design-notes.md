@@ -49,7 +49,7 @@ The generator resolves aliases, feature constants, extension offset constants, g
 
 The selected renderer surface is deliberately close to Vulkan: consumers receive generated handle types, create-info structs, constants, result values, and dispatch-table function fields. That is enough for a compositor renderer to allocate host-visible staging buffers, copy pixels into images, create and destroy graphics pipelines, bind descriptors/buffers/pipelines, issue draw calls, and begin/end dynamic rendering.
 
-Render targets should use dynamic rendering (`vkCmdBeginRendering` / `vkCmdEndRendering`, or the `KHR` aliases when that is the exposed path) instead of requiring classic render-pass/framebuffer objects in this binding milestone. Dynamic rendering fits imported images and compositor-owned render-target decisions better: the consumer can choose color/depth attachments at command-record time, while this package only exposes the raw structures and commands. Optional dynamic-rendering commands may be nil if the required core version or extension is not enabled, so consumers must validate availability during device setup.
+Render targets should use dynamic rendering (`vkCmdBeginRendering` / `vkCmdEndRendering`, or the `KHR` aliases when that is the exposed path) instead of requiring classic render-pass/framebuffer objects in this binding milestone. Dynamic rendering fits imported images and compositor-owned render-target decisions better: the consumer can choose color/depth attachments at command-record time, while this package only exposes the raw structures and commands. `LoadDeviceDispatch` requires either the core dynamic-rendering symbols or their `KHR` aliases and returns an error when neither path is exposed, so consumers should filter devices by Vulkan version/extension support before creating renderer devices.
 
 ## v0.x exclusions
 
@@ -66,7 +66,7 @@ Classic render-pass/framebuffer commands and pipeline-cache commands are not par
 - Upload handoff: consumer chooses memory types, staging-buffer lifetime, flush/invalidate policy, and barriers; this package supplies buffer, memory-map, bind, copy, and synchronization command bindings.
 - Pipeline handoff: consumer owns shader modules, pipeline layouts, descriptor layouts, graphics-pipeline create-info assembly, and destruction ordering; this package supplies the raw create/destroy commands and structs.
 - Draw handoff: consumer records command buffers, binds pipelines/descriptors/vertex/index buffers, and issues draw calls through the device dispatch table.
-- Render-target handoff: consumer imports or creates images, selects layouts/load-store ops/attachment formats, enables core/KHR dynamic rendering, and checks that dynamic-rendering function fields are non-nil before recording.
+- Render-target handoff: consumer imports or creates images, selects layouts/load-store ops/attachment formats, enables core/KHR dynamic rendering, and treats `LoadDeviceDispatch` failure as a device-capability rejection when dynamic-rendering symbols are unavailable.
 - Run `make check` in this repository before updating the compositor integration.
 
 The `examples/enumerate` program is the smoke test for consumers: it initializes Vulkan, prints loader version, reports compositor-critical extension availability, creates an instance, and lists physical devices.
