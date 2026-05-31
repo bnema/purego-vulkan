@@ -102,11 +102,67 @@ func TestLoadDeviceDispatchLeavesOptionalExtensionCommandsNil(t *testing.T) {
 	if dispatch.BindImageMemory2 == nil || dispatch.BindImageMemory2KHR == nil {
 		t.Fatal("core/KHR device alias group was not populated from one available symbol")
 	}
+	assertRendererDeviceDispatch(t, dispatch)
 	if dispatch.GetMemoryFdKHR != nil {
 		t.Fatal("optional GetMemoryFdKHR loaded despite missing symbol")
 	}
 	if dispatch.GetImageDrmFormatModifierPropertiesEXT != nil {
 		t.Fatal("optional GetImageDrmFormatModifierPropertiesEXT loaded despite missing symbol")
+	}
+}
+
+func TestLoadDeviceDispatchFallsBackToDynamicRenderingKHRAliases(t *testing.T) {
+	resetDispatchForTest()
+	defer resetDispatchForTest()
+
+	symbols := requiredDeviceSymbolsExcept("vkCmdBeginRendering", "vkCmdEndRendering")
+	symbols["vkCmdBeginRenderingKHR"] = 0xa001
+	symbols["vkCmdEndRenderingKHR"] = 0xa002
+	instanceDispatch := &InstanceDispatch{GetDeviceProcAddr: fakeGetDeviceProcAddr(symbols)}
+	dispatch, err := LoadDeviceDispatch(instanceDispatch, Device(4))
+	if err != nil {
+		t.Fatalf("LoadDeviceDispatch() error = %v", err)
+	}
+	if dispatch.CmdBeginRendering == nil || dispatch.CmdBeginRenderingKHR == nil {
+		t.Fatal("dynamic rendering begin core/KHR alias group was not populated from KHR symbol")
+	}
+	if dispatch.CmdEndRendering == nil || dispatch.CmdEndRenderingKHR == nil {
+		t.Fatal("dynamic rendering end core/KHR alias group was not populated from KHR symbol")
+	}
+}
+
+func assertRendererDeviceDispatch(t *testing.T, dispatch *DeviceDispatch) {
+	t.Helper()
+	checks := []struct {
+		name string
+		fn   any
+	}{
+		{"CreateBuffer", dispatch.CreateBuffer},
+		{"DestroyBuffer", dispatch.DestroyBuffer},
+		{"GetBufferMemoryRequirements", dispatch.GetBufferMemoryRequirements},
+		{"BindBufferMemory", dispatch.BindBufferMemory},
+		{"MapMemory", dispatch.MapMemory},
+		{"UnmapMemory", dispatch.UnmapMemory},
+		{"FlushMappedMemoryRanges", dispatch.FlushMappedMemoryRanges},
+		{"InvalidateMappedMemoryRanges", dispatch.InvalidateMappedMemoryRanges},
+		{"CmdCopyBufferToImage", dispatch.CmdCopyBufferToImage},
+		{"CreateGraphicsPipelines", dispatch.CreateGraphicsPipelines},
+		{"DestroyPipeline", dispatch.DestroyPipeline},
+		{"CmdBindPipeline", dispatch.CmdBindPipeline},
+		{"CmdBindDescriptorSets", dispatch.CmdBindDescriptorSets},
+		{"CmdBindVertexBuffers", dispatch.CmdBindVertexBuffers},
+		{"CmdBindIndexBuffer", dispatch.CmdBindIndexBuffer},
+		{"CmdDraw", dispatch.CmdDraw},
+		{"CmdDrawIndexed", dispatch.CmdDrawIndexed},
+		{"CmdBeginRendering", dispatch.CmdBeginRendering},
+		{"CmdBeginRenderingKHR", dispatch.CmdBeginRenderingKHR},
+		{"CmdEndRendering", dispatch.CmdEndRendering},
+		{"CmdEndRenderingKHR", dispatch.CmdEndRenderingKHR},
+	}
+	for _, check := range checks {
+		if check.fn == nil {
+			t.Fatalf("%s was not loaded", check.name)
+		}
 	}
 }
 
@@ -154,6 +210,14 @@ func requiredInstanceSymbols() map[string]uintptr {
 func requiredInstanceSymbolsExcept(excluded string) map[string]uintptr {
 	symbols := requiredInstanceSymbols()
 	delete(symbols, excluded)
+	return symbols
+}
+
+func requiredDeviceSymbolsExcept(excluded ...string) map[string]uintptr {
+	symbols := requiredDeviceSymbols()
+	for _, name := range excluded {
+		delete(symbols, name)
+	}
 	return symbols
 }
 
