@@ -947,21 +947,14 @@ type CommandBufferBeginInfo struct {
 	InheritanceInfo *CommandBufferInheritanceInfo
 }
 
-type ClearColorValue struct {
-	Float32 [4]float32
-	Int32   [4]int32
-	Uint32  [4]uint32
-}
+type ClearColorValue [4]float32
 
 type ClearDepthStencilValue struct {
 	Depth   float32
 	Stencil uint32
 }
 
-type ClearValue struct {
-	Color        ClearColorValue
-	DepthStencil ClearDepthStencilValue
-}
+type ClearValue ClearColorValue
 
 type FenceCreateInfo struct {
 	SType StructureType

@@ -26,9 +26,19 @@ func TestEmitTypes(t *testing.T) {
 		"DeviceName [MaxPhysicalDeviceNameSize]byte",
 		"type ImageDrmFormatModifierExplicitCreateInfoEXT struct",
 		"PlaneLayouts                *SubresourceLayout",
+		"type ClearColorValue [4]float32",
+		"type ClearValue ClearColorValue",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("EmitTypes() missing %q\n%s", want, out)
+		}
+	}
+	for _, bad := range []string{
+		"type ClearColorValue struct",
+		"type ClearValue struct",
+	} {
+		if strings.Contains(out, bad) {
+			t.Fatalf("EmitTypes() unexpectedly emitted union as struct %q\n%s", bad, out)
 		}
 	}
 }
@@ -154,6 +164,19 @@ func testSelectedRegistry() *model.SelectedRegistry {
 				{Name: "drmFormatModifier", Type: "uint64_t"},
 				{Name: "drmFormatModifierPlaneCount", Type: "uint32_t"},
 				{Name: "pPlaneLayouts", Type: "VkSubresourceLayout", Const: true, PointerDepth: 1},
+			}},
+			{Name: "VkClearColorValue", GoName: "ClearColorValue", Category: "union", Members: []model.MemberDecl{
+				{Name: "float32", Type: "float", ArrayLens: []string{"4"}},
+				{Name: "int32", Type: "int32_t", ArrayLens: []string{"4"}},
+				{Name: "uint32", Type: "uint32_t", ArrayLens: []string{"4"}},
+			}},
+			{Name: "VkClearDepthStencilValue", GoName: "ClearDepthStencilValue", Category: "struct", Members: []model.MemberDecl{
+				{Name: "depth", Type: "float"},
+				{Name: "stencil", Type: "uint32_t"},
+			}},
+			{Name: "VkClearValue", GoName: "ClearValue", Category: "union", Members: []model.MemberDecl{
+				{Name: "color", Type: "VkClearColorValue"},
+				{Name: "depthStencil", Type: "VkClearDepthStencilValue"},
 			}},
 			{Name: "VkSubresourceLayout", GoName: "SubresourceLayout", Category: "struct"},
 		},

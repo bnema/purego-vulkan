@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"go/format"
+	"strconv"
 	"strings"
 
 	"github.com/bnema/purego-vulkan/cmd/vulkangen/internal/model"
@@ -13,6 +14,7 @@ func EmitTypes(sel *model.SelectedRegistry) (string, error) {
 	var b bytes.Buffer
 	writeHeader(&b, "vulkan")
 	b.WriteString("import \"unsafe\"\n\n")
+	types := selectedTypeMap(sel)
 
 	for _, t := range sel.Types {
 		if t.Source.Alias != "" {
@@ -25,15 +27,25 @@ func EmitTypes(sel *model.SelectedRegistry) (string, error) {
 				continue
 			}
 			fmt.Fprintf(&b, "type %s %s\n\n", t.GoName, t.GoType)
-		case "struct", "union":
+		case "struct":
 			fmt.Fprintf(&b, "type %s struct {\n", t.GoName)
 			for _, m := range t.Members {
 				fmt.Fprintf(&b, "\t%s %s\n", exportName(m.Name), goFieldType(m))
 			}
 			b.WriteString("}\n\n")
+		case "union":
+			fmt.Fprintf(&b, "type %s %s\n\n", t.GoName, unionGoType(t, types))
 		}
 	}
 	return formatSource(b.Bytes())
+}
+
+func selectedTypeMap(sel *model.SelectedRegistry) map[string]model.SelectedType {
+	types := make(map[string]model.SelectedType, len(sel.Types))
+	for _, t := range sel.Types {
+		types[t.Name] = t
+	}
+	return types
 }
 
 func EmitConstants(sel *model.SelectedRegistry) (string, error) {
@@ -268,6 +280,160 @@ func quotedNames(names []string) string {
 		parts = append(parts, fmt.Sprintf("%q", name))
 	}
 	return strings.Join(parts, ", ")
+}
+
+type typeLayout struct {
+	size  int
+	align int
+	ok    bool
+}
+
+func unionGoType(t model.SelectedType, types map[string]model.SelectedType) string {
+	if len(t.Members) == 0 {
+		return "[0]byte"
+	}
+	union, bestMember, best := unionLayout(t, types, make(map[string]bool))
+	if union.ok && best.ok && best.size == union.size && best.align == union.align {
+		return goFieldType(bestMember)
+	}
+	if union.ok {
+		return unionStorageGoType(union.size, union.align)
+	}
+	return goFieldType(t.Members[0])
+}
+
+func unionLayout(t model.SelectedType, types map[string]model.SelectedType, seen map[string]bool) (typeLayout, model.MemberDecl, typeLayout) {
+	var union typeLayout
+	var bestMember model.MemberDecl
+	var best typeLayout
+	for i, member := range t.Members {
+		layout := memberLayout(member, types, seen)
+		if !layout.ok {
+			return typeLayout{}, t.Members[0], typeLayout{}
+		}
+		if i == 0 || layout.size > best.size || (layout.size == best.size && layout.align > best.align) {
+			bestMember = member
+			best = layout
+		}
+		if layout.size > union.size {
+			union.size = layout.size
+		}
+		if layout.align > union.align {
+			union.align = layout.align
+		}
+	}
+	if union.align == 0 {
+		union.align = 1
+	}
+	union.size = alignUp(union.size, union.align)
+	union.ok = true
+	return union, bestMember, best
+}
+
+func unionStorageGoType(size, align int) string {
+	size = alignUp(size, align)
+	switch {
+	case align >= 8 && size%8 == 0:
+		return fmt.Sprintf("[%d]uint64", size/8)
+	case align >= 4 && size%4 == 0:
+		return fmt.Sprintf("[%d]uint32", size/4)
+	case align >= 2 && size%2 == 0:
+		return fmt.Sprintf("[%d]uint16", size/2)
+	default:
+		return fmt.Sprintf("[%d]byte", size)
+	}
+}
+
+func memberLayout(member model.MemberDecl, types map[string]model.SelectedType, seen map[string]bool) typeLayout {
+	var layout typeLayout
+	if member.PointerDepth > 0 {
+		layout = typeLayout{size: 8, align: 8, ok: true}
+	} else {
+		layout = vkTypeLayout(member.Type, types, seen)
+	}
+	if !layout.ok {
+		return layout
+	}
+	for _, lenValue := range member.ArrayLens {
+		n, err := strconv.Atoi(strings.TrimSpace(lenValue))
+		if err != nil {
+			return typeLayout{}
+		}
+		layout.size *= n
+	}
+	return layout
+}
+
+func vkTypeLayout(name string, types map[string]model.SelectedType, seen map[string]bool) typeLayout {
+	if layout := scalarLayout(name); layout.ok {
+		return layout
+	}
+	t, ok := types[name]
+	if !ok {
+		return typeLayout{}
+	}
+	if t.Source.Alias != "" {
+		return vkTypeLayout(t.Source.Alias, types, seen)
+	}
+	if seen[name] {
+		return typeLayout{}
+	}
+	seen[name] = true
+	defer delete(seen, name)
+	switch t.Category {
+	case "handle", "basetype", "bitmask", "enum", "funcpointer":
+		return scalarLayout(t.GoType)
+	case "struct":
+		return structLayout(t, types, seen)
+	case "union":
+		layout, _, _ := unionLayout(t, types, seen)
+		return layout
+	default:
+		return typeLayout{}
+	}
+}
+
+func structLayout(t model.SelectedType, types map[string]model.SelectedType, seen map[string]bool) typeLayout {
+	layout := typeLayout{align: 1, ok: true}
+	for _, member := range t.Members {
+		fieldLayout := memberLayout(member, types, seen)
+		if !fieldLayout.ok {
+			return typeLayout{}
+		}
+		layout.size = alignUp(layout.size, fieldLayout.align)
+		layout.size += fieldLayout.size
+		if fieldLayout.align > layout.align {
+			layout.align = fieldLayout.align
+		}
+	}
+	layout.size = alignUp(layout.size, layout.align)
+	return layout
+}
+
+func scalarLayout(name string) typeLayout {
+	switch name {
+	case "char", "byte", "uint8_t", "uint8", "int8_t", "int8":
+		return typeLayout{size: 1, align: 1, ok: true}
+	case "uint16_t", "uint16", "int16_t", "int16":
+		return typeLayout{size: 2, align: 2, ok: true}
+	case "int", "float", "uint32_t", "uint32", "int32_t", "int32", "float32", "VkFlags", "Bool32", "Result":
+		return typeLayout{size: 4, align: 4, ok: true}
+	case "double", "uint64_t", "uint64", "int64_t", "int64", "float64", "size_t", "uintptr", "unsafe.Pointer", "VkFlags64", "VkDeviceSize", "DeviceSize":
+		return typeLayout{size: 8, align: 8, ok: true}
+	default:
+		return typeLayout{}
+	}
+}
+
+func alignUp(value, align int) int {
+	if align <= 1 {
+		return value
+	}
+	rem := value % align
+	if rem == 0 {
+		return value
+	}
+	return value + align - rem
 }
 
 func commandsNeedUnsafe(commands []model.SelectedCommand) bool {
