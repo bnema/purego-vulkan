@@ -78,6 +78,28 @@ func TestSelectReportsMissingConfiguredCommandsAndDependencies(t *testing.T) {
 	}
 }
 
+func TestSelectIncludesFeatureConstantsForSelectedTypes(t *testing.T) {
+	reg := testRegistry()
+	sel, err := model.Select(reg, model.SelectionConfig{Commands: []string{"vkGetPhysicalDeviceProperties2"}})
+	if err != nil {
+		t.Fatalf("Select() error = %v", err)
+	}
+	if !containsConstant(sel, "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2") {
+		t.Fatalf("expected feature constant for selected sType, got %+v", sel.Constants)
+	}
+}
+
+func TestSelectIncludesVulkanTypedefDependencies(t *testing.T) {
+	reg := testRegistry()
+	sel, err := model.Select(reg, model.SelectionConfig{Commands: []string{"vkAllocateMemory"}})
+	if err != nil {
+		t.Fatalf("Select() error = %v", err)
+	}
+	if sel.TypeByName("VkDeviceSize") == nil {
+		t.Fatalf("VkDeviceSize typedef missing from selected types: %+v", sel.Types)
+	}
+}
+
 func TestSelectResolvesAliasCommandsAndTypes(t *testing.T) {
 	reg := testRegistry()
 	sel, err := model.Select(reg, model.SelectionConfig{Extensions: []string{"VK_KHR_get_physical_device_properties2"}})
@@ -188,6 +210,15 @@ func TestDefaultSelectionOnPinnedRegistryHasNoDuplicateOrBrokenAliasCommands(t *
 		}
 	}
 
+	if sel.TypeByName("VkDeviceSize") == nil {
+		t.Fatal("VkDeviceSize missing from default selected type closure")
+	}
+	for _, name := range []string{"VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2", "VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO"} {
+		if !containsConstant(sel, name) {
+			t.Fatalf("feature constant %s missing from default selected constants", name)
+		}
+	}
+
 	for _, name := range []string{"vkGetPhysicalDeviceProperties2KHR", "vkGetPhysicalDeviceFeatures2KHR", "vkGetPhysicalDeviceQueueFamilyProperties2KHR"} {
 		cmd := sel.CommandByName(name)
 		if cmd == nil {
@@ -242,6 +273,7 @@ func testRegistry() *model.Registry {
 			{Name: "VkImage", Category: "handle", Type: "VK_DEFINE_NON_DISPATCHABLE_HANDLE", Parent: "VkDevice"},
 			{Name: "VkBool32", Category: "basetype", Type: "uint32_t"},
 			{Name: "VkResult", Category: "basetype", Type: "int32_t"},
+			{Name: "VkDeviceSize", Category: "basetype", Type: "uint64_t"},
 			{Name: "VkAccessFlags2", Category: "bitmask", Type: "VkFlags64"},
 			{Name: "VkAccessFlags2KHR", Category: "bitmask", Alias: "VkAccessFlags2"},
 			{Name: "VkStructureType", Category: "enum"},
@@ -256,9 +288,14 @@ func testRegistry() *model.Registry {
 				{Name: "pNext", Type: "void", Const: true, PointerDepth: 1},
 				{Name: "memory", Type: "VkDeviceMemory"},
 			}},
+			{Name: "VkMemoryAllocateInfo", Category: "struct", Members: []model.MemberDecl{
+				{Name: "sType", Type: "VkStructureType", Values: "VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO"},
+				{Name: "pNext", Type: "void", Const: true, PointerDepth: 1},
+				{Name: "allocationSize", Type: "VkDeviceSize"},
+			}},
 			{Name: "VkAllocationCallbacks", Category: "struct"},
 			{Name: "VkPhysicalDeviceProperties2", Category: "struct", Members: []model.MemberDecl{
-				{Name: "sType", Type: "VkStructureType"},
+				{Name: "sType", Type: "VkStructureType", Values: "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2"},
 				{Name: "pNext", Type: "void", PointerDepth: 1},
 			}},
 			{Name: "VkDeviceCreateInfo", Category: "struct", Members: []model.MemberDecl{
@@ -274,6 +311,14 @@ func testRegistry() *model.Registry {
 			{Name: "VkStructureType", Type: "enum", Enums: []model.EnumDecl{
 				{Name: "VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO", Value: "1"},
 			}},
+		},
+		Features: []model.FeatureDecl{
+			{Name: "VK_VERSION_1_0", Number: "1.0", API: "vulkan", Requires: []model.RequireDecl{{
+				Enums: []model.EnumDecl{{Name: "VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO", Value: "5", Extends: "VkStructureType"}},
+			}}},
+			{Name: "VK_VERSION_1_1", Number: "1.1", API: "vulkan", Requires: []model.RequireDecl{{
+				Enums: []model.EnumDecl{{Name: "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2", Extends: "VkStructureType", Offset: "1"}},
+			}}},
 		},
 		Commands: []model.CommandDecl{
 			{Name: "vkCreateInstance", Return: "VkResult", Params: []model.ParamDecl{
@@ -293,6 +338,12 @@ func testRegistry() *model.Registry {
 			}},
 			{Name: "vkCreateDevice", Return: "VkResult", API: "vulkansc", Params: []model.ParamDecl{
 				{Name: "physicalDevice", Type: "VkPhysicalDevice"},
+			}},
+			{Name: "vkAllocateMemory", Return: "VkResult", Params: []model.ParamDecl{
+				{Name: "device", Type: "VkDevice"},
+				{Name: "pAllocateInfo", Type: "VkMemoryAllocateInfo", Const: true, PointerDepth: 1},
+				{Name: "pAllocator", Type: "VkAllocationCallbacks", Const: true, PointerDepth: 1},
+				{Name: "pMemory", Type: "VkDeviceMemory", PointerDepth: 1},
 			}},
 			{Name: "vkGetMemoryFdKHR", Return: "VkResult", Params: []model.ParamDecl{
 				{Name: "device", Type: "VkDevice"},

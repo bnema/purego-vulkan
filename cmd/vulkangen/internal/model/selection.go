@@ -146,6 +146,7 @@ func Select(reg *Registry, cfg SelectionConfig) (*SelectedRegistry, error) {
 		state.addType(decl.Alias, "type "+decl.Name)
 		for _, member := range decl.Members {
 			state.addType(member.Type, "member "+decl.Name+"."+member.Name)
+			state.addFeatureConstant(member.Values)
 		}
 	}
 
@@ -161,6 +162,7 @@ type registryIndex struct {
 	commandOrder []string
 	extensions   map[string]ExtensionDecl
 	enumGroups   map[string]EnumGroup
+	featureEnums map[string]EnumDecl
 }
 
 func preferCommand(candidate, existing CommandDecl) bool {
@@ -193,10 +195,11 @@ func commandVariantScore(cmd CommandDecl) int {
 
 func newIndex(reg *Registry) registryIndex {
 	idx := registryIndex{
-		types:      make(map[string]TypeDecl, len(reg.Types)),
-		commands:   make(map[string]CommandDecl, len(reg.Commands)),
-		extensions: make(map[string]ExtensionDecl, len(reg.Extensions)),
-		enumGroups: make(map[string]EnumGroup, len(reg.EnumGroups)),
+		types:        make(map[string]TypeDecl, len(reg.Types)),
+		commands:     make(map[string]CommandDecl, len(reg.Commands)),
+		extensions:   make(map[string]ExtensionDecl, len(reg.Extensions)),
+		enumGroups:   make(map[string]EnumGroup, len(reg.EnumGroups)),
+		featureEnums: make(map[string]EnumDecl),
 	}
 	for _, t := range reg.Types {
 		idx.types[t.Name] = t
@@ -216,6 +219,18 @@ func newIndex(reg *Registry) registryIndex {
 	}
 	for _, g := range reg.EnumGroups {
 		idx.enumGroups[g.Name] = g
+	}
+	for _, feature := range reg.Features {
+		if feature.API != "" && !strings.Contains(feature.API, "vulkan") {
+			continue
+		}
+		for _, req := range feature.Requires {
+			for _, enum := range req.Enums {
+				if enum.Name != "" {
+					idx.featureEnums[enum.Name] = enum
+				}
+			}
+		}
 	}
 	return idx
 }
@@ -335,6 +350,18 @@ func (s *selectionState) addConstant(enum EnumDecl, defaultExtends string) {
 	}
 	s.constantNames[enum.Name] = true
 	s.constants = append(s.constants, enum)
+}
+
+func (s *selectionState) addFeatureConstant(name string) {
+	if name == "" {
+		return
+	}
+	for _, enumName := range strings.Split(name, ",") {
+		enumName = strings.TrimSpace(enumName)
+		if enum, ok := s.idx.featureEnums[enumName]; ok {
+			s.addConstant(enum, enum.Extends)
+		}
+	}
 }
 
 func (s *selectionState) addEnumGroupConstants(groupName string) {
@@ -541,7 +568,7 @@ func isBuiltinType(name string) bool {
 	case "", "void", "char", "int", "float", "double", "size_t",
 		"uint8_t", "uint16_t", "uint32_t", "uint64_t",
 		"int8_t", "int16_t", "int32_t", "int64_t",
-		"VkFlags", "VkFlags64", "VkDeviceSize":
+		"VkFlags", "VkFlags64":
 		return true
 	default:
 		return false
