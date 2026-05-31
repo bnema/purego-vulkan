@@ -232,7 +232,64 @@ func newIndex(reg *Registry) registryIndex {
 			}
 		}
 	}
+	for _, ext := range reg.Extensions {
+		if ext.Supported == "disabled" {
+			continue
+		}
+		for _, req := range ext.Requires {
+			for _, enum := range req.Enums {
+				if enum.Name != "" {
+					idx.featureEnums[enum.Name] = enum
+				}
+			}
+		}
+	}
+	for name, enum := range idx.featureEnums {
+		idx.featureEnums[name] = idx.resolveEnumAlias(enum, nil)
+	}
+	for groupName, group := range idx.enumGroups {
+		for i, enum := range group.Enums {
+			group.Enums[i] = idx.resolveEnumAlias(enum, nil)
+		}
+		idx.enumGroups[groupName] = group
+	}
 	return idx
+}
+
+func (idx registryIndex) resolveEnumAlias(enum EnumDecl, seen map[string]bool) EnumDecl {
+	if enum.Alias == "" {
+		return enum
+	}
+	if seen == nil {
+		seen = make(map[string]bool)
+	}
+	if seen[enum.Name] {
+		return enum
+	}
+	seen[enum.Name] = true
+	if target, ok := idx.featureEnums[enum.Alias]; ok {
+		resolved := idx.resolveEnumAlias(target, seen)
+		resolved.Name = enum.Name
+		resolved.Alias = enum.Alias
+		if enum.Extends != "" {
+			resolved.Extends = enum.Extends
+		}
+		return resolved
+	}
+	for _, group := range idx.enumGroups {
+		for _, candidate := range group.Enums {
+			if candidate.Name == enum.Alias {
+				resolved := idx.resolveEnumAlias(candidate, seen)
+				resolved.Name = enum.Name
+				resolved.Alias = enum.Alias
+				if enum.Extends != "" {
+					resolved.Extends = enum.Extends
+				}
+				return resolved
+			}
+		}
+	}
+	return enum
 }
 
 type selectionState struct {
@@ -361,7 +418,20 @@ func (s *selectionState) addFeatureConstant(name string) {
 		if enum, ok := s.idx.featureEnums[enumName]; ok {
 			s.addConstant(enum, enum.Extends)
 		}
+		for _, enum := range s.aliasConstantsFor(enumName) {
+			s.addConstant(enum, enum.Extends)
+		}
 	}
+}
+
+func (s *selectionState) aliasConstantsFor(targetName string) []EnumDecl {
+	var aliases []EnumDecl
+	for _, enum := range s.idx.featureEnums {
+		if enum.Alias == targetName {
+			aliases = append(aliases, enum)
+		}
+	}
+	return aliases
 }
 
 func (s *selectionState) addEnumGroupConstants(groupName string) {

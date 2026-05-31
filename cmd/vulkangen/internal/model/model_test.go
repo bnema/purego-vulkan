@@ -78,6 +78,28 @@ func TestSelectReportsMissingConfiguredCommandsAndDependencies(t *testing.T) {
 	}
 }
 
+func TestSelectResolvesAliasSTypeConstants(t *testing.T) {
+	reg := testRegistry()
+	sel, err := model.Select(reg, model.SelectionConfig{RootTypes: []string{"VkPhysicalDeviceProperties2KHR"}})
+	if err != nil {
+		t.Fatalf("Select() error = %v", err)
+	}
+	alias := constantByName(sel, "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR")
+	if alias == nil {
+		t.Fatalf("alias sType constant missing from selection: %+v", sel.Constants)
+	}
+	if alias.Value == "" {
+		t.Fatalf("alias sType constant was not resolved: %+v", *alias)
+	}
+	base := constantByName(sel, "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2")
+	if base == nil {
+		t.Fatalf("base sType constant missing from selection: %+v", sel.Constants)
+	}
+	if alias.Value != base.Value {
+		t.Fatalf("alias value = %q, base value = %q", alias.Value, base.Value)
+	}
+}
+
 func TestSelectIncludesFeatureConstantsForSelectedTypes(t *testing.T) {
 	reg := testRegistry()
 	sel, err := model.Select(reg, model.SelectionConfig{Commands: []string{"vkGetPhysicalDeviceProperties2"}})
@@ -259,12 +281,16 @@ func TestSelectionFiltersToLinuxCompositorSubset(t *testing.T) {
 }
 
 func containsConstant(sel *model.SelectedRegistry, name string) bool {
-	for _, c := range sel.Constants {
-		if c.Name == name {
-			return true
+	return constantByName(sel, name) != nil
+}
+
+func constantByName(sel *model.SelectedRegistry, name string) *model.SelectedConstant {
+	for i := range sel.Constants {
+		if sel.Constants[i].Name == name {
+			return &sel.Constants[i]
 		}
 	}
-	return false
+	return nil
 }
 
 func testRegistry() *model.Registry {
@@ -304,6 +330,7 @@ func testRegistry() *model.Registry {
 				{Name: "sType", Type: "VkStructureType", Values: "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2"},
 				{Name: "pNext", Type: "void", PointerDepth: 1},
 			}},
+			{Name: "VkPhysicalDeviceProperties2KHR", Category: "struct", Alias: "VkPhysicalDeviceProperties2"},
 			{Name: "VkDeviceCreateInfo", Category: "struct", Members: []model.MemberDecl{
 				{Name: "sType", Type: "VkStructureType"},
 				{Name: "pNext", Type: "void", Const: true, PointerDepth: 1},
@@ -323,7 +350,10 @@ func testRegistry() *model.Registry {
 				Enums: []model.EnumDecl{{Name: "VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO", Value: "5", Extends: "VkStructureType"}},
 			}}},
 			{Name: "VK_VERSION_1_1", Number: "1.1", API: "vulkan", Requires: []model.RequireDecl{{
-				Enums: []model.EnumDecl{{Name: "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2", Extends: "VkStructureType", Offset: "1"}},
+				Enums: []model.EnumDecl{
+					{Name: "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2", Extends: "VkStructureType", Offset: "1", Value: "1000059001"},
+					{Name: "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR", Extends: "VkStructureType", Alias: "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2"},
+				},
 			}}},
 		},
 		Commands: []model.CommandDecl{
