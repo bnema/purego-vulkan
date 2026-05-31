@@ -8,7 +8,7 @@ The package is intentionally low-level. It exposes Vulkan ABI types, constants, 
 
 ## Status
 
-Early v0.x implementation. The initial target is a Linux/DRM compositor renderer path. Other platforms, high-level rendering helpers, swapchain management, and scene abstractions are out of scope for this milestone.
+Early v0.x implementation. The initial target is a Linux/DRM compositor renderer path. The generated subset is renderer-ready at the low level: CPU-visible buffer uploads, buffer-to-image copies, graphics pipeline creation/destruction, draw commands, and dynamic rendering are covered. Other platforms, high-level rendering helpers, swapchain management, and scene abstractions are out of scope for this milestone.
 
 ## Usage
 
@@ -27,7 +27,7 @@ if gd.EnumerateInstanceVersion != nil {
 }
 ```
 
-Use `LoadInstanceDispatch(instance)` and `LoadDeviceDispatch(instanceDispatch, device)` after creating Vulkan handles. Optional extension commands are nil when unavailable.
+Use `LoadInstanceDispatch(instance)` and `LoadDeviceDispatch(instanceDispatch, device)` after creating Vulkan handles. Optional driver or extension commands may be nil when the loader, driver, enabled API version, or enabled extensions do not expose them; check function fields before use.
 
 Run the smoke example on a Vulkan-capable Linux machine:
 
@@ -48,6 +48,8 @@ make check
 ```
 
 `make check` runs generation, tests, and `git diff --exit-code` to ensure generated files are fresh.
+
+The development target is raw renderer binding coverage, not framework code. Keep upload orchestration, pipeline policy, render-target ownership, and command-buffer recording in the consumer; this module supplies the low-level Vulkan commands and structs needed for CPU-visible staging/upload buffers, buffer-to-image copies, graphics pipelines, draw calls, and `VK_KHR_dynamic_rendering` / core dynamic-rendering paths.
 
 ## Generated files
 

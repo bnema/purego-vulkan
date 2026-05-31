@@ -19,7 +19,11 @@ Required commands return descriptive errors when missing. Optional extension com
 The generator reads the pinned Khronos registry at `registry/vk.xml` and emits the selected Linux compositor subset:
 
 - core instance and device enumeration;
-- command buffer, fence, semaphore, image, memory, descriptor, sampler, shader module, and pipeline-layout setup;
+- CPU-visible buffer upload primitives (`vkMapMemory`, `vkUnmapMemory`, memory binding, buffers, and barriers);
+- buffer-to-image upload commands (`vkCmdCopyBufferToImage` and image layout/access structures);
+- command buffer, fence, semaphore, image, memory, descriptor, sampler, shader module, pipeline-layout, graphics-pipeline creation, and pipeline destruction setup;
+- draw command recording (`vkCmdBindPipeline`, descriptor/vertex/index binding, `vkCmdDraw`, and `vkCmdDrawIndexed`);
+- dynamic rendering commands and structures for render-target setup without generated render-pass builders;
 - external memory fd / DMA-BUF support;
 - external semaphore fd support;
 - DRM format modifier and physical-device DRM property structures;
@@ -27,6 +31,7 @@ The generator reads the pinned Khronos registry at `registry/vk.xml` and emits t
 
 The selected extension set includes:
 
+- `VK_KHR_dynamic_rendering`
 - `VK_KHR_get_physical_device_properties2`
 - `VK_KHR_external_memory`
 - `VK_KHR_external_memory_fd`
@@ -40,9 +45,17 @@ The selected extension set includes:
 
 The generator resolves aliases, feature constants, extension offset constants, guarded extension requirements, and core/KHR promoted command fallbacks for the selected subset. Generated files are committed and checked for freshness by `go generate ./...` plus `git diff --exit-code`.
 
+## Renderer surface and render-target choice
+
+The selected renderer surface is deliberately close to Vulkan: consumers receive generated handle types, create-info structs, constants, result values, and dispatch-table function fields. That is enough for a compositor renderer to allocate host-visible staging buffers, copy pixels into images, create and destroy graphics pipelines, bind descriptors/buffers/pipelines, issue draw calls, and begin/end dynamic rendering.
+
+Render targets should use dynamic rendering (`vkCmdBeginRendering` / `vkCmdEndRendering`, or the `KHR` aliases when that is the exposed path) instead of requiring classic render-pass/framebuffer objects in this binding milestone. Dynamic rendering fits imported images and compositor-owned render-target decisions better: the consumer can choose color/depth attachments at command-record time, while this package only exposes the raw structures and commands. Optional dynamic-rendering commands may be nil if the required core version or extension is not enabled, so consumers must validate availability during device setup.
+
 ## v0.x exclusions
 
-This package intentionally avoids high-level Vulkan ownership abstractions. It does not provide swapchain management, render-pass builders, descriptor allocators, pipeline caches, scene graphs, callback-heavy debug messenger surfaces, or compositor-specific import policy. Those belong in consumer packages that can make product-specific trade-offs.
+This package intentionally avoids high-level Vulkan ownership abstractions. It does not provide swapchain management, render-pass builders, framebuffer builders, descriptor allocators, pipeline-cache policy, scene graphs, callback-heavy debug messenger surfaces, upload managers, render-graph abstractions, or compositor-specific import policy. Those belong in consumer packages that can make product-specific trade-offs.
+
+Classic render-pass/framebuffer commands and pipeline-cache commands are not part of the renderer-ready target unless already needed as parameter types (for example, `PipelineCache` as a nullable handle passed to `vkCreateGraphicsPipelines`). Prefer `VK_NULL_HANDLE` / zero pipeline cache and dynamic rendering for the current compositor path.
 
 ## Consumer integration checklist
 
@@ -50,6 +63,10 @@ This package intentionally avoids high-level Vulkan ownership abstractions. It d
 - Keep Vulkan binding code inside `purego-vulkan`.
 - Keep compositor-specific rendering, import policy, and DRM presentation inside `go-wm-poc/adapters/vulkan`.
 - Do not copy generated files into the compositor repository.
+- Upload handoff: consumer chooses memory types, staging-buffer lifetime, flush/invalidate policy, and barriers; this package supplies buffer, memory-map, bind, copy, and synchronization command bindings.
+- Pipeline handoff: consumer owns shader modules, pipeline layouts, descriptor layouts, graphics-pipeline create-info assembly, and destruction ordering; this package supplies the raw create/destroy commands and structs.
+- Draw handoff: consumer records command buffers, binds pipelines/descriptors/vertex/index buffers, and issues draw calls through the device dispatch table.
+- Render-target handoff: consumer imports or creates images, selects layouts/load-store ops/attachment formats, enables core/KHR dynamic rendering, and checks that dynamic-rendering function fields are non-nil before recording.
 - Run `make check` in this repository before updating the compositor integration.
 
 The `examples/enumerate` program is the smoke test for consumers: it initializes Vulkan, prints loader version, reports compositor-critical extension availability, creates an instance, and lists physical devices.
