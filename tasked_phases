@@ -1,0 +1,6 @@
+current_phase: phase-1
+phase-1:
+  p1-t1: checked
+  p1-t2: checked
+  p1-t3: checked
+  p1-t4: unchecked

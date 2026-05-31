@@ -180,6 +180,24 @@ type registryIndex struct {
 	featureEnums map[string]EnumDecl
 }
 
+func preferType(candidate, existing TypeDecl) bool {
+	candidateScore := typeVariantScore(candidate)
+	existingScore := typeVariantScore(existing)
+	return candidateScore > existingScore
+}
+
+func typeVariantScore(t TypeDecl) int {
+	api := strings.ToLower(t.API)
+	score := 0
+	if api == "" || strings.Contains(api, "vulkan") {
+		score += 2
+	}
+	if strings.Contains(api, "vulkansc") && !strings.Contains(api, "vulkan,") {
+		score -= 2
+	}
+	return score
+}
+
 func preferCommand(candidate, existing CommandDecl) bool {
 	candidateScore := commandVariantScore(candidate)
 	existingScore := commandVariantScore(existing)
@@ -218,6 +236,12 @@ func newIndex(reg *Registry) registryIndex {
 		featureEnums: make(map[string]EnumDecl),
 	}
 	for _, t := range reg.Types {
+		if existing, ok := idx.types[t.Name]; ok {
+			if preferType(t, existing) {
+				idx.types[t.Name] = t
+			}
+			continue
+		}
 		idx.types[t.Name] = t
 	}
 	for _, c := range reg.Commands {
@@ -713,10 +737,12 @@ func (s *selectionState) missingError() error {
 
 func (s *selectionState) buildSelected() (*SelectedRegistry, error) {
 	out := &SelectedRegistry{}
+	seenTypes := make(map[string]bool)
 	for _, decl := range s.reg.Types {
-		if !s.selectedTypes[decl.Name] {
+		if !s.selectedTypes[decl.Name] || seenTypes[decl.Name] {
 			continue
 		}
+		seenTypes[decl.Name] = true
 		out.Types = append(out.Types, s.selectType(decl))
 	}
 	for _, enum := range s.constants {
@@ -813,7 +839,7 @@ func (s *selectionState) selectType(decl TypeDecl) SelectedType {
 		GoName:       goName(decl.Name),
 		GoType:       goType,
 		Dispatchable: dispatchable,
-		Members:      slices.Clone(resolved.Members),
+		Members:      uniqueMembers(resolved.Members),
 		Source:       resolved,
 	}
 }
@@ -893,6 +919,19 @@ func goScalarType(cType string) string {
 	default:
 		return goName(cType)
 	}
+}
+
+func uniqueMembers(members []MemberDecl) []MemberDecl {
+	out := make([]MemberDecl, 0, len(members))
+	seen := make(map[string]bool, len(members))
+	for _, member := range members {
+		if seen[member.Name] {
+			continue
+		}
+		seen[member.Name] = true
+		out = append(out, member)
+	}
+	return out
 }
 
 func isGlobalCommand(name string) bool {

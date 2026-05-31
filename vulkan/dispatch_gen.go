@@ -2,6 +2,8 @@
 
 package vulkan
 
+import "unsafe"
+
 type GlobalDispatch struct {
 	CreateInstance                       func(*InstanceCreateInfo, *AllocationCallbacks, *Instance) Result
 	GetInstanceProcAddr                  func(Instance, *byte) PFN_vkVoidFunction
@@ -29,7 +31,6 @@ type InstanceDispatch struct {
 	GetPhysicalDeviceQueueFamilyProperties2KHR       func(PhysicalDevice, *uint32, *QueueFamilyProperties2)
 	GetPhysicalDeviceMemoryProperties2KHR            func(PhysicalDevice, *PhysicalDeviceMemoryProperties2)
 	GetPhysicalDeviceSparseImageFormatProperties2KHR func(PhysicalDevice, *PhysicalDeviceSparseImageFormatInfo2, *uint32, *SparseImageFormatProperties2)
-	GetPhysicalDeviceExternalBufferPropertiesKHR     func(PhysicalDevice, *PhysicalDeviceExternalBufferInfo, *ExternalBufferProperties)
 	GetPhysicalDeviceExternalSemaphorePropertiesKHR  func(PhysicalDevice, *PhysicalDeviceExternalSemaphoreInfo, *ExternalSemaphoreProperties)
 }
 
@@ -42,6 +43,12 @@ type DeviceDispatch struct {
 	DeviceWaitIdle                         func(Device) Result
 	AllocateMemory                         func(Device, *MemoryAllocateInfo, *AllocationCallbacks, *DeviceMemory) Result
 	FreeMemory                             func(Device, DeviceMemory, *AllocationCallbacks)
+	MapMemory                              func(Device, DeviceMemory, DeviceSize, DeviceSize, MemoryMapFlags, **unsafe.Pointer) Result
+	UnmapMemory                            func(Device, DeviceMemory)
+	FlushMappedMemoryRanges                func(Device, uint32, *MappedMemoryRange) Result
+	InvalidateMappedMemoryRanges           func(Device, uint32, *MappedMemoryRange) Result
+	GetBufferMemoryRequirements            func(Device, Buffer, *MemoryRequirements)
+	BindBufferMemory                       func(Device, Buffer, DeviceMemory, DeviceSize) Result
 	GetImageMemoryRequirements             func(Device, Image, *MemoryRequirements)
 	BindImageMemory                        func(Device, Image, DeviceMemory, DeviceSize) Result
 	CreateFence                            func(Device, *FenceCreateInfo, *AllocationCallbacks, *Fence) Result
@@ -50,12 +57,16 @@ type DeviceDispatch struct {
 	WaitForFences                          func(Device, uint32, *Fence, Bool32, uint64) Result
 	CreateSemaphore                        func(Device, *SemaphoreCreateInfo, *AllocationCallbacks, *Semaphore) Result
 	DestroySemaphore                       func(Device, Semaphore, *AllocationCallbacks)
+	CreateBuffer                           func(Device, *BufferCreateInfo, *AllocationCallbacks, *Buffer) Result
+	DestroyBuffer                          func(Device, Buffer, *AllocationCallbacks)
 	CreateImage                            func(Device, *ImageCreateInfo, *AllocationCallbacks, *Image) Result
 	DestroyImage                           func(Device, Image, *AllocationCallbacks)
 	CreateImageView                        func(Device, *ImageViewCreateInfo, *AllocationCallbacks, *ImageView) Result
 	DestroyImageView                       func(Device, ImageView, *AllocationCallbacks)
 	CreateShaderModule                     func(Device, *ShaderModuleCreateInfo, *AllocationCallbacks, *ShaderModule) Result
 	DestroyShaderModule                    func(Device, ShaderModule, *AllocationCallbacks)
+	CreateGraphicsPipelines                func(Device, PipelineCache, uint32, *GraphicsPipelineCreateInfo, *AllocationCallbacks, *Pipeline) Result
+	DestroyPipeline                        func(Device, Pipeline, *AllocationCallbacks)
 	CreatePipelineLayout                   func(Device, *PipelineLayoutCreateInfo, *AllocationCallbacks, *PipelineLayout) Result
 	DestroyPipelineLayout                  func(Device, PipelineLayout, *AllocationCallbacks)
 	CreateSampler                          func(Device, *SamplerCreateInfo, *AllocationCallbacks, *Sampler) Result
@@ -73,7 +84,13 @@ type DeviceDispatch struct {
 	BeginCommandBuffer                     func(CommandBuffer, *CommandBufferBeginInfo) Result
 	EndCommandBuffer                       func(CommandBuffer) Result
 	ResetCommandBuffer                     func(CommandBuffer, CommandBufferResetFlags) Result
-	TrimCommandPoolKHR                     func(Device, CommandPool, CommandPoolTrimFlags)
+	CmdBindPipeline                        func(CommandBuffer, PipelineBindPoint, Pipeline)
+	CmdBindDescriptorSets                  func(CommandBuffer, PipelineBindPoint, PipelineLayout, uint32, uint32, *DescriptorSet, uint32, *uint32)
+	CmdBindIndexBuffer                     func(CommandBuffer, Buffer, DeviceSize, IndexType)
+	CmdBindVertexBuffers                   func(CommandBuffer, uint32, uint32, *Buffer, *DeviceSize)
+	CmdDraw                                func(CommandBuffer, uint32, uint32, uint32, uint32)
+	CmdDrawIndexed                         func(CommandBuffer, uint32, uint32, uint32, int32, uint32)
+	CmdCopyBufferToImage                   func(CommandBuffer, Buffer, Image, ImageLayout, uint32, *BufferImageCopy)
 	GetMemoryFdKHR                         func(Device, *MemoryGetFdInfoKHR, *int32) Result
 	GetMemoryFdPropertiesKHR               func(Device, ExternalMemoryHandleTypeFlagBits, int32, *MemoryFdPropertiesKHR) Result
 	GetSemaphoreFdKHR                      func(Device, *SemaphoreGetFdInfoKHR, *int32) Result
@@ -85,8 +102,6 @@ type DeviceDispatch struct {
 	GetImageMemoryRequirements2            func(Device, *ImageMemoryRequirementsInfo2, *MemoryRequirements2)
 	GetImageMemoryRequirements2KHR         func(Device, *ImageMemoryRequirementsInfo2, *MemoryRequirements2)
 	GetImageSparseMemoryRequirements2KHR   func(Device, *ImageSparseMemoryRequirementsInfo2, *uint32, *SparseImageMemoryRequirements2)
-	CreateSamplerYcbcrConversionKHR        func(Device, *SamplerYcbcrConversionCreateInfo, *AllocationCallbacks, *SamplerYcbcrConversion) Result
-	DestroySamplerYcbcrConversionKHR       func(Device, SamplerYcbcrConversion, *AllocationCallbacks)
 	GetImageDrmFormatModifierPropertiesEXT func(Device, Image, *ImageDrmFormatModifierPropertiesEXT) Result
 	CmdSetEvent2KHR                        func(CommandBuffer, Event, *DependencyInfo)
 	CmdResetEvent2KHR                      func(CommandBuffer, Event, PipelineStageFlags2)
@@ -94,4 +109,8 @@ type DeviceDispatch struct {
 	CmdPipelineBarrier2KHR                 func(CommandBuffer, *DependencyInfo)
 	QueueSubmit2KHR                        func(Queue, uint32, *SubmitInfo2, Fence) Result
 	CmdWriteTimestamp2KHR                  func(CommandBuffer, PipelineStageFlags2, QueryPool, uint32)
+	CmdBeginRendering                      func(CommandBuffer, *RenderingInfo)
+	CmdBeginRenderingKHR                   func(CommandBuffer, *RenderingInfo)
+	CmdEndRendering                        func(CommandBuffer)
+	CmdEndRenderingKHR                     func(CommandBuffer)
 }

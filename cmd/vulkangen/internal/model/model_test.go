@@ -320,6 +320,70 @@ func TestSelectSkipsUnsatisfiedGuardedRequireBlocks(t *testing.T) {
 	}
 }
 
+func TestDefaultSelectionOnPinnedRegistryHasRendererReadySurface(t *testing.T) {
+	reg, err := parser.ParseFile(filepath.Join("..", "..", "..", "..", "registry", "vk.xml"))
+	if err != nil {
+		t.Fatalf("ParseFile() error = %v", err)
+	}
+	sel, err := model.Select(reg, overrides.DefaultSelection())
+	if err != nil {
+		t.Fatalf("Select() error = %v", err)
+	}
+
+	for _, name := range []string{
+		"vkCreateBuffer", "vkDestroyBuffer", "vkGetBufferMemoryRequirements", "vkBindBufferMemory",
+		"vkMapMemory", "vkUnmapMemory", "vkFlushMappedMemoryRanges", "vkInvalidateMappedMemoryRanges",
+		"vkCmdCopyBufferToImage",
+		"vkCreateGraphicsPipelines", "vkDestroyPipeline",
+		"vkCmdBindPipeline", "vkCmdBindDescriptorSets", "vkCmdBindVertexBuffers", "vkCmdBindIndexBuffer", "vkCmdDraw", "vkCmdDrawIndexed",
+		"vkCmdBeginRendering", "vkCmdEndRendering", "vkCmdBeginRenderingKHR", "vkCmdEndRenderingKHR",
+	} {
+		cmd := sel.CommandByName(name)
+		if cmd == nil {
+			t.Fatalf("renderer command %s missing", name)
+		}
+		if cmd.Dispatch != model.DispatchDevice {
+			t.Fatalf("%s dispatch = %q, want device", name, cmd.Dispatch)
+		}
+	}
+
+	for _, name := range []string{
+		"VkBuffer", "VkBufferCreateInfo", "VkBufferUsageFlags", "VkBufferUsageFlagBits", "VkMappedMemoryRange",
+		"VkBufferImageCopy", "VkImageSubresourceLayers",
+		"VkPipeline", "VkPipelineCache", "VkGraphicsPipelineCreateInfo", "VkPipelineShaderStageCreateInfo", "VkPipelineVertexInputStateCreateInfo", "VkPipelineInputAssemblyStateCreateInfo", "VkPipelineViewportStateCreateInfo", "VkPipelineRasterizationStateCreateInfo", "VkPipelineMultisampleStateCreateInfo", "VkPipelineColorBlendStateCreateInfo", "VkPipelineDynamicStateCreateInfo",
+		"VkRenderingInfo", "VkRenderingInfoKHR", "VkRenderingAttachmentInfo", "VkRenderingAttachmentInfoKHR", "VkPipelineRenderingCreateInfo", "VkPipelineRenderingCreateInfoKHR", "VkPhysicalDeviceDynamicRenderingFeatures", "VkPhysicalDeviceDynamicRenderingFeaturesKHR",
+	} {
+		if sel.TypeByName(name) == nil {
+			t.Fatalf("renderer type %s missing", name)
+		}
+	}
+
+	for _, name := range []string{
+		"VK_BUFFER_USAGE_TRANSFER_SRC_BIT", "VK_BUFFER_USAGE_TRANSFER_DST_BIT", "VK_BUFFER_USAGE_VERTEX_BUFFER_BIT", "VK_BUFFER_USAGE_INDEX_BUFFER_BIT",
+		"VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME",
+		"VK_STRUCTURE_TYPE_RENDERING_INFO", "VK_STRUCTURE_TYPE_RENDERING_INFO_KHR", "VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO", "VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR", "VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO", "VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR", "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES", "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR",
+	} {
+		if constantByName(sel, name) == nil {
+			t.Fatalf("renderer constant %s missing", name)
+		}
+	}
+	for _, name := range []string{
+		"VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME",
+		"VK_STRUCTURE_TYPE_RENDERING_INFO", "VK_STRUCTURE_TYPE_RENDERING_INFO_KHR", "VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO", "VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR", "VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO", "VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR", "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES", "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR",
+	} {
+		constant := constantByName(sel, name)
+		if constant.Value == "" {
+			t.Fatalf("renderer constant %s has empty value: %+v", name, *constant)
+		}
+	}
+
+	for _, name := range []string{"vkCreateRenderPass", "vkDestroyRenderPass", "vkCreateFramebuffer", "vkDestroyFramebuffer", "vkCmdBeginRenderPass", "vkCmdEndRenderPass"} {
+		if sel.CommandByName(name) != nil {
+			t.Fatalf("dynamic rendering selection pulled classic render-pass command %s", name)
+		}
+	}
+}
+
 func TestDefaultSelectionOnPinnedRegistryHasNoDuplicateOrBrokenAliasCommands(t *testing.T) {
 	reg, err := parser.ParseFile(filepath.Join("..", "..", "..", "..", "registry", "vk.xml"))
 	if err != nil {

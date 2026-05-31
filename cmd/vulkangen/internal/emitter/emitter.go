@@ -104,6 +104,9 @@ func goConstValue(value string) string {
 func EmitCommands(sel *model.SelectedRegistry) (string, error) {
 	var b bytes.Buffer
 	writeHeader(&b, "vulkan")
+	if commandsNeedUnsafe(sel.Commands) {
+		b.WriteString("import \"unsafe\"\n\n")
+	}
 	for _, cmd := range sel.Commands {
 		fmt.Fprintf(&b, "var %s func(%s)%s\n", rawFuncName(cmd.Name), paramsSignature(cmd.Params), resultSignature(cmd.Return))
 	}
@@ -117,6 +120,9 @@ func EmitCommands(sel *model.SelectedRegistry) (string, error) {
 func EmitDispatch(sel *model.SelectedRegistry) (string, error) {
 	var b bytes.Buffer
 	writeHeader(&b, "vulkan")
+	if commandsNeedUnsafe(sel.Commands) {
+		b.WriteString("import \"unsafe\"\n\n")
+	}
 	writeDispatchStruct(&b, "GlobalDispatch", "", commandsByDispatch(sel, model.DispatchGlobal))
 	writeDispatchStruct(&b, "InstanceDispatch", "Instance Instance", commandsByDispatch(sel, model.DispatchInstance))
 	writeDispatchStruct(&b, "DeviceDispatch", "Device Device", commandsByDispatch(sel, model.DispatchDevice))
@@ -262,6 +268,20 @@ func quotedNames(names []string) string {
 		parts = append(parts, fmt.Sprintf("%q", name))
 	}
 	return strings.Join(parts, ", ")
+}
+
+func commandsNeedUnsafe(commands []model.SelectedCommand) bool {
+	for _, cmd := range commands {
+		if cmd.Return == "void" {
+			return true
+		}
+		for _, param := range cmd.Params {
+			if param.Type == "void" {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func commandsByDispatch(sel *model.SelectedRegistry, level model.DispatchLevel) []model.SelectedCommand {

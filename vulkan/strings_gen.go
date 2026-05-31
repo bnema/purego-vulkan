@@ -6,8 +6,6 @@ func ResultString(r Result) string {
 	switch r {
 	case ErrorInvalidExternalHandleKHR:
 		return "VK_ERROR_INVALID_EXTERNAL_HANDLE_KHR"
-	case ErrorOutOfPoolMemoryKHR:
-		return "VK_ERROR_OUT_OF_POOL_MEMORY_KHR"
 	case ErrorInvalidDRMFormatModifierPlaneLayoutEXT:
 		return "VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT"
 	case Success:

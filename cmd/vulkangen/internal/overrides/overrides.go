@@ -58,6 +58,29 @@ var InitialCommands = []string{
 	"vkDestroyDescriptorPool",
 	"vkAllocateDescriptorSets",
 	"vkUpdateDescriptorSets",
+
+	// Renderer-ready low-level surface: buffer upload, transfer, graphics pipeline,
+	// draw, and dynamic rendering. Pipeline cache management commands are omitted;
+	// VkPipelineCache is still selected through vkCreateGraphicsPipelines.
+	"vkCreateBuffer",
+	"vkDestroyBuffer",
+	"vkGetBufferMemoryRequirements",
+	"vkBindBufferMemory",
+	"vkMapMemory",
+	"vkUnmapMemory",
+	"vkFlushMappedMemoryRanges",
+	"vkInvalidateMappedMemoryRanges",
+	"vkCmdCopyBufferToImage",
+	"vkCreateGraphicsPipelines",
+	"vkDestroyPipeline",
+	"vkCmdBindPipeline",
+	"vkCmdBindDescriptorSets",
+	"vkCmdBindVertexBuffers",
+	"vkCmdBindIndexBuffer",
+	"vkCmdDraw",
+	"vkCmdDrawIndexed",
+	"vkCmdBeginRendering",
+	"vkCmdEndRendering",
 }
 
 var RequiredExtensions = []string{
@@ -73,6 +96,7 @@ var RequiredExtensions = []string{
 	"VK_KHR_external_semaphore_fd",
 	"VK_KHR_synchronization2",
 	"VK_EXT_queue_family_foreign",
+	"VK_KHR_dynamic_rendering",
 }
 
 var CommandOverrides = map[string]model.CommandOverride{
@@ -90,6 +114,7 @@ func DefaultSelection() model.SelectionConfig {
 	return model.SelectionConfig{
 		Commands:         append([]string(nil), InitialCommands...),
 		Extensions:       append([]string(nil), RequiredExtensions...),
+		CoreVersions:     []string{"VK_VERSION_1_0", "VK_VERSION_1_1", "VK_VERSION_1_2"},
 		CommandOverrides: cloneCommandOverrides(),
 	}
 }

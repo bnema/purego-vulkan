@@ -4,6 +4,8 @@ package vulkan
 
 import "unsafe"
 
+type SampleMask uint32
+
 type Bool32 uint32
 
 type Flags uint32
@@ -15,6 +17,26 @@ type DeviceSize uint64
 type SamplerCreateFlags uint32
 
 type PipelineLayoutCreateFlags uint32
+
+type PipelineDepthStencilStateCreateFlags uint32
+
+type PipelineDynamicStateCreateFlags uint32
+
+type PipelineColorBlendStateCreateFlags uint32
+
+type PipelineMultisampleStateCreateFlags uint32
+
+type PipelineRasterizationStateCreateFlags uint32
+
+type PipelineViewportStateCreateFlags uint32
+
+type PipelineTessellationStateCreateFlags uint32
+
+type PipelineInputAssemblyStateCreateFlags uint32
+
+type PipelineVertexInputStateCreateFlags uint32
+
+type PipelineShaderStageCreateFlags uint32
 
 type DescriptorSetLayoutCreateFlags uint32
 
@@ -42,6 +64,10 @@ type ImageCreateFlags uint32
 
 type ImageViewCreateFlags uint32
 
+type PipelineCreateFlags uint32
+
+type ColorComponentFlags uint32
+
 type FenceCreateFlags uint32
 
 type SemaphoreCreateFlags uint32
@@ -60,6 +86,8 @@ type CommandBufferUsageFlags uint32
 
 type QueryPipelineStatisticFlags uint32
 
+type MemoryMapFlags uint32
+
 type ImageAspectFlags uint32
 
 type SparseImageFormatFlags uint32
@@ -67,6 +95,8 @@ type SparseImageFormatFlags uint32
 type PipelineStageFlags uint32
 
 type SampleCountFlags uint32
+
+type CullModeFlags uint32
 
 type DescriptorPoolCreateFlags uint32
 
@@ -80,17 +110,11 @@ type PipelineStageFlags2 uint64
 
 type PipelineStageFlags2KHR = PipelineStageFlags2
 
-type CommandPoolTrimFlags uint32
+type RenderingFlags uint32
 
-type CommandPoolTrimFlagsKHR = CommandPoolTrimFlags
+type RenderingFlagsKHR = RenderingFlags
 
 type ExternalMemoryHandleTypeFlags uint32
-
-type ExternalMemoryHandleTypeFlagsKHR = ExternalMemoryHandleTypeFlags
-
-type ExternalMemoryFeatureFlags uint32
-
-type ExternalMemoryFeatureFlagsKHR = ExternalMemoryFeatureFlags
 
 type ExternalSemaphoreHandleTypeFlags uint32
 
@@ -132,6 +156,8 @@ type ImageView uint64
 
 type ShaderModule uint64
 
+type Pipeline uint64
+
 type PipelineLayout uint64
 
 type Sampler uint64
@@ -154,13 +180,21 @@ type Framebuffer uint64
 
 type RenderPass uint64
 
-type SamplerYcbcrConversion uint64
+type PipelineCache uint64
 
-type SamplerYcbcrConversionKHR = SamplerYcbcrConversion
+type AttachmentLoadOp int32
+
+type AttachmentStoreOp int32
+
+type BlendFactor int32
+
+type BlendOp int32
 
 type BorderColor int32
 
 type SamplerCreateFlagBits int32
+
+type PipelineShaderStageCreateFlagBits int32
 
 type DescriptorSetLayoutCreateFlagBits int32
 
@@ -171,6 +205,8 @@ type DeviceQueueCreateFlagBits int32
 type BufferCreateFlagBits int32
 
 type BufferUsageFlagBits int32
+
+type ColorComponentFlagBits int32
 
 type ComponentSwizzle int32
 
@@ -184,13 +220,23 @@ type CommandBufferUsageFlagBits int32
 
 type CompareOp int32
 
+type CullModeFlagBits int32
+
 type DescriptorType int32
 
+type DynamicState int32
+
 type FenceCreateFlagBits int32
+
+type PolygonMode int32
 
 type Format int32
 
 type FormatFeatureFlagBits int32
+
+type FrontFace int32
+
+type MemoryMapFlagBits int32
 
 type ImageAspectFlagBits int32
 
@@ -210,11 +256,21 @@ type ImageViewType int32
 
 type SharingMode int32
 
+type IndexType int32
+
+type LogicOp int32
+
 type MemoryHeapFlagBits int32
 
 type MemoryPropertyFlagBits int32
 
 type PhysicalDeviceType int32
+
+type PipelineBindPoint int32
+
+type PipelineCreateFlagBits int32
+
+type PrimitiveTopology int32
 
 type QueryControlFlagBits int32
 
@@ -226,6 +282,8 @@ type Result int32
 
 type ShaderStageFlagBits int32
 
+type StencilOp int32
+
 type StructureType int32
 
 type SamplerAddressMode int32
@@ -233,6 +291,8 @@ type SamplerAddressMode int32
 type Filter int32
 
 type SamplerMipmapMode int32
+
+type VertexInputRate int32
 
 type PipelineStageFlagBits int32
 
@@ -246,6 +306,8 @@ type DependencyFlagBits int32
 
 type PipelineLayoutCreateFlagBits int32
 
+type ResolveModeFlagBits int32
+
 type AccessFlagBits2 int32
 
 type AccessFlagBits2KHR = AccessFlagBits2
@@ -254,13 +316,15 @@ type PipelineStageFlagBits2 int32
 
 type PipelineStageFlagBits2KHR = PipelineStageFlagBits2
 
+type RenderingFlagBits int32
+
+type RenderingFlagBitsKHR = RenderingFlagBits
+
+type PipelineDepthStencilStateCreateFlagBits int32
+
+type PipelineColorBlendStateCreateFlagBits int32
+
 type ExternalMemoryHandleTypeFlagBits int32
-
-type ExternalMemoryHandleTypeFlagBitsKHR = ExternalMemoryHandleTypeFlagBits
-
-type ExternalMemoryFeatureFlagBits int32
-
-type ExternalMemoryFeatureFlagBitsKHR = ExternalMemoryFeatureFlagBits
 
 type ExternalSemaphoreHandleTypeFlagBits int32
 
@@ -273,18 +337,6 @@ type ExternalSemaphoreFeatureFlagBitsKHR = ExternalSemaphoreFeatureFlagBits
 type SemaphoreImportFlagBits int32
 
 type SemaphoreImportFlagBitsKHR = SemaphoreImportFlagBits
-
-type SamplerYcbcrModelConversion int32
-
-type SamplerYcbcrModelConversionKHR = SamplerYcbcrModelConversion
-
-type SamplerYcbcrRange int32
-
-type SamplerYcbcrRangeKHR = SamplerYcbcrRange
-
-type ChromaLocation int32
-
-type ChromaLocationKHR = ChromaLocation
 
 type SubmitFlagBits int32
 
@@ -302,10 +354,40 @@ type PFN_vkFreeFunction uintptr
 
 type PFN_vkVoidFunction uintptr
 
+type Offset2D struct {
+	X int32
+	Y int32
+}
+
+type Offset3D struct {
+	X int32
+	Y int32
+	Z int32
+}
+
+type Extent2D struct {
+	Width  uint32
+	Height uint32
+}
+
 type Extent3D struct {
 	Width  uint32
 	Height uint32
 	Depth  uint32
+}
+
+type Viewport struct {
+	X        float32
+	Y        float32
+	Width    float32
+	Height   float32
+	MinDepth float32
+	MaxDepth float32
+}
+
+type Rect2D struct {
+	Offset Offset2D
+	Extent Extent2D
 }
 
 type ComponentMapping struct {
@@ -442,6 +524,14 @@ type MemoryHeap struct {
 	Flags MemoryHeapFlags
 }
 
+type MappedMemoryRange struct {
+	SType  StructureType
+	Next   unsafe.Pointer
+	Memory DeviceMemory
+	Offset DeviceSize
+	Size   DeviceSize
+}
+
 type FormatProperties struct {
 	LinearTilingFeatures  FormatFeatureFlags
 	OptimalTilingFeatures FormatFeatureFlags
@@ -493,6 +583,24 @@ type CopyDescriptorSet struct {
 	DescriptorCount uint32
 }
 
+type BufferCreateInfo struct {
+	SType                 StructureType
+	Next                  unsafe.Pointer
+	Flags                 BufferCreateFlags
+	Size                  DeviceSize
+	Usage                 BufferUsageFlags
+	SharingMode           SharingMode
+	QueueFamilyIndexCount uint32
+	QueueFamilyIndices    *uint32
+}
+
+type ImageSubresourceLayers struct {
+	AspectMask     ImageAspectFlags
+	MipLevel       uint32
+	BaseArrayLayer uint32
+	LayerCount     uint32
+}
+
 type ImageSubresourceRange struct {
 	AspectMask     ImageAspectFlags
 	BaseMipLevel   uint32
@@ -536,6 +644,15 @@ type ImageViewCreateInfo struct {
 	Format           Format
 	Components       ComponentMapping
 	SubresourceRange ImageSubresourceRange
+}
+
+type BufferImageCopy struct {
+	BufferOffset      DeviceSize
+	BufferRowLength   uint32
+	BufferImageHeight uint32
+	ImageSubresource  ImageSubresourceLayers
+	ImageOffset       Offset3D
+	ImageExtent       Extent3D
 }
 
 type ShaderModuleCreateInfo struct {
@@ -582,6 +699,182 @@ type DescriptorSetAllocateInfo struct {
 	DescriptorPool     DescriptorPool
 	DescriptorSetCount uint32
 	SetLayouts         *DescriptorSetLayout
+}
+
+type SpecializationMapEntry struct {
+	ConstantID uint32
+	Offset     uint32
+	Size       uintptr
+}
+
+type SpecializationInfo struct {
+	MapEntryCount uint32
+	MapEntries    *SpecializationMapEntry
+	DataSize      uintptr
+	Data          unsafe.Pointer
+}
+
+type PipelineShaderStageCreateInfo struct {
+	SType              StructureType
+	Next               unsafe.Pointer
+	Flags              PipelineShaderStageCreateFlags
+	Stage              ShaderStageFlagBits
+	Module             ShaderModule
+	Name               *byte
+	SpecializationInfo *SpecializationInfo
+}
+
+type VertexInputBindingDescription struct {
+	Binding   uint32
+	Stride    uint32
+	InputRate VertexInputRate
+}
+
+type VertexInputAttributeDescription struct {
+	Location uint32
+	Binding  uint32
+	Format   Format
+	Offset   uint32
+}
+
+type PipelineVertexInputStateCreateInfo struct {
+	SType                           StructureType
+	Next                            unsafe.Pointer
+	Flags                           PipelineVertexInputStateCreateFlags
+	VertexBindingDescriptionCount   uint32
+	VertexBindingDescriptions       *VertexInputBindingDescription
+	VertexAttributeDescriptionCount uint32
+	VertexAttributeDescriptions     *VertexInputAttributeDescription
+}
+
+type PipelineInputAssemblyStateCreateInfo struct {
+	SType                  StructureType
+	Next                   unsafe.Pointer
+	Flags                  PipelineInputAssemblyStateCreateFlags
+	Topology               PrimitiveTopology
+	PrimitiveRestartEnable Bool32
+}
+
+type PipelineTessellationStateCreateInfo struct {
+	SType              StructureType
+	Next               unsafe.Pointer
+	Flags              PipelineTessellationStateCreateFlags
+	PatchControlPoints uint32
+}
+
+type PipelineViewportStateCreateInfo struct {
+	SType         StructureType
+	Next          unsafe.Pointer
+	Flags         PipelineViewportStateCreateFlags
+	ViewportCount uint32
+	Viewports     *Viewport
+	ScissorCount  uint32
+	Scissors      *Rect2D
+}
+
+type PipelineRasterizationStateCreateInfo struct {
+	SType                   StructureType
+	Next                    unsafe.Pointer
+	Flags                   PipelineRasterizationStateCreateFlags
+	DepthClampEnable        Bool32
+	RasterizerDiscardEnable Bool32
+	PolygonMode             PolygonMode
+	CullMode                CullModeFlags
+	FrontFace               FrontFace
+	DepthBiasEnable         Bool32
+	DepthBiasConstantFactor float32
+	DepthBiasClamp          float32
+	DepthBiasSlopeFactor    float32
+	LineWidth               float32
+}
+
+type PipelineMultisampleStateCreateInfo struct {
+	SType                 StructureType
+	Next                  unsafe.Pointer
+	Flags                 PipelineMultisampleStateCreateFlags
+	RasterizationSamples  SampleCountFlagBits
+	SampleShadingEnable   Bool32
+	MinSampleShading      float32
+	SampleMask            *SampleMask
+	AlphaToCoverageEnable Bool32
+	AlphaToOneEnable      Bool32
+}
+
+type PipelineColorBlendAttachmentState struct {
+	BlendEnable         Bool32
+	SrcColorBlendFactor BlendFactor
+	DstColorBlendFactor BlendFactor
+	ColorBlendOp        BlendOp
+	SrcAlphaBlendFactor BlendFactor
+	DstAlphaBlendFactor BlendFactor
+	AlphaBlendOp        BlendOp
+	ColorWriteMask      ColorComponentFlags
+}
+
+type PipelineColorBlendStateCreateInfo struct {
+	SType           StructureType
+	Next            unsafe.Pointer
+	Flags           PipelineColorBlendStateCreateFlags
+	LogicOpEnable   Bool32
+	LogicOp         LogicOp
+	AttachmentCount uint32
+	Attachments     *PipelineColorBlendAttachmentState
+	BlendConstants  [4]float32
+}
+
+type PipelineDynamicStateCreateInfo struct {
+	SType             StructureType
+	Next              unsafe.Pointer
+	Flags             PipelineDynamicStateCreateFlags
+	DynamicStateCount uint32
+	DynamicStates     *DynamicState
+}
+
+type StencilOpState struct {
+	FailOp      StencilOp
+	PassOp      StencilOp
+	DepthFailOp StencilOp
+	CompareOp   CompareOp
+	CompareMask uint32
+	WriteMask   uint32
+	Reference   uint32
+}
+
+type PipelineDepthStencilStateCreateInfo struct {
+	SType                 StructureType
+	Next                  unsafe.Pointer
+	Flags                 PipelineDepthStencilStateCreateFlags
+	DepthTestEnable       Bool32
+	DepthWriteEnable      Bool32
+	DepthCompareOp        CompareOp
+	DepthBoundsTestEnable Bool32
+	StencilTestEnable     Bool32
+	Front                 StencilOpState
+	Back                  StencilOpState
+	MinDepthBounds        float32
+	MaxDepthBounds        float32
+}
+
+type GraphicsPipelineCreateInfo struct {
+	SType              StructureType
+	Next               unsafe.Pointer
+	Flags              PipelineCreateFlags
+	StageCount         uint32
+	Stages             *PipelineShaderStageCreateInfo
+	VertexInputState   *PipelineVertexInputStateCreateInfo
+	InputAssemblyState *PipelineInputAssemblyStateCreateInfo
+	TessellationState  *PipelineTessellationStateCreateInfo
+	ViewportState      *PipelineViewportStateCreateInfo
+	RasterizationState *PipelineRasterizationStateCreateInfo
+	MultisampleState   *PipelineMultisampleStateCreateInfo
+	DepthStencilState  *PipelineDepthStencilStateCreateInfo
+	ColorBlendState    *PipelineColorBlendStateCreateInfo
+	DynamicState       *PipelineDynamicStateCreateInfo
+	Layout             PipelineLayout
+	RenderPass         RenderPass
+	Subpass            uint32
+	BasePipelineHandle Pipeline
+	BasePipelineIndex  int32
 }
 
 type PushConstantRange struct {
@@ -652,6 +945,22 @@ type CommandBufferBeginInfo struct {
 	Next            unsafe.Pointer
 	Flags           CommandBufferUsageFlags
 	InheritanceInfo *CommandBufferInheritanceInfo
+}
+
+type ClearColorValue struct {
+	Float32 [4]float32
+	Int32   [4]int32
+	Uint32  [4]uint32
+}
+
+type ClearDepthStencilValue struct {
+	Depth   float32
+	Stencil uint32
+}
+
+type ClearValue struct {
+	Color        ClearColorValue
+	DepthStencil ClearDepthStencilValue
 }
 
 type FenceCreateInfo struct {
@@ -933,48 +1242,6 @@ type PhysicalDeviceSparseImageFormatInfo2 struct {
 
 type PhysicalDeviceSparseImageFormatInfo2KHR = PhysicalDeviceSparseImageFormatInfo2
 
-type ExternalMemoryProperties struct {
-	ExternalMemoryFeatures        ExternalMemoryFeatureFlags
-	ExportFromImportedHandleTypes ExternalMemoryHandleTypeFlags
-	CompatibleHandleTypes         ExternalMemoryHandleTypeFlags
-}
-
-type ExternalMemoryPropertiesKHR = ExternalMemoryProperties
-
-type PhysicalDeviceExternalImageFormatInfo struct {
-	SType      StructureType
-	Next       unsafe.Pointer
-	HandleType ExternalMemoryHandleTypeFlagBits
-}
-
-type PhysicalDeviceExternalImageFormatInfoKHR = PhysicalDeviceExternalImageFormatInfo
-
-type ExternalImageFormatProperties struct {
-	SType                    StructureType
-	Next                     unsafe.Pointer
-	ExternalMemoryProperties ExternalMemoryProperties
-}
-
-type ExternalImageFormatPropertiesKHR = ExternalImageFormatProperties
-
-type PhysicalDeviceExternalBufferInfo struct {
-	SType      StructureType
-	Next       unsafe.Pointer
-	Flags      BufferCreateFlags
-	Usage      BufferUsageFlags
-	HandleType ExternalMemoryHandleTypeFlagBits
-}
-
-type PhysicalDeviceExternalBufferInfoKHR = PhysicalDeviceExternalBufferInfo
-
-type ExternalBufferProperties struct {
-	SType                    StructureType
-	Next                     unsafe.Pointer
-	ExternalMemoryProperties ExternalMemoryProperties
-}
-
-type ExternalBufferPropertiesKHR = ExternalBufferProperties
-
 type PhysicalDeviceIDProperties struct {
 	SType           StructureType
 	Next            unsafe.Pointer
@@ -1133,70 +1400,6 @@ type SparseImageMemoryRequirements2 struct {
 
 type SparseImageMemoryRequirements2KHR = SparseImageMemoryRequirements2
 
-type SamplerYcbcrConversionInfo struct {
-	SType      StructureType
-	Next       unsafe.Pointer
-	Conversion SamplerYcbcrConversion
-}
-
-type SamplerYcbcrConversionInfoKHR = SamplerYcbcrConversionInfo
-
-type SamplerYcbcrConversionCreateInfo struct {
-	SType                       StructureType
-	Next                        unsafe.Pointer
-	Format                      Format
-	YcbcrModel                  SamplerYcbcrModelConversion
-	YcbcrRange                  SamplerYcbcrRange
-	Components                  ComponentMapping
-	XChromaOffset               ChromaLocation
-	YChromaOffset               ChromaLocation
-	ChromaFilter                Filter
-	ForceExplicitReconstruction Bool32
-}
-
-type SamplerYcbcrConversionCreateInfoKHR = SamplerYcbcrConversionCreateInfo
-
-type BindImagePlaneMemoryInfo struct {
-	SType       StructureType
-	Next        unsafe.Pointer
-	PlaneAspect ImageAspectFlagBits
-}
-
-type BindImagePlaneMemoryInfoKHR = BindImagePlaneMemoryInfo
-
-type ImagePlaneMemoryRequirementsInfo struct {
-	SType       StructureType
-	Next        unsafe.Pointer
-	PlaneAspect ImageAspectFlagBits
-}
-
-type ImagePlaneMemoryRequirementsInfoKHR = ImagePlaneMemoryRequirementsInfo
-
-type PhysicalDeviceSamplerYcbcrConversionFeatures struct {
-	SType                  StructureType
-	Next                   unsafe.Pointer
-	SamplerYcbcrConversion Bool32
-}
-
-type PhysicalDeviceSamplerYcbcrConversionFeaturesKHR = PhysicalDeviceSamplerYcbcrConversionFeatures
-
-type SamplerYcbcrConversionImageFormatProperties struct {
-	SType                               StructureType
-	Next                                unsafe.Pointer
-	CombinedImageSamplerDescriptorCount uint32
-}
-
-type SamplerYcbcrConversionImageFormatPropertiesKHR = SamplerYcbcrConversionImageFormatProperties
-
-type ImageFormatListCreateInfo struct {
-	SType           StructureType
-	Next            unsafe.Pointer
-	ViewFormatCount uint32
-	ViewFormats     *Format
-}
-
-type ImageFormatListCreateInfoKHR = ImageFormatListCreateInfo
-
 type DrmFormatModifierPropertiesListEXT struct {
 	SType                       StructureType
 	Next                        unsafe.Pointer
@@ -1350,3 +1553,67 @@ type PhysicalDeviceDrmPropertiesEXT struct {
 	RenderMajor  int64
 	RenderMinor  int64
 }
+
+type PipelineRenderingCreateInfo struct {
+	SType                   StructureType
+	Next                    unsafe.Pointer
+	ViewMask                uint32
+	ColorAttachmentCount    uint32
+	ColorAttachmentFormats  *Format
+	DepthAttachmentFormat   Format
+	StencilAttachmentFormat Format
+}
+
+type PipelineRenderingCreateInfoKHR = PipelineRenderingCreateInfo
+
+type RenderingInfo struct {
+	SType                StructureType
+	Next                 unsafe.Pointer
+	Flags                RenderingFlags
+	RenderArea           Rect2D
+	LayerCount           uint32
+	ViewMask             uint32
+	ColorAttachmentCount uint32
+	ColorAttachments     *RenderingAttachmentInfo
+	DepthAttachment      *RenderingAttachmentInfo
+	StencilAttachment    *RenderingAttachmentInfo
+}
+
+type RenderingInfoKHR = RenderingInfo
+
+type RenderingAttachmentInfo struct {
+	SType              StructureType
+	Next               unsafe.Pointer
+	ImageView          ImageView
+	ImageLayout        ImageLayout
+	ResolveMode        ResolveModeFlagBits
+	ResolveImageView   ImageView
+	ResolveImageLayout ImageLayout
+	LoadOp             AttachmentLoadOp
+	StoreOp            AttachmentStoreOp
+	ClearValue         ClearValue
+}
+
+type RenderingAttachmentInfoKHR = RenderingAttachmentInfo
+
+type PhysicalDeviceDynamicRenderingFeatures struct {
+	SType            StructureType
+	Next             unsafe.Pointer
+	DynamicRendering Bool32
+}
+
+type PhysicalDeviceDynamicRenderingFeaturesKHR = PhysicalDeviceDynamicRenderingFeatures
+
+type CommandBufferInheritanceRenderingInfo struct {
+	SType                   StructureType
+	Next                    unsafe.Pointer
+	Flags                   RenderingFlags
+	ViewMask                uint32
+	ColorAttachmentCount    uint32
+	ColorAttachmentFormats  *Format
+	DepthAttachmentFormat   Format
+	StencilAttachmentFormat Format
+	RasterizationSamples    SampleCountFlagBits
+}
+
+type CommandBufferInheritanceRenderingInfoKHR = CommandBufferInheritanceRenderingInfo
