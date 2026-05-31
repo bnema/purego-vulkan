@@ -280,6 +280,15 @@ func TestDefaultSelectionOnPinnedRegistryHasNoDuplicateOrBrokenAliasCommands(t *
 			t.Fatalf("feature constant %s missing from default selected constants", name)
 		}
 	}
+	for _, name := range []string{"VK_STRUCTURE_TYPE_IMPORT_MEMORY_FD_INFO_KHR", "VK_STRUCTURE_TYPE_MEMORY_FD_PROPERTIES_KHR", "VK_STRUCTURE_TYPE_DRM_FORMAT_MODIFIER_PROPERTIES_LIST_EXT"} {
+		constant := constantByName(sel, name)
+		if constant == nil {
+			t.Fatalf("extension offset constant %s missing", name)
+		}
+		if constant.Value == "" {
+			t.Fatalf("extension offset constant %s has empty value: %+v", name, *constant)
+		}
+	}
 
 	for _, name := range []string{"vkGetPhysicalDeviceProperties2KHR", "vkGetPhysicalDeviceFeatures2KHR", "vkGetPhysicalDeviceQueueFamilyProperties2KHR"} {
 		cmd := sel.CommandByName(name)

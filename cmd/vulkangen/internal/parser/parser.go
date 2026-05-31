@@ -272,12 +272,16 @@ func (f xmlFeature) toModel() model.FeatureDecl {
 func (e xmlExtension) toModel() model.ExtensionDecl {
 	decl := model.ExtensionDecl{Name: e.Name, Number: e.Number, Type: e.Type, Depends: e.Depends, Supported: e.Supported, Platform: e.Platform}
 	for _, req := range e.Requires {
-		decl.Requires = append(decl.Requires, req.toModel())
+		decl.Requires = append(decl.Requires, req.toModelWithExtNumber(e.Number))
 	}
 	return decl
 }
 
 func (r xmlRequire) toModel() model.RequireDecl {
+	return r.toModelWithExtNumber("")
+}
+
+func (r xmlRequire) toModelWithExtNumber(extNumber string) model.RequireDecl {
 	decl := model.RequireDecl{Depends: r.Depends}
 	for _, ref := range r.Types {
 		if ref.Name != "" {
@@ -290,7 +294,11 @@ func (r xmlRequire) toModel() model.RequireDecl {
 		}
 	}
 	for _, e := range r.Enums {
-		decl.Enums = append(decl.Enums, e.toModel())
+		enum := e.toModel()
+		if enum.ExtNumber == "" {
+			enum.ExtNumber = extNumber
+		}
+		decl.Enums = append(decl.Enums, enum)
 	}
 	return decl
 }
