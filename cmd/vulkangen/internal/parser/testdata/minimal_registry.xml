@@ -6,12 +6,16 @@
     <type category="handle" parent="VkDevice"><type>VK_DEFINE_NON_DISPATCHABLE_HANDLE</type>(<name>VkImage</name>)</type>
     <type category="basetype">typedef <type>uint32_t</type> <name>VkBool32</name>;</type>
     <type category="basetype">typedef <type>int32_t</type> <name>VkResult</name>;</type>
+    <type category="basetype" name="VkAccessFlags2KHR" alias="VkAccessFlags2"/>
     <type category="enum" name="VkStructureType"/>
     <type category="struct" name="VkInstanceCreateInfo">
       <member values="VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO"><type>VkStructureType</type> <name>sType</name></member>
       <member optional="true">const <type>void</type>* <name>pNext</name></member>
       <member><type>uint32_t</type> <name>enabledExtensionCount</name></member>
       <member len="enabledExtensionCount">const <type>char</type>* const* <name>ppEnabledExtensionNames</name></member>
+    </type>
+    <type category="struct" name="VkTransformMatrixKHR">
+      <member><type>float</type> <name>matrix</name>[3][4]</member>
     </type>
   </types>
   <enums name="VkResult" type="enum">
@@ -25,11 +29,12 @@
       <param optional="true">const <type>VkAllocationCallbacks</type>* <name>pAllocator</name></param>
       <param><type>VkInstance</type>* <name>pInstance</name></param>
     </command>
-    <command>
+    <command api="vulkan" export="vulkan">
       <proto><type>void</type> <name>vkGetPhysicalDeviceProperties</name></proto>
       <param><type>VkPhysicalDevice</type> <name>physicalDevice</name></param>
       <param><type>VkPhysicalDeviceProperties</type>* <name>pProperties</name></param>
     </command>
+    <command name="vkGetPhysicalDeviceProperties2KHR" alias="vkGetPhysicalDeviceProperties2"/>
   </commands>
   <feature name="VK_VERSION_1_0" number="1.0" api="vulkan">
     <require>
@@ -39,6 +44,11 @@
     </require>
   </feature>
   <extensions>
+    <extension name="VK_EXT_external_memory_dma_buf" number="126" type="device" depends="VK_KHR_external_memory_fd" supported="vulkan">
+      <require>
+        <enum bitpos="9" extends="VkExternalMemoryHandleTypeFlagBits" name="VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT"/>
+      </require>
+    </extension>
     <extension name="VK_KHR_external_memory_fd" number="75" type="device" supported="vulkan">
       <require>
         <enum value="&quot;VK_KHR_external_memory_fd&quot;" name="VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME"/>

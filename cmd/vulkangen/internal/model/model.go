@@ -41,6 +41,7 @@ type TypeDecl struct {
 	Category      string
 	Type          string
 	Alias         string
+	API           string
 	Requires      string
 	Bitvalues     string
 	Parent        string
@@ -57,6 +58,7 @@ type MemberDecl struct {
 	Const        bool
 	PointerDepth int
 	ArrayLen     string
+	ArrayLens    []string
 	Len          string
 	Optional     string
 	Values       string
@@ -83,6 +85,8 @@ type CommandDecl struct {
 	Name         string
 	Return       string
 	Alias        string
+	API          string
+	Export       string
 	SuccessCodes string
 	ErrorCodes   string
 	Params       []ParamDecl
@@ -95,6 +99,7 @@ type ParamDecl struct {
 	Const        bool
 	PointerDepth int
 	ArrayLen     string
+	ArrayLens    []string
 	Len          string
 	Optional     string
 }

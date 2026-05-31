@@ -12,8 +12,8 @@ func TestParseRegistryFixture(t *testing.T) {
 		t.Fatalf("ParseFile() error = %v", err)
 	}
 
-	if len(reg.Types) != 7 {
-		t.Fatalf("types = %d, want 7", len(reg.Types))
+	if len(reg.Types) != 9 {
+		t.Fatalf("types = %d, want 9", len(reg.Types))
 	}
 	instance := reg.TypeByName("VkInstance")
 	if instance == nil {
@@ -63,10 +63,23 @@ func TestParseRegistryFixture(t *testing.T) {
 	if len(reg.Features) != 1 || reg.Features[0].Name != "VK_VERSION_1_0" {
 		t.Fatalf("features = %+v", reg.Features)
 	}
-	if len(reg.Extensions) != 1 || reg.Extensions[0].Name != "VK_KHR_external_memory_fd" {
+	aliasType := reg.TypeByName("VkAccessFlags2KHR")
+	if aliasType == nil || aliasType.Alias != "VkAccessFlags2" {
+		t.Fatalf("alias type parsed as %+v", aliasType)
+	}
+	matrix := reg.TypeByName("VkTransformMatrixKHR")
+	if matrix == nil || len(matrix.Members) != 1 || len(matrix.Members[0].ArrayLens) != 2 || matrix.Members[0].ArrayLens[0] != "3" || matrix.Members[0].ArrayLens[1] != "4" {
+		t.Fatalf("matrix member parsed as %+v", matrix)
+	}
+	aliasCommand := reg.CommandByName("vkGetPhysicalDeviceProperties2KHR")
+	if aliasCommand == nil || aliasCommand.Alias != "vkGetPhysicalDeviceProperties2" {
+		t.Fatalf("alias command parsed as %+v", aliasCommand)
+	}
+
+	if len(reg.Extensions) != 2 || reg.Extensions[1].Name != "VK_KHR_external_memory_fd" {
 		t.Fatalf("extensions = %+v", reg.Extensions)
 	}
-	ext := reg.Extensions[0]
+	ext := reg.Extensions[1]
 	if ext.Type != "device" || len(ext.Requires) != 1 || ext.Requires[0].Commands[0] != "vkGetMemoryFdKHR" {
 		t.Fatalf("extension parsed as %+v", ext)
 	}

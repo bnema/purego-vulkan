@@ -44,6 +44,7 @@ type xmlType struct {
 	Category      string      `xml:"category,attr"`
 	NameAttr      string      `xml:"name,attr"`
 	Alias         string      `xml:"alias,attr"`
+	API           string      `xml:"api,attr"`
 	Requires      string      `xml:"requires,attr"`
 	Bitvalues     string      `xml:"bitvalues,attr"`
 	Parent        string      `xml:"parent,attr"`
@@ -84,6 +85,8 @@ type xmlCommands struct {
 type xmlCommand struct {
 	NameAttr     string     `xml:"name,attr"`
 	Alias        string     `xml:"alias,attr"`
+	API          string     `xml:"api,attr"`
+	Export       string     `xml:"export,attr"`
 	SuccessCodes string     `xml:"successcodes,attr"`
 	ErrorCodes   string     `xml:"errorcodes,attr"`
 	Proto        xmlProto   `xml:"proto"`
@@ -122,10 +125,10 @@ type xmlExtension struct {
 }
 
 type xmlRequire struct {
-	Depends  string       `xml:"depends,attr"`
-	Types    []xmlRef     `xml:"type"`
-	Commands []xmlRef     `xml:"command"`
-	Enums    []xmlEnum    `xml:"enum"`
+	Depends  string    `xml:"depends,attr"`
+	Types    []xmlRef  `xml:"type"`
+	Commands []xmlRef  `xml:"command"`
+	Enums    []xmlEnum `xml:"enum"`
 }
 
 type xmlRef struct {
@@ -165,6 +168,7 @@ func (t xmlType) toModel() model.TypeDecl {
 		Category:      t.Category,
 		Type:          typed.Type,
 		Alias:         t.Alias,
+		API:           t.API,
 		Requires:      t.Requires,
 		Bitvalues:     t.Bitvalues,
 		Parent:        t.Parent,
@@ -193,6 +197,7 @@ func (m xmlMember) toModel() model.MemberDecl {
 		Const:        t.Const,
 		PointerDepth: t.PointerDepth,
 		ArrayLen:     t.ArrayLen,
+		ArrayLens:    t.ArrayLens,
 		Len:          m.Len,
 		Optional:     m.Optional,
 		Values:       m.Values,
@@ -225,6 +230,8 @@ func (c xmlCommand) toModel() model.CommandDecl {
 		Name:         proto.Name,
 		Return:       proto.Type,
 		Alias:        c.Alias,
+		API:          c.API,
+		Export:       c.Export,
 		SuccessCodes: c.SuccessCodes,
 		ErrorCodes:   c.ErrorCodes,
 	}
@@ -246,6 +253,7 @@ func (p xmlParam) toModel() model.ParamDecl {
 		Const:        t.Const,
 		PointerDepth: t.PointerDepth,
 		ArrayLen:     t.ArrayLen,
+		ArrayLens:    t.ArrayLens,
 		Len:          p.Len,
 		Optional:     p.Optional,
 	}
@@ -292,13 +300,15 @@ type typedElement struct {
 	Const        bool
 	PointerDepth int
 	ArrayLen     string
+	ArrayLens    []string
 }
 
 var (
 	typeRE       = regexp.MustCompile(`<type>([^<]+)</type>`)
 	nameRE       = regexp.MustCompile(`<name>([^<]+)</name>`)
 	tagRE        = regexp.MustCompile(`<[^>]+>`)
-	arrayRE      = regexp.MustCompile(`<name>[^<]+</name>\s*\[([^\]]+)\]`)
+	arrayRE      = regexp.MustCompile(`<name>[^<]+</name>((?:\s*\[[^\]]+\])+)`)
+	arrayDimRE   = regexp.MustCompile(`\[([^\]]+)\]`)
 	spaceRE      = regexp.MustCompile(`\s+`)
 	pointerStarR = regexp.MustCompile(`\*`)
 )
@@ -315,7 +325,14 @@ func parseTypedElement(innerXML, nameAttr string) typedElement {
 		out.Name = nameAttr
 	}
 	if m := arrayRE.FindStringSubmatch(innerXML); len(m) == 2 {
-		out.ArrayLen = strings.TrimSpace(m[1])
+		for _, dim := range arrayDimRE.FindAllStringSubmatch(m[1], -1) {
+			if len(dim) == 2 {
+				out.ArrayLens = append(out.ArrayLens, strings.TrimSpace(dim[1]))
+			}
+		}
+		if len(out.ArrayLens) > 0 {
+			out.ArrayLen = out.ArrayLens[0]
+		}
 	}
 
 	raw := tagRE.ReplaceAllString(innerXML, " ")

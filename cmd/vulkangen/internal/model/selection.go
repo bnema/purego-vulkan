@@ -3,7 +3,9 @@ package model
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"slices"
+	"strings"
 )
 
 type DispatchLevel string
@@ -126,30 +128,7 @@ func Select(reg *Registry, cfg SelectionConfig) (*SelectedRegistry, error) {
 		state.addCommand(name, cfg.CommandOverrides[name].Optional, "configured command")
 	}
 	for _, name := range cfg.Extensions {
-		ext, ok := idx.extensions[name]
-		if !ok {
-			state.addMissing("extension", name, "configured extension")
-			continue
-		}
-		if ext.Platform != "" || ext.Supported == "disabled" {
-			continue
-		}
-		state.selectedExts[name] = true
-		for _, req := range ext.Requires {
-			for _, typeName := range req.Types {
-				state.addType(typeName, "extension "+name)
-			}
-			for _, cmdName := range req.Commands {
-				if _, ok := idx.commands[cmdName]; !ok {
-					state.addMissing("command", cmdName, "extension "+name)
-					continue
-				}
-				state.addCommand(cmdName, true, "extension "+name)
-			}
-			for _, enum := range req.Enums {
-				state.addConstant(enum, enum.Extends)
-			}
-		}
+		state.addExtension(name, true, "configured extension")
 	}
 
 	for len(state.typeQueue) > 0 {
@@ -177,10 +156,39 @@ func Select(reg *Registry, cfg SelectionConfig) (*SelectedRegistry, error) {
 }
 
 type registryIndex struct {
-	types      map[string]TypeDecl
-	commands   map[string]CommandDecl
-	extensions map[string]ExtensionDecl
-	enumGroups map[string]EnumGroup
+	types        map[string]TypeDecl
+	commands     map[string]CommandDecl
+	commandOrder []string
+	extensions   map[string]ExtensionDecl
+	enumGroups   map[string]EnumGroup
+}
+
+func preferCommand(candidate, existing CommandDecl) bool {
+	candidateScore := commandVariantScore(candidate)
+	existingScore := commandVariantScore(existing)
+	return candidateScore > existingScore
+}
+
+func commandVariantScore(cmd CommandDecl) int {
+	api := strings.ToLower(cmd.API)
+	export := strings.ToLower(cmd.Export)
+	score := 0
+	if api == "" || strings.Contains(api, "vulkan") {
+		score += 2
+	}
+	if strings.Contains(api, "vulkansc") && !strings.Contains(api, "vulkan,") {
+		score -= 2
+	}
+	if export == "" || strings.Contains(export, "vulkan") {
+		score++
+	}
+	if strings.Contains(export, "vulkansc") && !strings.Contains(export, "vulkan,") {
+		score -= 2
+	}
+	if cmd.Return != "" || len(cmd.Params) > 0 {
+		score++
+	}
+	return score
 }
 
 func newIndex(reg *Registry) registryIndex {
@@ -194,7 +202,14 @@ func newIndex(reg *Registry) registryIndex {
 		idx.types[t.Name] = t
 	}
 	for _, c := range reg.Commands {
+		if existing, ok := idx.commands[c.Name]; ok {
+			if preferCommand(c, existing) {
+				idx.commands[c.Name] = c
+			}
+			continue
+		}
 		idx.commands[c.Name] = c
+		idx.commandOrder = append(idx.commandOrder, c.Name)
 	}
 	for _, e := range reg.Extensions {
 		idx.extensions[e.Name] = e
@@ -233,6 +248,62 @@ func (s *selectionState) addType(name, context string) {
 	s.typeQueue = append(s.typeQueue, name)
 }
 
+var extensionDependencyRE = regexp.MustCompile(`VK_[A-Z0-9]+_[A-Za-z0-9_]+`)
+
+func extensionDepends(expr string) []string {
+	if expr == "" {
+		return nil
+	}
+	matches := extensionDependencyRE.FindAllString(expr, -1)
+	seen := make(map[string]bool, len(matches))
+	deps := make([]string, 0, len(matches))
+	for _, match := range matches {
+		if strings.HasPrefix(match, "VK_VERSION_") || seen[match] {
+			continue
+		}
+		seen[match] = true
+		deps = append(deps, match)
+	}
+	return deps
+}
+
+func (s *selectionState) addExtension(name string, optionalCommands bool, context string) {
+	ext, ok := s.idx.extensions[name]
+	if !ok {
+		s.addMissing("extension", name, context)
+		return
+	}
+	if ext.Platform != "" || ext.Supported == "disabled" {
+		return
+	}
+	if s.selectedExts[name] {
+		return
+	}
+	s.selectedExts[name] = true
+
+	for _, depName := range extensionDepends(ext.Depends) {
+		s.addExtension(depName, optionalCommands, "dependency of extension "+name)
+	}
+	for _, req := range ext.Requires {
+		for _, depName := range extensionDepends(req.Depends) {
+			s.addExtension(depName, optionalCommands, "dependency of extension "+name)
+		}
+		for _, typeName := range req.Types {
+			s.addType(typeName, "extension "+name)
+		}
+		for _, cmdName := range req.Commands {
+			if _, ok := s.idx.commands[cmdName]; !ok {
+				s.addMissing("command", cmdName, "extension "+name)
+				continue
+			}
+			s.addCommand(cmdName, optionalCommands, "extension "+name)
+		}
+		for _, enum := range req.Enums {
+			s.addConstant(enum, enum.Extends)
+		}
+	}
+}
+
 func (s *selectionState) addCommand(name string, optional bool, context string) {
 	if s.selectedCommands[name] {
 		if optional {
@@ -240,7 +311,7 @@ func (s *selectionState) addCommand(name string, optional bool, context string) 
 		}
 		return
 	}
-	cmd, ok := s.idx.commands[name]
+	cmd, ok := s.resolveCommand(name)
 	if !ok {
 		s.addMissing("command", name, context)
 		return
@@ -304,13 +375,17 @@ func (s *selectionState) buildSelected() (*SelectedRegistry, error) {
 		if !s.selectedTypes[decl.Name] {
 			continue
 		}
-		out.Types = append(out.Types, selectType(decl))
+		out.Types = append(out.Types, s.selectType(decl))
 	}
 	for _, enum := range s.constants {
 		out.Constants = append(out.Constants, SelectedConstant{Name: enum.Name, Value: enum.Value, Extends: enum.Extends, Source: enum})
 	}
-	for _, decl := range s.reg.Commands {
-		if !s.selectedCommands[decl.Name] {
+	for _, name := range s.idx.commandOrder {
+		if !s.selectedCommands[name] {
+			continue
+		}
+		decl, ok := s.resolveCommand(name)
+		if !ok {
 			continue
 		}
 		dispatch, err := s.dispatchFor(decl)
@@ -342,6 +417,25 @@ func (s *selectionState) buildSelected() (*SelectedRegistry, error) {
 	return out, nil
 }
 
+func (s *selectionState) resolveCommand(name string) (CommandDecl, bool) {
+	cmd, ok := s.idx.commands[name]
+	if !ok {
+		return CommandDecl{}, false
+	}
+	if cmd.Alias == "" || (cmd.Return != "" || len(cmd.Params) > 0) {
+		return cmd, true
+	}
+	target, ok := s.resolveCommand(cmd.Alias)
+	if !ok {
+		return CommandDecl{}, false
+	}
+	target.Name = cmd.Name
+	target.Alias = cmd.Alias
+	target.API = cmd.API
+	target.Export = cmd.Export
+	return target, true
+}
+
 func (s *selectionState) dispatchFor(cmd CommandDecl) (DispatchLevel, error) {
 	if ov := s.cfg.CommandOverrides[cmd.Name]; ov.Dispatch != "" {
 		return ov.Dispatch, nil
@@ -368,8 +462,8 @@ func (s *selectionState) dispatchFor(cmd CommandDecl) (DispatchLevel, error) {
 	return DispatchGlobal, nil
 }
 
-func selectType(decl TypeDecl) SelectedType {
-	goType, dispatchable := goTypeFor(decl)
+func (s *selectionState) selectType(decl TypeDecl) SelectedType {
+	goType, dispatchable := s.goTypeFor(decl, nil)
 	return SelectedType{
 		Name:         decl.Name,
 		Category:     decl.Category,
@@ -381,7 +475,18 @@ func selectType(decl TypeDecl) SelectedType {
 	}
 }
 
-func goTypeFor(decl TypeDecl) (string, bool) {
+func (s *selectionState) goTypeFor(decl TypeDecl, seen map[string]bool) (string, bool) {
+	if decl.Alias != "" && (decl.Type == "" || goScalarType(decl.Type) == decl.Type) {
+		if seen == nil {
+			seen = make(map[string]bool)
+		}
+		if !seen[decl.Name] {
+			seen[decl.Name] = true
+			if target, ok := s.idx.types[decl.Alias]; ok {
+				return s.goTypeFor(target, seen)
+			}
+		}
+	}
 	if decl.Category == "handle" {
 		if decl.Type == "VK_DEFINE_HANDLE" {
 			return "uintptr", true
@@ -435,7 +540,8 @@ func isBuiltinType(name string) bool {
 	switch name {
 	case "", "void", "char", "int", "float", "double", "size_t",
 		"uint8_t", "uint16_t", "uint32_t", "uint64_t",
-		"int8_t", "int16_t", "int32_t", "int64_t":
+		"int8_t", "int16_t", "int32_t", "int64_t",
+		"VkFlags", "VkFlags64", "VkDeviceSize":
 		return true
 	default:
 		return false

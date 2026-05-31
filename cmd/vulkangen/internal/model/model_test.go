@@ -1,10 +1,12 @@
 package model_test
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/bnema/purego-vulkan/cmd/vulkangen/internal/model"
 	"github.com/bnema/purego-vulkan/cmd/vulkangen/internal/overrides"
+	"github.com/bnema/purego-vulkan/cmd/vulkangen/internal/parser"
 )
 
 func TestNormalizeClassifiesDispatchableAndNonDispatchableHandles(t *testing.T) {
@@ -76,6 +78,71 @@ func TestSelectReportsMissingConfiguredCommandsAndDependencies(t *testing.T) {
 	}
 }
 
+func TestSelectResolvesAliasCommandsAndTypes(t *testing.T) {
+	reg := testRegistry()
+	sel, err := model.Select(reg, model.SelectionConfig{Extensions: []string{"VK_KHR_get_physical_device_properties2"}})
+	if err != nil {
+		t.Fatalf("Select() error = %v", err)
+	}
+
+	aliasCmd := sel.CommandByName("vkGetPhysicalDeviceProperties2KHR")
+	if aliasCmd == nil {
+		t.Fatal("vkGetPhysicalDeviceProperties2KHR missing")
+	}
+	if aliasCmd.Return != "void" || len(aliasCmd.Params) != 2 {
+		t.Fatalf("alias command signature = return %q params %+v", aliasCmd.Return, aliasCmd.Params)
+	}
+	if aliasCmd.Dispatch != model.DispatchInstance {
+		t.Fatalf("alias command dispatch = %q, want instance", aliasCmd.Dispatch)
+	}
+
+	aliasType := sel.TypeByName("VkAccessFlags2KHR")
+	if aliasType == nil {
+		t.Fatal("VkAccessFlags2KHR missing")
+	}
+	if aliasType.GoType != "uint64" {
+		t.Fatalf("VkAccessFlags2KHR GoType = %q, want uint64", aliasType.GoType)
+	}
+}
+
+func TestSelectIncludesExtensionDependsClosure(t *testing.T) {
+	reg := testRegistry()
+	sel, err := model.Select(reg, model.SelectionConfig{Extensions: []string{"VK_EXT_external_memory_dma_buf"}})
+	if err != nil {
+		t.Fatalf("Select() error = %v", err)
+	}
+	if sel.ExtensionByName("VK_EXT_external_memory_dma_buf") == nil {
+		t.Fatal("VK_EXT_external_memory_dma_buf missing")
+	}
+	if sel.ExtensionByName("VK_KHR_external_memory_fd") == nil {
+		t.Fatal("dependent VK_KHR_external_memory_fd extension missing")
+	}
+	if sel.CommandByName("vkGetMemoryFdKHR") == nil {
+		t.Fatal("dependent extension command vkGetMemoryFdKHR missing")
+	}
+}
+
+func TestSelectFiltersDuplicateCommandVariants(t *testing.T) {
+	reg := testRegistry()
+	sel, err := model.Select(reg, model.SelectionConfig{Commands: []string{"vkCreateDevice"}})
+	if err != nil {
+		t.Fatalf("Select() error = %v", err)
+	}
+	var count int
+	for _, cmd := range sel.Commands {
+		if cmd.Name == "vkCreateDevice" {
+			count++
+		}
+	}
+	if count != 1 {
+		t.Fatalf("vkCreateDevice selected %d times, want 1", count)
+	}
+	cmd := sel.CommandByName("vkCreateDevice")
+	if cmd == nil || cmd.Dispatch != model.DispatchInstance || len(cmd.Params) != 3 {
+		t.Fatalf("vkCreateDevice selected as %+v", cmd)
+	}
+}
+
 func TestOverridesMarkOptionalExtensionCommands(t *testing.T) {
 	reg := testRegistry()
 	cfg := model.SelectionConfig{
@@ -97,6 +164,41 @@ func TestOverridesMarkOptionalExtensionCommands(t *testing.T) {
 	}
 	if cmd.Dispatch != model.DispatchDevice {
 		t.Fatalf("vkGetMemoryFdKHR dispatch = %q, want device", cmd.Dispatch)
+	}
+}
+
+func TestDefaultSelectionOnPinnedRegistryHasNoDuplicateOrBrokenAliasCommands(t *testing.T) {
+	reg, err := parser.ParseFile(filepath.Join("..", "..", "..", "..", "registry", "vk.xml"))
+	if err != nil {
+		t.Fatalf("ParseFile() error = %v", err)
+	}
+	sel, err := model.Select(reg, overrides.DefaultSelection())
+	if err != nil {
+		t.Fatalf("Select() error = %v", err)
+	}
+
+	seen := make(map[string]bool)
+	for _, cmd := range sel.Commands {
+		if seen[cmd.Name] {
+			t.Fatalf("duplicate selected command %s", cmd.Name)
+		}
+		seen[cmd.Name] = true
+		if cmd.Return == "" && len(cmd.Params) == 0 {
+			t.Fatalf("selected command %s has empty alias signature", cmd.Name)
+		}
+	}
+
+	for _, name := range []string{"vkGetPhysicalDeviceProperties2KHR", "vkGetPhysicalDeviceFeatures2KHR", "vkGetPhysicalDeviceQueueFamilyProperties2KHR"} {
+		cmd := sel.CommandByName(name)
+		if cmd == nil {
+			t.Fatalf("%s missing", name)
+		}
+		if cmd.Dispatch != model.DispatchInstance {
+			t.Fatalf("%s dispatch = %q, want instance", name, cmd.Dispatch)
+		}
+		if len(cmd.Params) == 0 {
+			t.Fatalf("%s has no params", name)
+		}
 	}
 }
 
@@ -140,6 +242,8 @@ func testRegistry() *model.Registry {
 			{Name: "VkImage", Category: "handle", Type: "VK_DEFINE_NON_DISPATCHABLE_HANDLE", Parent: "VkDevice"},
 			{Name: "VkBool32", Category: "basetype", Type: "uint32_t"},
 			{Name: "VkResult", Category: "basetype", Type: "int32_t"},
+			{Name: "VkAccessFlags2", Category: "bitmask", Type: "VkFlags64"},
+			{Name: "VkAccessFlags2KHR", Category: "bitmask", Alias: "VkAccessFlags2"},
 			{Name: "VkStructureType", Category: "enum"},
 			{Name: "VkInstanceCreateInfo", Category: "struct", Members: []model.MemberDecl{
 				{Name: "sType", Type: "VkStructureType"},
@@ -153,6 +257,14 @@ func testRegistry() *model.Registry {
 				{Name: "memory", Type: "VkDeviceMemory"},
 			}},
 			{Name: "VkAllocationCallbacks", Category: "struct"},
+			{Name: "VkPhysicalDeviceProperties2", Category: "struct", Members: []model.MemberDecl{
+				{Name: "sType", Type: "VkStructureType"},
+				{Name: "pNext", Type: "void", PointerDepth: 1},
+			}},
+			{Name: "VkDeviceCreateInfo", Category: "struct", Members: []model.MemberDecl{
+				{Name: "sType", Type: "VkStructureType"},
+				{Name: "pNext", Type: "void", Const: true, PointerDepth: 1},
+			}},
 		},
 		EnumGroups: []model.EnumGroup{
 			{Name: "VkResult", Type: "enum", Enums: []model.EnumDecl{
@@ -169,6 +281,19 @@ func testRegistry() *model.Registry {
 				{Name: "pAllocator", Type: "VkAllocationCallbacks", Const: true, PointerDepth: 1, Optional: "true"},
 				{Name: "pInstance", Type: "VkInstance", PointerDepth: 1},
 			}},
+			{Name: "vkGetPhysicalDeviceProperties2", Return: "void", API: "vulkan", Params: []model.ParamDecl{
+				{Name: "physicalDevice", Type: "VkPhysicalDevice"},
+				{Name: "pProperties", Type: "VkPhysicalDeviceProperties2", PointerDepth: 1},
+			}},
+			{Name: "vkGetPhysicalDeviceProperties2KHR", Alias: "vkGetPhysicalDeviceProperties2"},
+			{Name: "vkCreateDevice", Return: "VkResult", API: "vulkan", Params: []model.ParamDecl{
+				{Name: "physicalDevice", Type: "VkPhysicalDevice"},
+				{Name: "pCreateInfo", Type: "VkDeviceCreateInfo", Const: true, PointerDepth: 1},
+				{Name: "pAllocator", Type: "VkAllocationCallbacks", Const: true, PointerDepth: 1},
+			}},
+			{Name: "vkCreateDevice", Return: "VkResult", API: "vulkansc", Params: []model.ParamDecl{
+				{Name: "physicalDevice", Type: "VkPhysicalDevice"},
+			}},
 			{Name: "vkGetMemoryFdKHR", Return: "VkResult", Params: []model.ParamDecl{
 				{Name: "device", Type: "VkDevice"},
 				{Name: "pGetFdInfo", Type: "VkMemoryGetFdInfoKHR", Const: true, PointerDepth: 1},
@@ -178,6 +303,13 @@ func testRegistry() *model.Registry {
 			}},
 		},
 		Extensions: []model.ExtensionDecl{
+			{Name: "VK_KHR_get_physical_device_properties2", Type: "instance", Supported: "vulkan", Requires: []model.RequireDecl{{
+				Types:    []string{"VkPhysicalDeviceProperties2", "VkAccessFlags2KHR"},
+				Commands: []string{"vkGetPhysicalDeviceProperties2KHR"},
+			}}},
+			{Name: "VK_EXT_external_memory_dma_buf", Type: "device", Depends: "VK_KHR_external_memory_fd", Supported: "vulkan", Requires: []model.RequireDecl{{
+				Enums: []model.EnumDecl{{Name: "VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT", Bitpos: "9", Extends: "VkExternalMemoryHandleTypeFlagBits"}},
+			}}},
 			{Name: "VK_KHR_external_memory_fd", Type: "device", Supported: "vulkan", Requires: []model.RequireDecl{{
 				Types:    []string{"VkMemoryGetFdInfoKHR"},
 				Commands: []string{"vkGetMemoryFdKHR"},
