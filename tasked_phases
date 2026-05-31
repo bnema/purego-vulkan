@@ -12,7 +12,7 @@ phase-3:
   p3-t3: checked
   p3-t4: checked
 phase-4:
-  p4-t1: unchecked
-  p4-t2: unchecked
+  p4-t1: checked
+  p4-t2: checked
   p4-t3: unchecked
   p4-t4: unchecked
