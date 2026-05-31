@@ -25,34 +25,48 @@ func WithLibraryPath(path string) Option {
 type runtimeHooks struct {
 	open     func([]string, internalloader.OpenFunc) (internalloader.SharedLibrary, error)
 	lookup   func(internalloader.SharedLibrary, string, internalloader.LookupFunc) (uintptr, error)
+	close    func(internalloader.SharedLibrary, internalloader.CloseFunc) error
 	register func(any, uintptr)
 }
 
 var defaultRuntimeHooks = runtimeHooks{
 	open:     internalloader.Open,
 	lookup:   internalloader.Lookup,
+	close:    internalloader.Close,
 	register: capi.RegisterFunc,
 }
 
 var (
-	initOnce sync.Once
+	initMu   sync.Mutex
+	initDone bool
 	initErr  error
 
-	initializedLibrary internalloader.SharedLibrary
-	hooks              = defaultRuntimeHooks
+	hooks = defaultRuntimeHooks
 )
 
-// Init opens the Vulkan loader once and resolves vkGetInstanceProcAddr.
+// Init opens the Vulkan loader and resolves vkGetInstanceProcAddr.
+//
+// A successful initialization is process-global and runs once. Failed attempts
+// are not cached so callers can retry with different options, such as an
+// explicit loader path discovered after startup.
 func Init(opts ...Option) error {
 	cfg := config{}
 	for _, opt := range opts {
 		opt(&cfg)
 	}
 
-	initOnce.Do(func() {
-		initErr = initRuntime(cfg)
-	})
-	return initErr
+	initMu.Lock()
+	defer initMu.Unlock()
+
+	if initDone {
+		return nil
+	}
+	initErr = initRuntime(cfg)
+	if initErr != nil {
+		return initErr
+	}
+	initDone = true
+	return nil
 }
 
 func initRuntime(cfg config) error {
@@ -62,6 +76,9 @@ func initRuntime(cfg config) error {
 	}
 	if h.lookup == nil {
 		h.lookup = internalloader.Lookup
+	}
+	if h.close == nil {
+		h.close = internalloader.Close
 	}
 	if h.register == nil {
 		h.register = capi.RegisterFunc
@@ -74,10 +91,10 @@ func initRuntime(cfg config) error {
 
 	addr, err := h.lookup(lib, "vkGetInstanceProcAddr", internalloader.PuregoLookup)
 	if err != nil {
+		_ = h.close(lib, internalloader.PuregoClose)
 		return fmt.Errorf("vulkan: resolve vkGetInstanceProcAddr: %w", err)
 	}
 	h.register(&vkGetInstanceProcAddr, addr)
-	initializedLibrary = lib
 	return nil
 }
 
@@ -101,9 +118,9 @@ func setRuntimeHooksForTest(h runtimeHooks) {
 }
 
 func resetInitForTest() {
-	initOnce = sync.Once{}
+	initMu = sync.Mutex{}
+	initDone = false
 	initErr = nil
-	initializedLibrary = internalloader.SharedLibrary{}
 	vkGetInstanceProcAddr = nil
 	hooks = defaultRuntimeHooks
 }
