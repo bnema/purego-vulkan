@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -256,7 +257,23 @@ func newIndex(reg *Registry) registryIndex {
 	return idx
 }
 
+func (idx registryIndex) normalizeEnum(enum EnumDecl) EnumDecl {
+	if enum.Value == "" && enum.Bitpos == "" && enum.Offset != "" && enum.ExtNumber != "" {
+		extNumber, extErr := strconv.ParseInt(enum.ExtNumber, 10, 64)
+		offset, offsetErr := strconv.ParseInt(enum.Offset, 10, 64)
+		if extErr == nil && offsetErr == nil {
+			value := int64(1000000000) + (extNumber-1)*1000 + offset
+			if enum.Dir == "-" {
+				value = -value
+			}
+			enum.Value = strconv.FormatInt(value, 10)
+		}
+	}
+	return enum
+}
+
 func (idx registryIndex) resolveEnumAlias(enum EnumDecl, seen map[string]bool) EnumDecl {
+	enum = idx.normalizeEnum(enum)
 	if enum.Alias == "" {
 		return enum
 	}
@@ -423,12 +440,21 @@ func (s *selectionState) addFeatureConstant(name string) {
 	}
 	for _, enumName := range strings.Split(name, ",") {
 		enumName = strings.TrimSpace(enumName)
-		if enum, ok := s.idx.featureEnums[enumName]; ok {
-			s.addConstant(enum, enum.Extends)
-		}
-		for _, enum := range s.aliasConstantsFor(enumName) {
-			s.addConstant(enum, enum.Extends)
-		}
+		s.addFeatureConstantRecursive(enumName, make(map[string]bool))
+	}
+}
+
+func (s *selectionState) addFeatureConstantRecursive(enumName string, seen map[string]bool) {
+	if enumName == "" || seen[enumName] {
+		return
+	}
+	seen[enumName] = true
+	if enum, ok := s.idx.featureEnums[enumName]; ok {
+		s.addConstant(enum, enum.Extends)
+	}
+	for _, enum := range s.aliasConstantsFor(enumName) {
+		s.addConstant(enum, enum.Extends)
+		s.addFeatureConstantRecursive(enum.Name, seen)
 	}
 }
 

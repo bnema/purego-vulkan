@@ -69,13 +69,14 @@ type xmlEnumGroup struct {
 }
 
 type xmlEnum struct {
-	Name    string `xml:"name,attr"`
-	Value   string `xml:"value,attr"`
-	Bitpos  string `xml:"bitpos,attr"`
-	Alias   string `xml:"alias,attr"`
-	Extends string `xml:"extends,attr"`
-	Offset  string `xml:"offset,attr"`
-	Dir     string `xml:"dir,attr"`
+	Name      string `xml:"name,attr"`
+	Value     string `xml:"value,attr"`
+	Bitpos    string `xml:"bitpos,attr"`
+	Alias     string `xml:"alias,attr"`
+	Extends   string `xml:"extends,attr"`
+	Offset    string `xml:"offset,attr"`
+	ExtNumber string `xml:"extnumber,attr"`
+	Dir       string `xml:"dir,attr"`
 }
 
 type xmlCommands struct {
@@ -214,13 +215,14 @@ func (g xmlEnumGroup) toModel() model.EnumGroup {
 
 func (e xmlEnum) toModel() model.EnumDecl {
 	return model.EnumDecl{
-		Name:    e.Name,
-		Value:   e.Value,
-		Bitpos:  e.Bitpos,
-		Alias:   e.Alias,
-		Extends: e.Extends,
-		Offset:  e.Offset,
-		Dir:     e.Dir,
+		Name:      e.Name,
+		Value:     e.Value,
+		Bitpos:    e.Bitpos,
+		Alias:     e.Alias,
+		Extends:   e.Extends,
+		Offset:    e.Offset,
+		ExtNumber: e.ExtNumber,
+		Dir:       e.Dir,
 	}
 }
 

@@ -72,13 +72,14 @@ type EnumGroup struct {
 }
 
 type EnumDecl struct {
-	Name    string
-	Value   string
-	Bitpos  string
-	Alias   string
-	Extends string
-	Offset  string
-	Dir     string
+	Name      string
+	Value     string
+	Bitpos    string
+	Alias     string
+	Extends   string
+	Offset    string
+	ExtNumber string
+	Dir       string
 }
 
 type CommandDecl struct {

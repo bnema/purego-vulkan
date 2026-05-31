@@ -78,6 +78,27 @@ func TestSelectReportsMissingConfiguredCommandsAndDependencies(t *testing.T) {
 	}
 }
 
+func TestSelectResolvesTransitiveAliasSTypeConstants(t *testing.T) {
+	reg := testRegistry()
+	sel, err := model.Select(reg, model.SelectionConfig{RootTypes: []string{"VkPhysicalDeviceVariablePointerFeaturesKHR"}})
+	if err != nil {
+		t.Fatalf("Select() error = %v", err)
+	}
+	for _, name := range []string{
+		"VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES",
+		"VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES_KHR",
+		"VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTER_FEATURES_KHR",
+	} {
+		constant := constantByName(sel, name)
+		if constant == nil {
+			t.Fatalf("%s missing from constants: %+v", name, sel.Constants)
+		}
+		if constant.Value == "" {
+			t.Fatalf("%s unresolved: %+v", name, *constant)
+		}
+	}
+}
+
 func TestSelectResolvesAliasSTypeConstants(t *testing.T) {
 	reg := testRegistry()
 	sel, err := model.Select(reg, model.SelectionConfig{RootTypes: []string{"VkPhysicalDeviceProperties2KHR"}})
@@ -350,6 +371,13 @@ func testRegistry() *model.Registry {
 				{Name: "sType", Type: "VkStructureType"},
 				{Name: "pNext", Type: "void", Const: true, PointerDepth: 1},
 			}},
+			{Name: "VkPhysicalDeviceVariablePointersFeatures", Category: "struct", Members: []model.MemberDecl{
+				{Name: "sType", Type: "VkStructureType", Values: "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES"},
+				{Name: "pNext", Type: "void", PointerDepth: 1},
+				{Name: "variablePointers", Type: "VkBool32"},
+			}},
+			{Name: "VkPhysicalDeviceVariablePointersFeaturesKHR", Category: "struct", Alias: "VkPhysicalDeviceVariablePointersFeatures"},
+			{Name: "VkPhysicalDeviceVariablePointerFeaturesKHR", Category: "struct", Alias: "VkPhysicalDeviceVariablePointersFeaturesKHR"},
 		},
 		EnumGroups: []model.EnumGroup{
 			{Name: "VkResult", Type: "enum", Enums: []model.EnumDecl{
@@ -368,6 +396,9 @@ func testRegistry() *model.Registry {
 				Enums: []model.EnumDecl{
 					{Name: "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2", Extends: "VkStructureType", Offset: "1", Value: "1000059001"},
 					{Name: "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR", Extends: "VkStructureType", Alias: "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2"},
+					{Name: "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES", Extends: "VkStructureType", Value: "1000120000"},
+					{Name: "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES_KHR", Extends: "VkStructureType", Alias: "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES"},
+					{Name: "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTER_FEATURES_KHR", Extends: "VkStructureType", Alias: "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES_KHR"},
 				},
 			}}},
 		},
