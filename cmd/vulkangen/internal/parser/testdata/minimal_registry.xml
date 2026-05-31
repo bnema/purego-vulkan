@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<registry>
+  <types>
+    <type category="handle"><type>VK_DEFINE_HANDLE</type>(<name>VkInstance</name>)</type>
+    <type category="handle" parent="VkInstance"><type>VK_DEFINE_HANDLE</type>(<name>VkPhysicalDevice</name>)</type>
+    <type category="handle" parent="VkDevice"><type>VK_DEFINE_NON_DISPATCHABLE_HANDLE</type>(<name>VkImage</name>)</type>
+    <type category="basetype">typedef <type>uint32_t</type> <name>VkBool32</name>;</type>
+    <type category="basetype">typedef <type>int32_t</type> <name>VkResult</name>;</type>
+    <type category="enum" name="VkStructureType"/>
+    <type category="struct" name="VkInstanceCreateInfo">
+      <member values="VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO"><type>VkStructureType</type> <name>sType</name></member>
+      <member optional="true">const <type>void</type>* <name>pNext</name></member>
+      <member><type>uint32_t</type> <name>enabledExtensionCount</name></member>
+      <member len="enabledExtensionCount">const <type>char</type>* const* <name>ppEnabledExtensionNames</name></member>
+    </type>
+  </types>
+  <enums name="VkResult" type="enum">
+    <enum value="0" name="VK_SUCCESS"/>
+    <enum value="-1" name="VK_ERROR_OUT_OF_HOST_MEMORY"/>
+  </enums>
+  <commands>
+    <command successcodes="VK_SUCCESS" errorcodes="VK_ERROR_OUT_OF_HOST_MEMORY">
+      <proto><type>VkResult</type> <name>vkCreateInstance</name></proto>
+      <param>const <type>VkInstanceCreateInfo</type>* <name>pCreateInfo</name></param>
+      <param optional="true">const <type>VkAllocationCallbacks</type>* <name>pAllocator</name></param>
+      <param><type>VkInstance</type>* <name>pInstance</name></param>
+    </command>
+    <command>
+      <proto><type>void</type> <name>vkGetPhysicalDeviceProperties</name></proto>
+      <param><type>VkPhysicalDevice</type> <name>physicalDevice</name></param>
+      <param><type>VkPhysicalDeviceProperties</type>* <name>pProperties</name></param>
+    </command>
+  </commands>
+  <feature name="VK_VERSION_1_0" number="1.0" api="vulkan">
+    <require>
+      <type name="VkInstanceCreateInfo"/>
+      <enum name="VK_SUCCESS"/>
+      <command name="vkCreateInstance"/>
+    </require>
+  </feature>
+  <extensions>
+    <extension name="VK_KHR_external_memory_fd" number="75" type="device" supported="vulkan">
+      <require>
+        <enum value="&quot;VK_KHR_external_memory_fd&quot;" name="VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME"/>
+        <type name="VkImportMemoryFdInfoKHR"/>
+        <command name="vkGetMemoryFdKHR"/>
+      </require>
+    </extension>
+  </extensions>
+</registry>
