@@ -3,7 +3,6 @@ package model
 import (
 	"errors"
 	"fmt"
-	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -21,6 +20,7 @@ type SelectionConfig struct {
 	RootTypes        []string
 	Commands         []string
 	Extensions       []string
+	CoreVersions     []string
 	CommandOverrides map[string]CommandOverride
 }
 
@@ -115,7 +115,19 @@ func Select(reg *Registry, cfg SelectionConfig) (*SelectedRegistry, error) {
 		commandOptional:  make(map[string]bool),
 		selectedExts:     make(map[string]bool),
 		constantNames:    make(map[string]bool),
+		selectedCore:     make(map[string]bool),
+		configuredExts:   make(map[string]bool),
 		missingNames:     make(map[string]bool),
+	}
+	coreVersions := cfg.CoreVersions
+	if len(coreVersions) == 0 {
+		coreVersions = defaultCoreVersions()
+	}
+	for _, version := range coreVersions {
+		state.selectedCore[version] = true
+	}
+	for _, ext := range cfg.Extensions {
+		state.configuredExts[ext] = true
 	}
 
 	for _, name := range cfg.RootTypes {
@@ -321,6 +333,8 @@ type selectionState struct {
 	constantNames    map[string]bool
 	constants        []EnumDecl
 	typeQueue        []string
+	selectedCore     map[string]bool
+	configuredExts   map[string]bool
 	missingNames     map[string]bool
 	missing          []error
 }
@@ -337,23 +351,124 @@ func (s *selectionState) addType(name, context string) {
 	s.typeQueue = append(s.typeQueue, name)
 }
 
-var extensionDependencyRE = regexp.MustCompile(`VK_[A-Z0-9]+_[A-Za-z0-9_]+`)
+func defaultCoreVersions() []string {
+	return []string{"VK_VERSION_1_0", "VK_VERSION_1_1", "VK_VERSION_1_2"}
+}
 
-func extensionDepends(expr string) []string {
+func (s *selectionState) extensionDepsToAdd(expr string) ([]string, bool) {
+	expr = trimOuterParens(strings.TrimSpace(expr))
 	if expr == "" {
-		return nil
+		return nil, true
 	}
-	matches := extensionDependencyRE.FindAllString(expr, -1)
-	seen := make(map[string]bool, len(matches))
-	deps := make([]string, 0, len(matches))
-	for _, match := range matches {
-		if strings.HasPrefix(match, "VK_VERSION_") || seen[match] {
+	if parts := splitTopLevel(expr, ','); len(parts) > 1 {
+		bestOK := false
+		var best []string
+		for _, part := range parts {
+			deps, ok := s.extensionDepsToAdd(part)
+			if !ok {
+				continue
+			}
+			if !bestOK || len(deps) < len(best) {
+				bestOK = true
+				best = deps
+			}
+		}
+		return uniqueStrings(best), bestOK
+	}
+	if parts := splitTopLevel(expr, '+'); len(parts) > 1 {
+		var deps []string
+		for _, part := range parts {
+			partDeps, ok := s.extensionDepsToAdd(part)
+			if !ok {
+				return nil, false
+			}
+			deps = append(deps, partDeps...)
+		}
+		return uniqueStrings(deps), true
+	}
+	if strings.HasPrefix(expr, "VK_VERSION_") {
+		return nil, s.selectedCore[expr]
+	}
+	if strings.HasPrefix(expr, "VK_") {
+		if s.selectedExts[expr] || s.configuredExts[expr] {
+			return nil, true
+		}
+		ext, ok := s.idx.extensions[expr]
+		if !ok || ext.Platform != "" || ext.Supported == "disabled" {
+			return nil, false
+		}
+		return []string{expr}, true
+	}
+	return nil, true
+}
+
+func (s *selectionState) dependencyExprSatisfied(expr string) bool {
+	deps, ok := s.extensionDepsToAdd(expr)
+	return ok && len(deps) == 0
+}
+
+func trimOuterParens(expr string) string {
+	for strings.HasPrefix(expr, "(") && strings.HasSuffix(expr, ")") {
+		depth := 0
+		balanced := true
+		for i, r := range expr {
+			switch r {
+			case '(':
+				depth++
+			case ')':
+				depth--
+				if depth == 0 && i != len(expr)-1 {
+					balanced = false
+				}
+			}
+			if depth < 0 {
+				balanced = false
+				break
+			}
+		}
+		if !balanced || depth != 0 {
+			break
+		}
+		expr = strings.TrimSpace(expr[1 : len(expr)-1])
+	}
+	return expr
+}
+
+func splitTopLevel(expr string, sep rune) []string {
+	var parts []string
+	depth := 0
+	start := 0
+	for i, r := range expr {
+		switch r {
+		case '(':
+			depth++
+		case ')':
+			depth--
+		default:
+			if r == sep && depth == 0 {
+				parts = append(parts, strings.TrimSpace(expr[start:i]))
+				start = i + len(string(r))
+			}
+		}
+	}
+	if len(parts) == 0 {
+		return []string{strings.TrimSpace(expr)}
+	}
+	parts = append(parts, strings.TrimSpace(expr[start:]))
+	return parts
+}
+
+func uniqueStrings(in []string) []string {
+	seen := make(map[string]bool, len(in))
+	out := make([]string, 0, len(in))
+	for _, value := range in {
+		if value == "" || seen[value] {
 			continue
 		}
-		seen[match] = true
-		deps = append(deps, match)
+		seen[value] = true
+		out = append(out, value)
 	}
-	return deps
+	return out
 }
 
 func (s *selectionState) addExtension(name string, optionalCommands bool, context string) {
@@ -370,12 +485,16 @@ func (s *selectionState) addExtension(name string, optionalCommands bool, contex
 	}
 	s.selectedExts[name] = true
 
-	for _, depName := range extensionDepends(ext.Depends) {
+	deps, ok := s.extensionDepsToAdd(ext.Depends)
+	if !ok {
+		s.addMissing("dependency", ext.Depends, "extension "+name)
+	}
+	for _, depName := range deps {
 		s.addExtension(depName, optionalCommands, "dependency of extension "+name)
 	}
 	for _, req := range ext.Requires {
-		for _, depName := range extensionDepends(req.Depends) {
-			s.addExtension(depName, optionalCommands, "dependency of extension "+name)
+		if !s.dependencyExprSatisfied(req.Depends) {
+			continue
 		}
 		for _, typeName := range req.Types {
 			s.addType(typeName, "extension "+name)

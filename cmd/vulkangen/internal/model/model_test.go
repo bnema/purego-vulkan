@@ -249,6 +249,59 @@ func TestOverridesMarkOptionalExtensionCommands(t *testing.T) {
 	}
 }
 
+func TestDefaultSelectionDoesNotPullUnrelatedDependencyAlternatives(t *testing.T) {
+	reg, err := parser.ParseFile(filepath.Join("..", "..", "..", "..", "registry", "vk.xml"))
+	if err != nil {
+		t.Fatalf("ParseFile() error = %v", err)
+	}
+	sel, err := model.Select(reg, overrides.DefaultSelection())
+	if err != nil {
+		t.Fatalf("Select() error = %v", err)
+	}
+	for _, name := range []string{"vkCreateRayTracingPipelinesKHR", "vkCreateRayTracingPipelinesNV", "VK_KHR_ray_tracing_pipeline", "VK_NV_ray_tracing"} {
+		if sel.CommandByName(name) != nil || sel.ExtensionByName(name) != nil {
+			t.Fatalf("default selection pulled unrelated dependency alternative %s", name)
+		}
+	}
+	if len(sel.Commands) > len(overrides.InitialCommands)+40 {
+		t.Fatalf("default selection selected %d commands for %d configured commands", len(sel.Commands), len(overrides.InitialCommands))
+	}
+}
+
+func TestSelectSkipsUnsatisfiedGuardedRequireBlocks(t *testing.T) {
+	reg := testRegistry()
+	reg.Commands = append(reg.Commands,
+		model.CommandDecl{Name: "vkBaseExtensionCommand", Return: "void", Params: []model.ParamDecl{{Name: "device", Type: "VkDevice"}}},
+		model.CommandDecl{Name: "vkGuardedExtensionCommand", Return: "void", Params: []model.ParamDecl{{Name: "device", Type: "VkDevice"}}},
+	)
+	reg.Extensions = append(reg.Extensions,
+		model.ExtensionDecl{Name: "VK_EXT_guard_dependency", Type: "device", Supported: "vulkan"},
+		model.ExtensionDecl{Name: "VK_EXT_guarded", Type: "device", Supported: "vulkan", Requires: []model.RequireDecl{
+			{Commands: []string{"vkBaseExtensionCommand"}},
+			{Depends: "VK_EXT_guard_dependency", Commands: []string{"vkGuardedExtensionCommand"}},
+		}},
+	)
+
+	sel, err := model.Select(reg, model.SelectionConfig{Extensions: []string{"VK_EXT_guarded"}})
+	if err != nil {
+		t.Fatalf("Select() error = %v", err)
+	}
+	if sel.CommandByName("vkBaseExtensionCommand") == nil {
+		t.Fatal("base extension command missing")
+	}
+	if sel.CommandByName("vkGuardedExtensionCommand") != nil {
+		t.Fatal("guarded command selected without guard dependency")
+	}
+
+	sel, err = model.Select(reg, model.SelectionConfig{Extensions: []string{"VK_EXT_guarded", "VK_EXT_guard_dependency"}})
+	if err != nil {
+		t.Fatalf("Select() with guard dependency error = %v", err)
+	}
+	if sel.CommandByName("vkGuardedExtensionCommand") == nil {
+		t.Fatal("guarded command missing when guard dependency selected")
+	}
+}
+
 func TestDefaultSelectionOnPinnedRegistryHasNoDuplicateOrBrokenAliasCommands(t *testing.T) {
 	reg, err := parser.ParseFile(filepath.Join("..", "..", "..", "..", "registry", "vk.xml"))
 	if err != nil {
