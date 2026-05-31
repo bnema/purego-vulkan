@@ -145,6 +145,24 @@ func TestSelectIncludesVulkanTypedefDependencies(t *testing.T) {
 	}
 }
 
+func TestSelectIncludesFunctionPointerReturnTypes(t *testing.T) {
+	reg := testRegistry()
+	reg.Types = append(reg.Types, model.TypeDecl{Name: "PFN_vkVoidFunction", Category: "funcpointer"})
+	reg.Commands = append(reg.Commands, model.CommandDecl{Name: "vkGetInstanceProcAddr", Return: "PFN_vkVoidFunction", Params: []model.ParamDecl{
+		{Name: "instance", Type: "VkInstance"},
+		{Name: "pName", Type: "char", PointerDepth: 1},
+	}})
+
+	sel, err := model.Select(reg, model.SelectionConfig{Commands: []string{"vkGetInstanceProcAddr"}})
+	if err != nil {
+		t.Fatalf("Select() error = %v", err)
+	}
+	fn := sel.TypeByName("PFN_vkVoidFunction")
+	if fn == nil || fn.GoType != "uintptr" {
+		t.Fatalf("PFN_vkVoidFunction selected as %+v", fn)
+	}
+}
+
 func TestSelectResolvesAliasCommandsAndTypes(t *testing.T) {
 	reg := testRegistry()
 	sel, err := model.Select(reg, model.SelectionConfig{Extensions: []string{"VK_KHR_get_physical_device_properties2"}})
@@ -328,18 +346,22 @@ func TestDefaultSelectionOnPinnedRegistryHasNoDuplicateOrBrokenAliasCommands(t *
 			t.Fatalf("%s missing from default selected type closure", name)
 		}
 	}
-	for _, name := range []string{"VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2", "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR", "VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO"} {
-		if !containsConstant(sel, name) {
-			t.Fatalf("feature constant %s missing from default selected constants", name)
-		}
-	}
-	for _, name := range []string{"VK_STRUCTURE_TYPE_IMPORT_MEMORY_FD_INFO_KHR", "VK_STRUCTURE_TYPE_MEMORY_FD_PROPERTIES_KHR", "VK_STRUCTURE_TYPE_DRM_FORMAT_MODIFIER_PROPERTIES_LIST_EXT"} {
+	for _, name := range []string{"VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2", "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR", "VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO", "VK_MAX_PHYSICAL_DEVICE_NAME_SIZE", "VK_UUID_SIZE"} {
 		constant := constantByName(sel, name)
 		if constant == nil {
-			t.Fatalf("extension offset constant %s missing", name)
+			t.Fatalf("feature constant %s missing from default selected constants", name)
 		}
 		if constant.Value == "" {
-			t.Fatalf("extension offset constant %s has empty value: %+v", name, *constant)
+			t.Fatalf("feature constant %s has empty value: %+v", name, *constant)
+		}
+	}
+	for _, name := range []string{"VK_STRUCTURE_TYPE_IMPORT_MEMORY_FD_INFO_KHR", "VK_STRUCTURE_TYPE_MEMORY_FD_PROPERTIES_KHR", "VK_STRUCTURE_TYPE_DRM_FORMAT_MODIFIER_PROPERTIES_LIST_EXT", "VK_QUEUE_FAMILY_EXTERNAL_KHR", "VK_LUID_SIZE_KHR", "VK_QUEUE_FAMILY_FOREIGN_EXT"} {
+		constant := constantByName(sel, name)
+		if constant == nil {
+			t.Fatalf("extension constant %s missing", name)
+		}
+		if constant.Value == "" {
+			t.Fatalf("extension constant %s has empty value: %+v", name, *constant)
 		}
 	}
 
@@ -353,6 +375,15 @@ func TestDefaultSelectionOnPinnedRegistryHasNoDuplicateOrBrokenAliasCommands(t *
 		}
 		if len(cmd.Params) == 0 {
 			t.Fatalf("%s has no params", name)
+		}
+	}
+	for _, name := range []string{"vkBindImageMemory2KHR", "vkGetImageMemoryRequirements2KHR"} {
+		cmd := sel.CommandByName(name)
+		if cmd == nil {
+			t.Fatalf("%s missing", name)
+		}
+		if !cmd.Optional {
+			t.Fatalf("%s optional = false, want true for promoted KHR fallback", name)
 		}
 	}
 }

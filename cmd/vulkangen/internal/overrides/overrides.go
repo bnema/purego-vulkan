@@ -62,6 +62,8 @@ var InitialCommands = []string{
 
 var RequiredExtensions = []string{
 	"VK_KHR_get_physical_device_properties2",
+	"VK_KHR_bind_memory2",
+	"VK_KHR_get_memory_requirements2",
 	"VK_KHR_external_memory",
 	"VK_KHR_external_memory_fd",
 	"VK_EXT_external_memory_dma_buf",
@@ -74,7 +76,8 @@ var RequiredExtensions = []string{
 }
 
 var CommandOverrides = map[string]model.CommandOverride{
-	"vkGetDeviceProcAddr": {Dispatch: model.DispatchInstance},
+	"vkEnumerateInstanceVersion": {Optional: true},
+	"vkGetDeviceProcAddr":        {Dispatch: model.DispatchInstance},
 
 	"vkGetMemoryFdKHR":                         {Dispatch: model.DispatchDevice, Optional: true},
 	"vkGetMemoryFdPropertiesKHR":               {Dispatch: model.DispatchDevice, Optional: true},

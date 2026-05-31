@@ -160,6 +160,7 @@ func Select(reg *Registry, cfg SelectionConfig) (*SelectedRegistry, error) {
 		for _, member := range decl.Members {
 			state.addType(member.Type, "member "+decl.Name+"."+member.Name)
 			state.addFeatureConstant(member.Values)
+			state.addArrayLenConstants(member.ArrayLens)
 		}
 	}
 
@@ -175,6 +176,7 @@ type registryIndex struct {
 	commandOrder []string
 	extensions   map[string]ExtensionDecl
 	enumGroups   map[string]EnumGroup
+	enumValues   map[string]EnumDecl
 	featureEnums map[string]EnumDecl
 }
 
@@ -212,6 +214,7 @@ func newIndex(reg *Registry) registryIndex {
 		commands:     make(map[string]CommandDecl, len(reg.Commands)),
 		extensions:   make(map[string]ExtensionDecl, len(reg.Extensions)),
 		enumGroups:   make(map[string]EnumGroup, len(reg.EnumGroups)),
+		enumValues:   make(map[string]EnumDecl),
 		featureEnums: make(map[string]EnumDecl),
 	}
 	for _, t := range reg.Types {
@@ -232,6 +235,15 @@ func newIndex(reg *Registry) registryIndex {
 	}
 	for _, g := range reg.EnumGroups {
 		idx.enumGroups[g.Name] = g
+		for _, enum := range g.Enums {
+			if enum.Name == "" {
+				continue
+			}
+			if enum.Extends == "" && g.Type != "constants" {
+				enum.Extends = g.Name
+			}
+			idx.enumValues[enum.Name] = enum
+		}
 	}
 	for _, feature := range reg.Features {
 		if feature.API != "" && !strings.Contains(feature.API, "vulkan") {
@@ -239,9 +251,7 @@ func newIndex(reg *Registry) registryIndex {
 		}
 		for _, req := range feature.Requires {
 			for _, enum := range req.Enums {
-				if enum.Name != "" {
-					idx.featureEnums[enum.Name] = enum
-				}
+				putFeatureEnum(idx.featureEnums, enum)
 			}
 		}
 	}
@@ -251,13 +261,19 @@ func newIndex(reg *Registry) registryIndex {
 		}
 		for _, req := range ext.Requires {
 			for _, enum := range req.Enums {
-				if enum.Name != "" {
-					idx.featureEnums[enum.Name] = enum
-				}
+				putFeatureEnum(idx.featureEnums, enum)
 			}
 		}
 	}
+	for name, enum := range idx.enumValues {
+		idx.enumValues[name] = idx.resolveEnumAlias(enum, nil)
+	}
 	for name, enum := range idx.featureEnums {
+		if enumHasNoValueMetadata(enum) {
+			if full, ok := idx.enumValues[name]; ok {
+				enum = full
+			}
+		}
 		idx.featureEnums[name] = idx.resolveEnumAlias(enum, nil)
 	}
 	for groupName, group := range idx.enumGroups {
@@ -267,6 +283,46 @@ func newIndex(reg *Registry) registryIndex {
 		idx.enumGroups[groupName] = group
 	}
 	return idx
+}
+
+func putFeatureEnum(enums map[string]EnumDecl, enum EnumDecl) {
+	if enum.Name == "" {
+		return
+	}
+	existing, ok := enums[enum.Name]
+	if !ok || enumMetadataScore(enum) > enumMetadataScore(existing) {
+		enums[enum.Name] = enum
+	}
+}
+
+func enumHasNoValueMetadata(enum EnumDecl) bool {
+	return enum.Value == "" && enum.Bitpos == "" && enum.Offset == "" && enum.Alias == ""
+}
+
+func enumMetadataScore(enum EnumDecl) int {
+	score := 0
+	if enum.Value != "" {
+		score += 4
+	}
+	if enum.Bitpos != "" {
+		score += 4
+	}
+	if enum.Offset != "" {
+		score += 4
+	}
+	if enum.Alias != "" {
+		score += 3
+	}
+	if enum.ExtNumber != "" {
+		score += 2
+	}
+	if enum.Extends != "" {
+		score++
+	}
+	if enum.Dir != "" {
+		score++
+	}
+	return score
 }
 
 func (idx registryIndex) normalizeEnum(enum EnumDecl) EnumDecl {
@@ -297,6 +353,20 @@ func (idx registryIndex) resolveEnumAlias(enum EnumDecl, seen map[string]bool) E
 	}
 	seen[enum.Name] = true
 	if target, ok := idx.featureEnums[enum.Alias]; ok {
+		if target.Value == "" && target.Bitpos == "" && target.Offset == "" && target.Alias == "" {
+			if full, ok := idx.enumValues[enum.Alias]; ok {
+				target = full
+			}
+		}
+		resolved := idx.resolveEnumAlias(target, seen)
+		resolved.Name = enum.Name
+		resolved.Alias = enum.Alias
+		if enum.Extends != "" {
+			resolved.Extends = enum.Extends
+		}
+		return resolved
+	}
+	if target, ok := idx.enumValues[enum.Alias]; ok {
 		resolved := idx.resolveEnumAlias(target, seen)
 		resolved.Name = enum.Name
 		resolved.Alias = enum.Alias
@@ -352,7 +422,7 @@ func (s *selectionState) addType(name, context string) {
 }
 
 func defaultCoreVersions() []string {
-	return []string{"VK_VERSION_1_0", "VK_VERSION_1_1", "VK_VERSION_1_2"}
+	return []string{"VK_VERSION_1_0"}
 }
 
 func (s *selectionState) extensionDepsToAdd(expr string) ([]string, bool) {
@@ -531,11 +601,17 @@ func (s *selectionState) addCommand(name string, optional bool, context string) 
 	s.addType(cmd.Return, "return type for "+name)
 	for _, param := range cmd.Params {
 		s.addType(param.Type, "parameter "+name+"."+param.Name)
+		s.addArrayLenConstants(param.ArrayLens)
 	}
 }
 
 func (s *selectionState) addResolvedConstant(enum EnumDecl) {
 	if resolved, ok := s.idx.featureEnums[enum.Name]; ok {
+		if enumHasNoValueMetadata(resolved) {
+			if full, ok := s.idx.enumValues[enum.Name]; ok {
+				resolved = full
+			}
+		}
 		s.addConstant(resolved, resolved.Extends)
 		return
 	}
@@ -563,12 +639,28 @@ func (s *selectionState) addFeatureConstant(name string) {
 	}
 }
 
+func (s *selectionState) addArrayLenConstants(lens []string) {
+	for _, value := range lens {
+		value = strings.TrimSpace(value)
+		if strings.HasPrefix(value, "VK_") {
+			s.addFeatureConstant(value)
+		}
+	}
+}
+
 func (s *selectionState) addFeatureConstantRecursive(enumName string, seen map[string]bool) {
 	if enumName == "" || seen[enumName] {
 		return
 	}
 	seen[enumName] = true
 	if enum, ok := s.idx.featureEnums[enumName]; ok {
+		if enum.Value == "" && enum.Bitpos == "" && enum.Offset == "" && enum.Alias == "" {
+			if full, ok := s.idx.enumValues[enumName]; ok {
+				enum = full
+			}
+		}
+		s.addConstant(enum, enum.Extends)
+	} else if enum, ok := s.idx.enumValues[enumName]; ok {
 		s.addConstant(enum, enum.Extends)
 	}
 	for _, enum := range s.aliasConstantsFor(enumName) {
@@ -771,6 +863,9 @@ func (s *selectionState) goTypeFor(decl TypeDecl, seen map[string]bool) (string,
 	}
 	if decl.Category == "basetype" || decl.Category == "bitmask" {
 		return goScalarType(decl.Type), false
+	}
+	if decl.Category == "funcpointer" {
+		return "uintptr", false
 	}
 	return "", false
 }

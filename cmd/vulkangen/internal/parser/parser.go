@@ -337,7 +337,8 @@ func parseTypedElement(innerXML, nameAttr string) typedElement {
 	if m := arrayRE.FindStringSubmatch(innerXML); len(m) == 2 {
 		for _, dim := range arrayDimRE.FindAllStringSubmatch(m[1], -1) {
 			if len(dim) == 2 {
-				out.ArrayLens = append(out.ArrayLens, strings.TrimSpace(dim[1]))
+				value := tagRE.ReplaceAllString(dim[1], "")
+				out.ArrayLens = append(out.ArrayLens, strings.TrimSpace(value))
 			}
 		}
 		if len(out.ArrayLens) > 0 {

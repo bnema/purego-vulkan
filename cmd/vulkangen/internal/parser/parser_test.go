@@ -68,7 +68,7 @@ func TestParseRegistryFixture(t *testing.T) {
 		t.Fatalf("alias type parsed as %+v", aliasType)
 	}
 	matrix := reg.TypeByName("VkTransformMatrixKHR")
-	if matrix == nil || len(matrix.Members) != 1 || len(matrix.Members[0].ArrayLens) != 2 || matrix.Members[0].ArrayLens[0] != "3" || matrix.Members[0].ArrayLens[1] != "4" {
+	if matrix == nil || len(matrix.Members) != 1 || len(matrix.Members[0].ArrayLens) != 2 || matrix.Members[0].ArrayLens[0] != "VK_MAX_MATRIX_ROWS" || matrix.Members[0].ArrayLens[1] != "4" {
 		t.Fatalf("matrix member parsed as %+v", matrix)
 	}
 	aliasCommand := reg.CommandByName("vkGetPhysicalDeviceProperties2KHR")

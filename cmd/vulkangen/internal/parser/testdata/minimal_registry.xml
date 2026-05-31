@@ -15,7 +15,7 @@
       <member len="enabledExtensionCount">const <type>char</type>* const* <name>ppEnabledExtensionNames</name></member>
     </type>
     <type category="struct" name="VkTransformMatrixKHR">
-      <member><type>float</type> <name>matrix</name>[3][4]</member>
+      <member><type>float</type> <name>matrix</name>[<enum>VK_MAX_MATRIX_ROWS</enum>][4]</member>
     </type>
   </types>
   <enums name="VkResult" type="enum">
