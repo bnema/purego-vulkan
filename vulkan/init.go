@@ -98,6 +98,15 @@ func initRuntime(cfg config) error {
 		return fmt.Errorf("vulkan: resolve vkGetInstanceProcAddr: %w", err)
 	}
 	h.register(&vkGetInstanceProcAddr, addr)
+	h.register(&VkGetInstanceProcAddr, addr)
+	if VkGetInstanceProcAddr != nil {
+		if err := loadGlobalDispatch(); err != nil {
+			if closeErr := h.close(lib, internalloader.PuregoClose); closeErr != nil {
+				return fmt.Errorf("vulkan: initialize global dispatch: %w", errors.Join(err, closeErr))
+			}
+			return fmt.Errorf("vulkan: initialize global dispatch: %w", err)
+		}
+	}
 	return nil
 }
 
@@ -125,5 +134,7 @@ func resetInitForTest() {
 	initDone = false
 	initErr = nil
 	vkGetInstanceProcAddr = nil
+	VkGetInstanceProcAddr = nil
+	globalDispatch = GlobalDispatch{}
 	hooks = defaultRuntimeHooks
 }
