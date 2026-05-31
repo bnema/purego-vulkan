@@ -490,16 +490,39 @@ func (s *selectionState) dispatchFor(cmd CommandDecl) (DispatchLevel, error) {
 }
 
 func (s *selectionState) selectType(decl TypeDecl) SelectedType {
-	goType, dispatchable := s.goTypeFor(decl, nil)
+	resolved := s.resolveTypeDecl(decl, nil)
+	goType, dispatchable := s.goTypeFor(resolved, nil)
 	return SelectedType{
 		Name:         decl.Name,
-		Category:     decl.Category,
+		Category:     resolved.Category,
 		GoName:       goName(decl.Name),
 		GoType:       goType,
 		Dispatchable: dispatchable,
-		Members:      slices.Clone(decl.Members),
-		Source:       decl,
+		Members:      slices.Clone(resolved.Members),
+		Source:       resolved,
 	}
+}
+
+func (s *selectionState) resolveTypeDecl(decl TypeDecl, seen map[string]bool) TypeDecl {
+	if decl.Alias == "" {
+		return decl
+	}
+	if seen == nil {
+		seen = make(map[string]bool)
+	}
+	if seen[decl.Name] {
+		return decl
+	}
+	seen[decl.Name] = true
+	target, ok := s.idx.types[decl.Alias]
+	if !ok {
+		return decl
+	}
+	resolved := s.resolveTypeDecl(target, seen)
+	resolved.Name = decl.Name
+	resolved.Alias = decl.Alias
+	resolved.API = decl.API
+	return resolved
 }
 
 func (s *selectionState) goTypeFor(decl TypeDecl, seen map[string]bool) (string, bool) {
@@ -567,8 +590,7 @@ func isBuiltinType(name string) bool {
 	switch name {
 	case "", "void", "char", "int", "float", "double", "size_t",
 		"uint8_t", "uint16_t", "uint32_t", "uint64_t",
-		"int8_t", "int16_t", "int32_t", "int64_t",
-		"VkFlags", "VkFlags64":
+		"int8_t", "int16_t", "int32_t", "int64_t":
 		return true
 	default:
 		return false

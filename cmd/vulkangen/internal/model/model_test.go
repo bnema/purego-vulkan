@@ -91,12 +91,14 @@ func TestSelectIncludesFeatureConstantsForSelectedTypes(t *testing.T) {
 
 func TestSelectIncludesVulkanTypedefDependencies(t *testing.T) {
 	reg := testRegistry()
-	sel, err := model.Select(reg, model.SelectionConfig{Commands: []string{"vkAllocateMemory"}})
+	sel, err := model.Select(reg, model.SelectionConfig{Commands: []string{"vkAllocateMemory"}, RootTypes: []string{"VkAccessFlags2"}})
 	if err != nil {
 		t.Fatalf("Select() error = %v", err)
 	}
-	if sel.TypeByName("VkDeviceSize") == nil {
-		t.Fatalf("VkDeviceSize typedef missing from selected types: %+v", sel.Types)
+	for _, name := range []string{"VkDeviceSize", "VkFlags64"} {
+		if sel.TypeByName(name) == nil {
+			t.Fatalf("%s typedef missing from selected types: %+v", name, sel.Types)
+		}
 	}
 }
 
@@ -210,8 +212,10 @@ func TestDefaultSelectionOnPinnedRegistryHasNoDuplicateOrBrokenAliasCommands(t *
 		}
 	}
 
-	if sel.TypeByName("VkDeviceSize") == nil {
-		t.Fatal("VkDeviceSize missing from default selected type closure")
+	for _, name := range []string{"VkDeviceSize", "VkFlags", "VkFlags64"} {
+		if sel.TypeByName(name) == nil {
+			t.Fatalf("%s missing from default selected type closure", name)
+		}
 	}
 	for _, name := range []string{"VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2", "VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO"} {
 		if !containsConstant(sel, name) {
@@ -273,6 +277,8 @@ func testRegistry() *model.Registry {
 			{Name: "VkImage", Category: "handle", Type: "VK_DEFINE_NON_DISPATCHABLE_HANDLE", Parent: "VkDevice"},
 			{Name: "VkBool32", Category: "basetype", Type: "uint32_t"},
 			{Name: "VkResult", Category: "basetype", Type: "int32_t"},
+			{Name: "VkFlags", Category: "basetype", Type: "uint32_t"},
+			{Name: "VkFlags64", Category: "basetype", Type: "uint64_t"},
 			{Name: "VkDeviceSize", Category: "basetype", Type: "uint64_t"},
 			{Name: "VkAccessFlags2", Category: "bitmask", Type: "VkFlags64"},
 			{Name: "VkAccessFlags2KHR", Category: "bitmask", Alias: "VkAccessFlags2"},
