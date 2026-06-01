@@ -200,7 +200,7 @@ func typeVariantScore(t TypeDecl) int {
 
 func apiTokenSet(value string) map[string]bool {
 	tokens := make(map[string]bool)
-	for _, token := range strings.Split(value, ",") {
+	for token := range strings.SplitSeq(value, ",") {
 		token = strings.TrimSpace(strings.ToLower(token))
 		if token != "" {
 			tokens[token] = true
@@ -668,7 +668,7 @@ func (s *selectionState) addFeatureConstant(name string) {
 	if name == "" {
 		return
 	}
-	for _, enumName := range strings.Split(name, ",") {
+	for enumName := range strings.SplitSeq(name, ",") {
 		enumName = strings.TrimSpace(enumName)
 		s.addFeatureConstantRecursive(enumName, make(map[string]bool))
 	}

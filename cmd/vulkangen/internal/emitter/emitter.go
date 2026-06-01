@@ -91,25 +91,24 @@ func goConstValue(value string) string {
 	if strings.HasPrefix(value, "(~") && strings.HasSuffix(value, ")") {
 		inner := strings.TrimSuffix(strings.TrimPrefix(value, "(~"), ")")
 		width := "uint32"
-		switch {
-		case strings.HasSuffix(inner, "ULL"):
+		if trimmed, ok := strings.CutSuffix(inner, "ULL"); ok {
 			width = "uint64"
-			inner = strings.TrimSuffix(inner, "ULL")
-		case strings.HasSuffix(inner, "UL"):
-			inner = strings.TrimSuffix(inner, "UL")
-		case strings.HasSuffix(inner, "U"):
-			inner = strings.TrimSuffix(inner, "U")
+			inner = trimmed
+		} else if trimmed, ok := strings.CutSuffix(inner, "UL"); ok {
+			inner = trimmed
+		} else if trimmed, ok := strings.CutSuffix(inner, "U"); ok {
+			inner = trimmed
 		}
 		return "^" + width + "(" + inner + ")"
 	}
-	if strings.HasSuffix(value, "ULL") {
-		return strings.TrimSuffix(value, "ULL")
+	if trimmed, ok := strings.CutSuffix(value, "ULL"); ok {
+		return trimmed
 	}
-	if strings.HasSuffix(value, "UL") {
-		return strings.TrimSuffix(value, "UL")
+	if trimmed, ok := strings.CutSuffix(value, "UL"); ok {
+		return trimmed
 	}
-	if strings.HasSuffix(value, "U") {
-		return strings.TrimSuffix(value, "U")
+	if trimmed, ok := strings.CutSuffix(value, "U"); ok {
+		return trimmed
 	}
 	if (strings.HasSuffix(value, "F") || strings.HasSuffix(value, "f")) && strings.ContainsAny(value, ".eE") {
 		return value[:len(value)-1]
