@@ -187,15 +187,26 @@ func preferType(candidate, existing TypeDecl) bool {
 }
 
 func typeVariantScore(t TypeDecl) int {
-	api := strings.ToLower(t.API)
+	api := apiTokenSet(t.API)
 	score := 0
-	if api == "" || strings.Contains(api, "vulkan") {
+	if len(api) == 0 || api["vulkan"] {
 		score += 2
 	}
-	if strings.Contains(api, "vulkansc") && !strings.Contains(api, "vulkan,") {
+	if api["vulkansc"] && !api["vulkan"] {
 		score -= 2
 	}
 	return score
+}
+
+func apiTokenSet(value string) map[string]bool {
+	tokens := make(map[string]bool)
+	for _, token := range strings.Split(value, ",") {
+		token = strings.TrimSpace(strings.ToLower(token))
+		if token != "" {
+			tokens[token] = true
+		}
+	}
+	return tokens
 }
 
 func preferCommand(candidate, existing CommandDecl) bool {

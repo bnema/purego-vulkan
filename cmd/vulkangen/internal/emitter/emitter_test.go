@@ -122,6 +122,42 @@ func TestEmitDispatch(t *testing.T) {
 	}
 }
 
+func TestEmitCommandsOmitsUnsafeImportWhenUnused(t *testing.T) {
+	out, err := EmitCommands(testSelectedRegistryNoUnsafe())
+	if err != nil {
+		t.Fatalf("EmitCommands() error = %v", err)
+	}
+	for _, want := range []string{
+		"var VkCreateInstance func(*Instance) Result",
+		`"vkCreateInstance": &VkCreateInstance`,
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("EmitCommands() missing %q\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "import \"unsafe\"") {
+		t.Fatalf("EmitCommands() unexpectedly imported unsafe\n%s", out)
+	}
+}
+
+func TestEmitDispatchOmitsUnsafeImportWhenUnused(t *testing.T) {
+	out, err := EmitDispatch(testSelectedRegistryNoUnsafe())
+	if err != nil {
+		t.Fatalf("EmitDispatch() error = %v", err)
+	}
+	for _, want := range []string{
+		"type GlobalDispatch struct",
+		"CreateInstance func(*Instance) Result",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("EmitDispatch() missing %q\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "import \"unsafe\"") {
+		t.Fatalf("EmitDispatch() unexpectedly imported unsafe\n%s", out)
+	}
+}
+
 func testSelectedRegistry() *model.SelectedRegistry {
 	return &model.SelectedRegistry{
 		Types: []model.SelectedType{
@@ -219,6 +255,20 @@ func testSelectedRegistry() *model.SelectedRegistry {
 				{Name: "size", Type: "VkDeviceSize"},
 				{Name: "flags", Type: "VkMemoryMapFlags"},
 				{Name: "ppData", Type: "void", PointerDepth: 2},
+			}},
+		},
+	}
+}
+
+func testSelectedRegistryNoUnsafe() *model.SelectedRegistry {
+	return &model.SelectedRegistry{
+		Types: []model.SelectedType{
+			{Name: "VkInstance", GoName: "Instance", GoType: "uintptr", Category: "handle", Dispatchable: true},
+			{Name: "VkResult", GoName: "Result", GoType: "int32", Category: "basetype"},
+		},
+		Commands: []model.SelectedCommand{
+			{Name: "vkCreateInstance", GoName: "CreateInstance", Return: "VkResult", Dispatch: model.DispatchGlobal, Params: []model.ParamDecl{
+				{Name: "pInstance", Type: "VkInstance", PointerDepth: 1},
 			}},
 		},
 	}

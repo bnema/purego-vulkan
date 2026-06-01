@@ -1,6 +1,7 @@
 package vulkan
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 	"unsafe"
@@ -160,7 +161,7 @@ func assertRendererDeviceDispatch(t *testing.T, dispatch *DeviceDispatch) {
 		{"CmdEndRenderingKHR", dispatch.CmdEndRenderingKHR},
 	}
 	for _, check := range checks {
-		if check.fn == nil {
+		if check.fn == nil || reflect.ValueOf(check.fn).IsNil() {
 			t.Fatalf("%s was not loaded", check.name)
 		}
 	}

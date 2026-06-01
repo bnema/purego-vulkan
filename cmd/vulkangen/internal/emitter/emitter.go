@@ -34,7 +34,11 @@ func EmitTypes(sel *model.SelectedRegistry) (string, error) {
 			}
 			b.WriteString("}\n\n")
 		case "union":
-			fmt.Fprintf(&b, "type %s %s\n\n", t.GoName, unionGoType(t, types))
+			goType, err := unionGoType(t, types)
+			if err != nil {
+				return "", err
+			}
+			fmt.Fprintf(&b, "type %s %s\n\n", t.GoName, goType)
 		}
 	}
 	return formatSource(b.Bytes())
@@ -288,18 +292,22 @@ type typeLayout struct {
 	ok    bool
 }
 
-func unionGoType(t model.SelectedType, types map[string]model.SelectedType) string {
+func unionGoType(t model.SelectedType, types map[string]model.SelectedType) (string, error) {
 	if len(t.Members) == 0 {
-		return "[0]byte"
+		return "[0]byte", nil
 	}
 	union, bestMember, best := unionLayout(t, types, make(map[string]bool))
-	if union.ok && best.ok && best.size == union.size && best.align == union.align {
-		return goFieldType(bestMember)
+	if !union.ok || !best.ok {
+		return "", fmt.Errorf("cannot resolve union layout for %s", t.Name)
 	}
-	if union.ok {
-		return unionStorageGoType(union.size, union.align)
+	if best.size == union.size && best.align == union.align {
+		return goFieldType(bestMember), nil
 	}
-	return goFieldType(t.Members[0])
+	storage := unionStorageGoType(union.size, union.align)
+	if storage == "" {
+		return "", fmt.Errorf("cannot represent union %s layout size=%d align=%d", t.Name, union.size, union.align)
+	}
+	return storage, nil
 }
 
 func unionLayout(t model.SelectedType, types map[string]model.SelectedType, seen map[string]bool) (typeLayout, model.MemberDecl, typeLayout) {
@@ -344,10 +352,15 @@ func unionStorageGoType(size, align int) string {
 	}
 }
 
+func pointerLayout() typeLayout {
+	size := strconv.IntSize / 8
+	return typeLayout{size: size, align: size, ok: true}
+}
+
 func memberLayout(member model.MemberDecl, types map[string]model.SelectedType, seen map[string]bool) typeLayout {
 	var layout typeLayout
 	if member.PointerDepth > 0 {
-		layout = typeLayout{size: 8, align: 8, ok: true}
+		layout = pointerLayout()
 	} else {
 		layout = vkTypeLayout(member.Type, types, seen)
 	}
@@ -418,8 +431,10 @@ func scalarLayout(name string) typeLayout {
 		return typeLayout{size: 2, align: 2, ok: true}
 	case "int", "float", "uint32_t", "uint32", "int32_t", "int32", "float32", "VkFlags", "Bool32", "Result":
 		return typeLayout{size: 4, align: 4, ok: true}
-	case "double", "uint64_t", "uint64", "int64_t", "int64", "float64", "size_t", "uintptr", "unsafe.Pointer", "VkFlags64", "VkDeviceSize", "DeviceSize":
+	case "double", "uint64_t", "uint64", "int64_t", "int64", "float64", "VkFlags64", "VkDeviceSize", "DeviceSize":
 		return typeLayout{size: 8, align: 8, ok: true}
+	case "size_t", "uintptr", "unsafe.Pointer":
+		return pointerLayout()
 	default:
 		return typeLayout{}
 	}

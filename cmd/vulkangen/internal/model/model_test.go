@@ -249,6 +249,33 @@ func TestSelectUsesPreferredDuplicateTypeVariant(t *testing.T) {
 	}
 }
 
+func TestSelectScoresTypeAPITokensOrderIndependently(t *testing.T) {
+	reg := &model.Registry{
+		Types: []model.TypeDecl{
+			{Name: "VkDevice", Category: "handle", Type: "VK_DEFINE_HANDLE"},
+			{Name: "VkPreferredInfo", Category: "struct", API: "vulkansc", Members: []model.MemberDecl{{Name: "scOnly", Type: "uint32_t"}}},
+			{Name: "VkPreferredInfo", Category: "struct", API: "vulkansc,vulkan", Members: []model.MemberDecl{{Name: "value", Type: "VkDeviceSize"}}},
+			{Name: "VkDeviceSize", Category: "basetype", Type: "uint64_t"},
+		},
+		Commands: []model.CommandDecl{{Name: "vkUsePreferredInfo", Return: "void", Params: []model.ParamDecl{
+			{Name: "device", Type: "VkDevice"},
+			{Name: "pInfo", Type: "VkPreferredInfo", PointerDepth: 1},
+		}}},
+	}
+
+	sel, err := model.Select(reg, model.SelectionConfig{Commands: []string{"vkUsePreferredInfo"}})
+	if err != nil {
+		t.Fatalf("Select() error = %v", err)
+	}
+	info := sel.TypeByName("VkPreferredInfo")
+	if info == nil {
+		t.Fatal("VkPreferredInfo missing")
+	}
+	if len(info.Members) != 1 || info.Members[0].Name != "value" {
+		t.Fatalf("selected type members = %+v, want combined Vulkan token variant", info.Members)
+	}
+}
+
 func TestSelectFiltersDuplicateCommandVariants(t *testing.T) {
 	reg := testRegistry()
 	sel, err := model.Select(reg, model.SelectionConfig{Commands: []string{"vkCreateDevice"}})
