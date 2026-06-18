@@ -61,7 +61,6 @@ func RegisterInstance(handle uintptr, lookup LookupFunc, fptrs map[string]any) e
 	}
 	registerOptional([]string{"vkGetPhysicalDeviceMemoryProperties2KHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkGetPhysicalDeviceSparseImageFormatProperties2KHR"}, handle, lookup, fptrs)
-	registerOptional([]string{"vkGetPhysicalDeviceExternalBufferPropertiesKHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkGetPhysicalDeviceExternalSemaphorePropertiesKHR"}, handle, lookup, fptrs)
 	return nil
 }
@@ -88,6 +87,24 @@ func RegisterDevice(handle uintptr, lookup LookupFunc, fptrs map[string]any) err
 	if err := registerRequired([]string{"vkFreeMemory"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
+	if err := registerRequired([]string{"vkMapMemory"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
+	if err := registerRequired([]string{"vkUnmapMemory"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
+	if err := registerRequired([]string{"vkFlushMappedMemoryRanges"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
+	if err := registerRequired([]string{"vkInvalidateMappedMemoryRanges"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
+	if err := registerRequired([]string{"vkGetBufferMemoryRequirements"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
+	if err := registerRequired([]string{"vkBindBufferMemory"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
 	if err := registerRequired([]string{"vkGetImageMemoryRequirements"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
@@ -112,6 +129,12 @@ func RegisterDevice(handle uintptr, lookup LookupFunc, fptrs map[string]any) err
 	if err := registerRequired([]string{"vkDestroySemaphore"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
+	if err := registerRequired([]string{"vkCreateBuffer"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
+	if err := registerRequired([]string{"vkDestroyBuffer"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
 	if err := registerRequired([]string{"vkCreateImage"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
@@ -128,6 +151,12 @@ func RegisterDevice(handle uintptr, lookup LookupFunc, fptrs map[string]any) err
 		return err
 	}
 	if err := registerRequired([]string{"vkDestroyShaderModule"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
+	if err := registerRequired([]string{"vkCreateGraphicsPipelines"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
+	if err := registerRequired([]string{"vkDestroyPipeline"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
 	if err := registerRequired([]string{"vkCreatePipelineLayout"}, handle, lookup, fptrs); err != nil {
@@ -181,7 +210,27 @@ func RegisterDevice(handle uintptr, lookup LookupFunc, fptrs map[string]any) err
 	if err := registerRequired([]string{"vkResetCommandBuffer"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
-	registerOptional([]string{"vkTrimCommandPoolKHR"}, handle, lookup, fptrs)
+	if err := registerRequired([]string{"vkCmdBindPipeline"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
+	if err := registerRequired([]string{"vkCmdBindDescriptorSets"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
+	if err := registerRequired([]string{"vkCmdBindIndexBuffer"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
+	if err := registerRequired([]string{"vkCmdBindVertexBuffers"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
+	if err := registerRequired([]string{"vkCmdDraw"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
+	if err := registerRequired([]string{"vkCmdDrawIndexed"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
+	if err := registerRequired([]string{"vkCmdCopyBufferToImage"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
 	registerOptional([]string{"vkGetMemoryFdKHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkGetMemoryFdPropertiesKHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkGetSemaphoreFdKHR"}, handle, lookup, fptrs)
@@ -195,8 +244,6 @@ func RegisterDevice(handle uintptr, lookup LookupFunc, fptrs map[string]any) err
 		return err
 	}
 	registerOptional([]string{"vkGetImageSparseMemoryRequirements2KHR"}, handle, lookup, fptrs)
-	registerOptional([]string{"vkCreateSamplerYcbcrConversionKHR"}, handle, lookup, fptrs)
-	registerOptional([]string{"vkDestroySamplerYcbcrConversionKHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkGetImageDrmFormatModifierPropertiesEXT"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkCmdSetEvent2KHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkCmdResetEvent2KHR"}, handle, lookup, fptrs)
@@ -204,6 +251,12 @@ func RegisterDevice(handle uintptr, lookup LookupFunc, fptrs map[string]any) err
 	registerOptional([]string{"vkCmdPipelineBarrier2KHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkQueueSubmit2KHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkCmdWriteTimestamp2KHR"}, handle, lookup, fptrs)
+	if err := registerRequired([]string{"vkCmdBeginRendering", "vkCmdBeginRenderingKHR"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
+	if err := registerRequired([]string{"vkCmdEndRendering", "vkCmdEndRenderingKHR"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
 	return nil
 }
 

@@ -2,6 +2,8 @@
 
 package vulkan
 
+import "unsafe"
+
 var VkCreateInstance func(*InstanceCreateInfo, *AllocationCallbacks, *Instance) Result
 var VkDestroyInstance func(Instance, *AllocationCallbacks)
 var VkEnumeratePhysicalDevices func(Instance, *uint32, *PhysicalDevice) Result
@@ -21,6 +23,12 @@ var VkQueueWaitIdle func(Queue) Result
 var VkDeviceWaitIdle func(Device) Result
 var VkAllocateMemory func(Device, *MemoryAllocateInfo, *AllocationCallbacks, *DeviceMemory) Result
 var VkFreeMemory func(Device, DeviceMemory, *AllocationCallbacks)
+var VkMapMemory func(Device, DeviceMemory, DeviceSize, DeviceSize, MemoryMapFlags, *unsafe.Pointer) Result
+var VkUnmapMemory func(Device, DeviceMemory)
+var VkFlushMappedMemoryRanges func(Device, uint32, *MappedMemoryRange) Result
+var VkInvalidateMappedMemoryRanges func(Device, uint32, *MappedMemoryRange) Result
+var VkGetBufferMemoryRequirements func(Device, Buffer, *MemoryRequirements)
+var VkBindBufferMemory func(Device, Buffer, DeviceMemory, DeviceSize) Result
 var VkGetImageMemoryRequirements func(Device, Image, *MemoryRequirements)
 var VkBindImageMemory func(Device, Image, DeviceMemory, DeviceSize) Result
 var VkCreateFence func(Device, *FenceCreateInfo, *AllocationCallbacks, *Fence) Result
@@ -29,12 +37,16 @@ var VkResetFences func(Device, uint32, *Fence) Result
 var VkWaitForFences func(Device, uint32, *Fence, Bool32, uint64) Result
 var VkCreateSemaphore func(Device, *SemaphoreCreateInfo, *AllocationCallbacks, *Semaphore) Result
 var VkDestroySemaphore func(Device, Semaphore, *AllocationCallbacks)
+var VkCreateBuffer func(Device, *BufferCreateInfo, *AllocationCallbacks, *Buffer) Result
+var VkDestroyBuffer func(Device, Buffer, *AllocationCallbacks)
 var VkCreateImage func(Device, *ImageCreateInfo, *AllocationCallbacks, *Image) Result
 var VkDestroyImage func(Device, Image, *AllocationCallbacks)
 var VkCreateImageView func(Device, *ImageViewCreateInfo, *AllocationCallbacks, *ImageView) Result
 var VkDestroyImageView func(Device, ImageView, *AllocationCallbacks)
 var VkCreateShaderModule func(Device, *ShaderModuleCreateInfo, *AllocationCallbacks, *ShaderModule) Result
 var VkDestroyShaderModule func(Device, ShaderModule, *AllocationCallbacks)
+var VkCreateGraphicsPipelines func(Device, PipelineCache, uint32, *GraphicsPipelineCreateInfo, *AllocationCallbacks, *Pipeline) Result
+var VkDestroyPipeline func(Device, Pipeline, *AllocationCallbacks)
 var VkCreatePipelineLayout func(Device, *PipelineLayoutCreateInfo, *AllocationCallbacks, *PipelineLayout) Result
 var VkDestroyPipelineLayout func(Device, PipelineLayout, *AllocationCallbacks)
 var VkCreateSampler func(Device, *SamplerCreateInfo, *AllocationCallbacks, *Sampler) Result
@@ -52,6 +64,13 @@ var VkFreeCommandBuffers func(Device, CommandPool, uint32, *CommandBuffer)
 var VkBeginCommandBuffer func(CommandBuffer, *CommandBufferBeginInfo) Result
 var VkEndCommandBuffer func(CommandBuffer) Result
 var VkResetCommandBuffer func(CommandBuffer, CommandBufferResetFlags) Result
+var VkCmdBindPipeline func(CommandBuffer, PipelineBindPoint, Pipeline)
+var VkCmdBindDescriptorSets func(CommandBuffer, PipelineBindPoint, PipelineLayout, uint32, uint32, *DescriptorSet, uint32, *uint32)
+var VkCmdBindIndexBuffer func(CommandBuffer, Buffer, DeviceSize, IndexType)
+var VkCmdBindVertexBuffers func(CommandBuffer, uint32, uint32, *Buffer, *DeviceSize)
+var VkCmdDraw func(CommandBuffer, uint32, uint32, uint32, uint32)
+var VkCmdDrawIndexed func(CommandBuffer, uint32, uint32, uint32, int32, uint32)
+var VkCmdCopyBufferToImage func(CommandBuffer, Buffer, Image, ImageLayout, uint32, *BufferImageCopy)
 var VkGetPhysicalDeviceFeatures2 func(PhysicalDevice, *PhysicalDeviceFeatures2)
 var VkGetPhysicalDeviceFeatures2KHR func(PhysicalDevice, *PhysicalDeviceFeatures2)
 var VkGetPhysicalDeviceProperties2 func(PhysicalDevice, *PhysicalDeviceProperties2)
@@ -62,8 +81,6 @@ var VkGetPhysicalDeviceQueueFamilyProperties2 func(PhysicalDevice, *uint32, *Que
 var VkGetPhysicalDeviceQueueFamilyProperties2KHR func(PhysicalDevice, *uint32, *QueueFamilyProperties2)
 var VkGetPhysicalDeviceMemoryProperties2KHR func(PhysicalDevice, *PhysicalDeviceMemoryProperties2)
 var VkGetPhysicalDeviceSparseImageFormatProperties2KHR func(PhysicalDevice, *PhysicalDeviceSparseImageFormatInfo2, *uint32, *SparseImageFormatProperties2)
-var VkTrimCommandPoolKHR func(Device, CommandPool, CommandPoolTrimFlags)
-var VkGetPhysicalDeviceExternalBufferPropertiesKHR func(PhysicalDevice, *PhysicalDeviceExternalBufferInfo, *ExternalBufferProperties)
 var VkGetMemoryFdKHR func(Device, *MemoryGetFdInfoKHR, *int32) Result
 var VkGetMemoryFdPropertiesKHR func(Device, ExternalMemoryHandleTypeFlagBits, int32, *MemoryFdPropertiesKHR) Result
 var VkGetPhysicalDeviceExternalSemaphorePropertiesKHR func(PhysicalDevice, *PhysicalDeviceExternalSemaphoreInfo, *ExternalSemaphoreProperties)
@@ -76,8 +93,6 @@ var VkGetBufferMemoryRequirements2KHR func(Device, *BufferMemoryRequirementsInfo
 var VkGetImageMemoryRequirements2 func(Device, *ImageMemoryRequirementsInfo2, *MemoryRequirements2)
 var VkGetImageMemoryRequirements2KHR func(Device, *ImageMemoryRequirementsInfo2, *MemoryRequirements2)
 var VkGetImageSparseMemoryRequirements2KHR func(Device, *ImageSparseMemoryRequirementsInfo2, *uint32, *SparseImageMemoryRequirements2)
-var VkCreateSamplerYcbcrConversionKHR func(Device, *SamplerYcbcrConversionCreateInfo, *AllocationCallbacks, *SamplerYcbcrConversion) Result
-var VkDestroySamplerYcbcrConversionKHR func(Device, SamplerYcbcrConversion, *AllocationCallbacks)
 var VkGetImageDrmFormatModifierPropertiesEXT func(Device, Image, *ImageDrmFormatModifierPropertiesEXT) Result
 var VkCmdSetEvent2KHR func(CommandBuffer, Event, *DependencyInfo)
 var VkCmdResetEvent2KHR func(CommandBuffer, Event, PipelineStageFlags2)
@@ -85,6 +100,10 @@ var VkCmdWaitEvents2KHR func(CommandBuffer, uint32, *Event, *DependencyInfo)
 var VkCmdPipelineBarrier2KHR func(CommandBuffer, *DependencyInfo)
 var VkQueueSubmit2KHR func(Queue, uint32, *SubmitInfo2, Fence) Result
 var VkCmdWriteTimestamp2KHR func(CommandBuffer, PipelineStageFlags2, QueryPool, uint32)
+var VkCmdBeginRendering func(CommandBuffer, *RenderingInfo)
+var VkCmdBeginRenderingKHR func(CommandBuffer, *RenderingInfo)
+var VkCmdEndRendering func(CommandBuffer)
+var VkCmdEndRenderingKHR func(CommandBuffer)
 
 func globalCommandPointers() map[string]any {
 	return map[string]any{
@@ -115,7 +134,6 @@ func instanceCommandPointers() map[string]any {
 		"vkGetPhysicalDeviceQueueFamilyProperties2KHR":       &VkGetPhysicalDeviceQueueFamilyProperties2KHR,
 		"vkGetPhysicalDeviceMemoryProperties2KHR":            &VkGetPhysicalDeviceMemoryProperties2KHR,
 		"vkGetPhysicalDeviceSparseImageFormatProperties2KHR": &VkGetPhysicalDeviceSparseImageFormatProperties2KHR,
-		"vkGetPhysicalDeviceExternalBufferPropertiesKHR":     &VkGetPhysicalDeviceExternalBufferPropertiesKHR,
 		"vkGetPhysicalDeviceExternalSemaphorePropertiesKHR":  &VkGetPhysicalDeviceExternalSemaphorePropertiesKHR,
 	}
 }
@@ -129,6 +147,12 @@ func deviceCommandPointers() map[string]any {
 		"vkDeviceWaitIdle":                         &VkDeviceWaitIdle,
 		"vkAllocateMemory":                         &VkAllocateMemory,
 		"vkFreeMemory":                             &VkFreeMemory,
+		"vkMapMemory":                              &VkMapMemory,
+		"vkUnmapMemory":                            &VkUnmapMemory,
+		"vkFlushMappedMemoryRanges":                &VkFlushMappedMemoryRanges,
+		"vkInvalidateMappedMemoryRanges":           &VkInvalidateMappedMemoryRanges,
+		"vkGetBufferMemoryRequirements":            &VkGetBufferMemoryRequirements,
+		"vkBindBufferMemory":                       &VkBindBufferMemory,
 		"vkGetImageMemoryRequirements":             &VkGetImageMemoryRequirements,
 		"vkBindImageMemory":                        &VkBindImageMemory,
 		"vkCreateFence":                            &VkCreateFence,
@@ -137,12 +161,16 @@ func deviceCommandPointers() map[string]any {
 		"vkWaitForFences":                          &VkWaitForFences,
 		"vkCreateSemaphore":                        &VkCreateSemaphore,
 		"vkDestroySemaphore":                       &VkDestroySemaphore,
+		"vkCreateBuffer":                           &VkCreateBuffer,
+		"vkDestroyBuffer":                          &VkDestroyBuffer,
 		"vkCreateImage":                            &VkCreateImage,
 		"vkDestroyImage":                           &VkDestroyImage,
 		"vkCreateImageView":                        &VkCreateImageView,
 		"vkDestroyImageView":                       &VkDestroyImageView,
 		"vkCreateShaderModule":                     &VkCreateShaderModule,
 		"vkDestroyShaderModule":                    &VkDestroyShaderModule,
+		"vkCreateGraphicsPipelines":                &VkCreateGraphicsPipelines,
+		"vkDestroyPipeline":                        &VkDestroyPipeline,
 		"vkCreatePipelineLayout":                   &VkCreatePipelineLayout,
 		"vkDestroyPipelineLayout":                  &VkDestroyPipelineLayout,
 		"vkCreateSampler":                          &VkCreateSampler,
@@ -160,7 +188,13 @@ func deviceCommandPointers() map[string]any {
 		"vkBeginCommandBuffer":                     &VkBeginCommandBuffer,
 		"vkEndCommandBuffer":                       &VkEndCommandBuffer,
 		"vkResetCommandBuffer":                     &VkResetCommandBuffer,
-		"vkTrimCommandPoolKHR":                     &VkTrimCommandPoolKHR,
+		"vkCmdBindPipeline":                        &VkCmdBindPipeline,
+		"vkCmdBindDescriptorSets":                  &VkCmdBindDescriptorSets,
+		"vkCmdBindIndexBuffer":                     &VkCmdBindIndexBuffer,
+		"vkCmdBindVertexBuffers":                   &VkCmdBindVertexBuffers,
+		"vkCmdDraw":                                &VkCmdDraw,
+		"vkCmdDrawIndexed":                         &VkCmdDrawIndexed,
+		"vkCmdCopyBufferToImage":                   &VkCmdCopyBufferToImage,
 		"vkGetMemoryFdKHR":                         &VkGetMemoryFdKHR,
 		"vkGetMemoryFdPropertiesKHR":               &VkGetMemoryFdPropertiesKHR,
 		"vkGetSemaphoreFdKHR":                      &VkGetSemaphoreFdKHR,
@@ -172,8 +206,6 @@ func deviceCommandPointers() map[string]any {
 		"vkGetImageMemoryRequirements2":            &VkGetImageMemoryRequirements2,
 		"vkGetImageMemoryRequirements2KHR":         &VkGetImageMemoryRequirements2KHR,
 		"vkGetImageSparseMemoryRequirements2KHR":   &VkGetImageSparseMemoryRequirements2KHR,
-		"vkCreateSamplerYcbcrConversionKHR":        &VkCreateSamplerYcbcrConversionKHR,
-		"vkDestroySamplerYcbcrConversionKHR":       &VkDestroySamplerYcbcrConversionKHR,
 		"vkGetImageDrmFormatModifierPropertiesEXT": &VkGetImageDrmFormatModifierPropertiesEXT,
 		"vkCmdSetEvent2KHR":                        &VkCmdSetEvent2KHR,
 		"vkCmdResetEvent2KHR":                      &VkCmdResetEvent2KHR,
@@ -181,5 +213,9 @@ func deviceCommandPointers() map[string]any {
 		"vkCmdPipelineBarrier2KHR":                 &VkCmdPipelineBarrier2KHR,
 		"vkQueueSubmit2KHR":                        &VkQueueSubmit2KHR,
 		"vkCmdWriteTimestamp2KHR":                  &VkCmdWriteTimestamp2KHR,
+		"vkCmdBeginRendering":                      &VkCmdBeginRendering,
+		"vkCmdBeginRenderingKHR":                   &VkCmdBeginRenderingKHR,
+		"vkCmdEndRendering":                        &VkCmdEndRendering,
+		"vkCmdEndRenderingKHR":                     &VkCmdEndRenderingKHR,
 	}
 }

@@ -180,6 +180,35 @@ type registryIndex struct {
 	featureEnums map[string]EnumDecl
 }
 
+func preferType(candidate, existing TypeDecl) bool {
+	candidateScore := typeVariantScore(candidate)
+	existingScore := typeVariantScore(existing)
+	return candidateScore > existingScore
+}
+
+func typeVariantScore(t TypeDecl) int {
+	api := apiTokenSet(t.API)
+	score := 0
+	if len(api) == 0 || api["vulkan"] {
+		score += 2
+	}
+	if api["vulkansc"] && !api["vulkan"] {
+		score -= 2
+	}
+	return score
+}
+
+func apiTokenSet(value string) map[string]bool {
+	tokens := make(map[string]bool)
+	for token := range strings.SplitSeq(value, ",") {
+		token = strings.TrimSpace(strings.ToLower(token))
+		if token != "" {
+			tokens[token] = true
+		}
+	}
+	return tokens
+}
+
 func preferCommand(candidate, existing CommandDecl) bool {
 	candidateScore := commandVariantScore(candidate)
 	existingScore := commandVariantScore(existing)
@@ -187,19 +216,19 @@ func preferCommand(candidate, existing CommandDecl) bool {
 }
 
 func commandVariantScore(cmd CommandDecl) int {
-	api := strings.ToLower(cmd.API)
-	export := strings.ToLower(cmd.Export)
+	api := apiTokenSet(cmd.API)
+	export := apiTokenSet(cmd.Export)
 	score := 0
-	if api == "" || strings.Contains(api, "vulkan") {
+	if len(api) == 0 || api["vulkan"] {
 		score += 2
 	}
-	if strings.Contains(api, "vulkansc") && !strings.Contains(api, "vulkan,") {
+	if api["vulkansc"] && !api["vulkan"] {
 		score -= 2
 	}
-	if export == "" || strings.Contains(export, "vulkan") {
+	if len(export) == 0 || export["vulkan"] {
 		score++
 	}
-	if strings.Contains(export, "vulkansc") && !strings.Contains(export, "vulkan,") {
+	if export["vulkansc"] && !export["vulkan"] {
 		score -= 2
 	}
 	if cmd.Return != "" || len(cmd.Params) > 0 {
@@ -218,6 +247,12 @@ func newIndex(reg *Registry) registryIndex {
 		featureEnums: make(map[string]EnumDecl),
 	}
 	for _, t := range reg.Types {
+		if existing, ok := idx.types[t.Name]; ok {
+			if preferType(t, existing) {
+				idx.types[t.Name] = t
+			}
+			continue
+		}
 		idx.types[t.Name] = t
 	}
 	for _, c := range reg.Commands {
@@ -633,7 +668,7 @@ func (s *selectionState) addFeatureConstant(name string) {
 	if name == "" {
 		return
 	}
-	for _, enumName := range strings.Split(name, ",") {
+	for enumName := range strings.SplitSeq(name, ",") {
 		enumName = strings.TrimSpace(enumName)
 		s.addFeatureConstantRecursive(enumName, make(map[string]bool))
 	}
@@ -713,11 +748,14 @@ func (s *selectionState) missingError() error {
 
 func (s *selectionState) buildSelected() (*SelectedRegistry, error) {
 	out := &SelectedRegistry{}
+	seenTypes := make(map[string]bool)
 	for _, decl := range s.reg.Types {
-		if !s.selectedTypes[decl.Name] {
+		if !s.selectedTypes[decl.Name] || seenTypes[decl.Name] {
 			continue
 		}
-		out.Types = append(out.Types, s.selectType(decl))
+		seenTypes[decl.Name] = true
+		selectedDecl := s.idx.types[decl.Name]
+		out.Types = append(out.Types, s.selectType(selectedDecl))
 	}
 	for _, enum := range s.constants {
 		out.Constants = append(out.Constants, SelectedConstant{Name: enum.Name, Value: enum.Value, Extends: enum.Extends, Source: enum})
@@ -813,7 +851,7 @@ func (s *selectionState) selectType(decl TypeDecl) SelectedType {
 		GoName:       goName(decl.Name),
 		GoType:       goType,
 		Dispatchable: dispatchable,
-		Members:      slices.Clone(resolved.Members),
+		Members:      uniqueMembers(resolved.Members),
 		Source:       resolved,
 	}
 }
@@ -893,6 +931,19 @@ func goScalarType(cType string) string {
 	default:
 		return goName(cType)
 	}
+}
+
+func uniqueMembers(members []MemberDecl) []MemberDecl {
+	out := make([]MemberDecl, 0, len(members))
+	seen := make(map[string]bool, len(members))
+	for _, member := range members {
+		if seen[member.Name] {
+			continue
+		}
+		seen[member.Name] = true
+		out = append(out, member)
+	}
+	return out
 }
 
 func isGlobalCommand(name string) bool {
