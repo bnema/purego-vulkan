@@ -216,19 +216,19 @@ func preferCommand(candidate, existing CommandDecl) bool {
 }
 
 func commandVariantScore(cmd CommandDecl) int {
-	api := strings.ToLower(cmd.API)
-	export := strings.ToLower(cmd.Export)
+	api := apiTokenSet(cmd.API)
+	export := apiTokenSet(cmd.Export)
 	score := 0
-	if api == "" || strings.Contains(api, "vulkan") {
+	if len(api) == 0 || api["vulkan"] {
 		score += 2
 	}
-	if strings.Contains(api, "vulkansc") && !strings.Contains(api, "vulkan,") {
+	if api["vulkansc"] && !api["vulkan"] {
 		score -= 2
 	}
-	if export == "" || strings.Contains(export, "vulkan") {
+	if len(export) == 0 || export["vulkan"] {
 		score++
 	}
-	if strings.Contains(export, "vulkansc") && !strings.Contains(export, "vulkan,") {
+	if export["vulkansc"] && !export["vulkan"] {
 		score -= 2
 	}
 	if cmd.Return != "" || len(cmd.Params) > 0 {

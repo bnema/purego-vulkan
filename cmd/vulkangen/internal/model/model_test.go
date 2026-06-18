@@ -297,6 +297,30 @@ func TestSelectFiltersDuplicateCommandVariants(t *testing.T) {
 	}
 }
 
+func TestSelectScoresCommandAPITokensOrderIndependently(t *testing.T) {
+	reg := &model.Registry{
+		Types: []model.TypeDecl{
+			{Name: "VkDevice", Category: "handle", Type: "VK_DEFINE_HANDLE"},
+		},
+		Commands: []model.CommandDecl{
+			{Name: "vkUsePreferredCommand", Return: "void", API: "vulkansc", Params: []model.ParamDecl{{Name: "device", Type: "VkDevice"}}},
+			{Name: "vkUsePreferredCommand", Return: "void", API: "vulkansc,vulkan", Params: []model.ParamDecl{{Name: "device", Type: "VkDevice"}, {Name: "value", Type: "uint32_t"}}},
+		},
+	}
+
+	sel, err := model.Select(reg, model.SelectionConfig{Commands: []string{"vkUsePreferredCommand"}})
+	if err != nil {
+		t.Fatalf("Select() error = %v", err)
+	}
+	cmd := sel.CommandByName("vkUsePreferredCommand")
+	if cmd == nil {
+		t.Fatal("vkUsePreferredCommand missing")
+	}
+	if len(cmd.Params) != 2 || cmd.Params[1].Name != "value" {
+		t.Fatalf("selected command params = %+v, want combined Vulkan token variant", cmd.Params)
+	}
+}
+
 func TestOverridesMarkOptionalExtensionCommands(t *testing.T) {
 	reg := testRegistry()
 	cfg := model.SelectionConfig{

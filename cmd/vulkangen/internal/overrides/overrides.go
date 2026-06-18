@@ -1,6 +1,10 @@
 package overrides
 
-import "github.com/bnema/purego-vulkan/cmd/vulkangen/internal/model"
+import (
+	"maps"
+
+	"github.com/bnema/purego-vulkan/cmd/vulkangen/internal/model"
+)
 
 var InitialCommands = []string{
 	"vkGetInstanceProcAddr",
@@ -121,8 +125,6 @@ func DefaultSelection() model.SelectionConfig {
 
 func cloneCommandOverrides() map[string]model.CommandOverride {
 	out := make(map[string]model.CommandOverride, len(CommandOverrides))
-	for name, entry := range CommandOverrides {
-		out[name] = entry
-	}
+	maps.Copy(out, CommandOverrides)
 	return out
 }
