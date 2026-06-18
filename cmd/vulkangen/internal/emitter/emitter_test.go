@@ -26,8 +26,8 @@ func TestEmitTypes(t *testing.T) {
 		"DeviceName [MaxPhysicalDeviceNameSize]byte",
 		"type ImageDrmFormatModifierExplicitCreateInfoEXT struct",
 		"PlaneLayouts                *SubresourceLayout",
-		"type ClearColorValue [4]float32",
-		"type ClearValue ClearColorValue",
+		"type ClearColorValue [4]uint32",
+		"type ClearValue [4]uint32",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("EmitTypes() missing %q\n%s", want, out)

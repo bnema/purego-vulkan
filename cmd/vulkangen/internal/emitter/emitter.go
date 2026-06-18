@@ -299,7 +299,7 @@ func unionGoType(t model.SelectedType, types map[string]model.SelectedType) (str
 	if !union.ok || !best.ok {
 		return "", fmt.Errorf("cannot resolve union layout for %s", t.Name)
 	}
-	if best.size == union.size && best.align == union.align {
+	if len(t.Members) == 1 && best.size == union.size && best.align == union.align {
 		return goFieldType(bestMember), nil
 	}
 	storage := unionStorageGoType(union.size, union.align)
