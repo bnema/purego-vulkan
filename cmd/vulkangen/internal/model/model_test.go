@@ -426,9 +426,10 @@ func TestDefaultSelectionOnPinnedRegistryHasRendererReadySurface(t *testing.T) {
 	}
 
 	for _, name := range []string{
+		"vkGetPhysicalDeviceMemoryProperties", "vkGetPhysicalDeviceMemoryProperties2", "vkGetPhysicalDeviceMemoryProperties2KHR",
 		"vkCreateBuffer", "vkDestroyBuffer", "vkGetBufferMemoryRequirements", "vkBindBufferMemory",
 		"vkMapMemory", "vkUnmapMemory", "vkFlushMappedMemoryRanges", "vkInvalidateMappedMemoryRanges",
-		"vkCmdCopyBufferToImage",
+		"vkCmdCopyBufferToImage", "vkCmdPipelineBarrier",
 		"vkCreateGraphicsPipelines", "vkDestroyPipeline",
 		"vkCmdBindPipeline", "vkCmdBindDescriptorSets", "vkCmdBindVertexBuffers", "vkCmdBindIndexBuffer", "vkCmdDraw", "vkCmdDrawIndexed",
 		"vkCmdBeginRendering", "vkCmdEndRendering", "vkCmdBeginRenderingKHR", "vkCmdEndRenderingKHR",
@@ -437,14 +438,22 @@ func TestDefaultSelectionOnPinnedRegistryHasRendererReadySurface(t *testing.T) {
 		if cmd == nil {
 			t.Fatalf("renderer command %s missing", name)
 		}
-		if cmd.Dispatch != model.DispatchDevice {
-			t.Fatalf("%s dispatch = %q, want device", name, cmd.Dispatch)
+		wantDispatch := model.DispatchDevice
+		if name == "vkGetPhysicalDeviceMemoryProperties" || name == "vkGetPhysicalDeviceMemoryProperties2" || name == "vkGetPhysicalDeviceMemoryProperties2KHR" {
+			wantDispatch = model.DispatchInstance
+		}
+		if cmd.Dispatch != wantDispatch {
+			t.Fatalf("%s dispatch = %q, want %q", name, cmd.Dispatch, wantDispatch)
+		}
+		if cmd.Optional && name != "vkCmdBeginRenderingKHR" && name != "vkCmdEndRenderingKHR" && name != "vkGetPhysicalDeviceMemoryProperties2KHR" {
+			t.Fatalf("renderer command %s optional = true", name)
 		}
 	}
 
 	for _, name := range []string{
+		"VkPhysicalDeviceMemoryProperties", "VkMemoryType", "VkMemoryHeap",
 		"VkBuffer", "VkBufferCreateInfo", "VkBufferUsageFlags", "VkBufferUsageFlagBits", "VkMappedMemoryRange",
-		"VkBufferImageCopy", "VkImageSubresourceLayers",
+		"VkBufferImageCopy", "VkImageSubresourceLayers", "VkMemoryBarrier", "VkBufferMemoryBarrier", "VkImageMemoryBarrier",
 		"VkPipeline", "VkPipelineCache", "VkGraphicsPipelineCreateInfo", "VkPipelineShaderStageCreateInfo", "VkPipelineVertexInputStateCreateInfo", "VkPipelineInputAssemblyStateCreateInfo", "VkPipelineViewportStateCreateInfo", "VkPipelineRasterizationStateCreateInfo", "VkPipelineMultisampleStateCreateInfo", "VkPipelineColorBlendStateCreateInfo", "VkPipelineDynamicStateCreateInfo",
 		"VkRenderingInfo", "VkRenderingInfoKHR", "VkRenderingAttachmentInfo", "VkRenderingAttachmentInfoKHR", "VkPipelineRenderingCreateInfo", "VkPipelineRenderingCreateInfoKHR", "VkPhysicalDeviceDynamicRenderingFeatures", "VkPhysicalDeviceDynamicRenderingFeaturesKHR",
 	} {

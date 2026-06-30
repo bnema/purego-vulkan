@@ -69,6 +69,12 @@ func TestLoadInstanceDispatchRequiresCoreCommands(t *testing.T) {
 	if dispatch.DestroyInstance == nil {
 		t.Fatal("DestroyInstance was not loaded")
 	}
+	if dispatch.GetPhysicalDeviceMemoryProperties == nil {
+		t.Fatal("GetPhysicalDeviceMemoryProperties was not loaded")
+	}
+	if dispatch.GetPhysicalDeviceMemoryProperties2 == nil || dispatch.GetPhysicalDeviceMemoryProperties2KHR == nil {
+		t.Fatal("memory properties2 core/KHR alias group was not populated from one available symbol")
+	}
 	if dispatch.GetPhysicalDeviceProperties2 == nil || dispatch.GetPhysicalDeviceProperties2KHR == nil {
 		t.Fatal("core/KHR alias group was not populated from one available symbol")
 	}
@@ -147,6 +153,7 @@ func assertRendererDeviceDispatch(t *testing.T, dispatch *DeviceDispatch) {
 		{"FlushMappedMemoryRanges", dispatch.FlushMappedMemoryRanges},
 		{"InvalidateMappedMemoryRanges", dispatch.InvalidateMappedMemoryRanges},
 		{"CmdCopyBufferToImage", dispatch.CmdCopyBufferToImage},
+		{"CmdPipelineBarrier", dispatch.CmdPipelineBarrier},
 		{"CreateGraphicsPipelines", dispatch.CreateGraphicsPipelines},
 		{"DestroyPipeline", dispatch.DestroyPipeline},
 		{"CmdBindPipeline", dispatch.CmdBindPipeline},
@@ -199,6 +206,8 @@ func requiredInstanceSymbols() map[string]uintptr {
 		"vkEnumeratePhysicalDevices",
 		"vkGetDeviceProcAddr",
 		"vkGetPhysicalDeviceProperties",
+		"vkGetPhysicalDeviceMemoryProperties",
+		"vkGetPhysicalDeviceMemoryProperties2",
 		"vkGetPhysicalDeviceQueueFamilyProperties",
 		"vkCreateDevice",
 		"vkEnumerateDeviceExtensionProperties",
@@ -274,6 +283,7 @@ func requiredDeviceSymbols() map[string]uintptr {
 		"vkInvalidateMappedMemoryRanges",
 		"vkCmdCopyBufferToImage",
 		"vkCmdCopyImageToBuffer",
+		"vkCmdPipelineBarrier",
 		"vkCreateGraphicsPipelines",
 		"vkDestroyPipeline",
 		"vkCmdBindPipeline",

@@ -52,6 +52,8 @@ type MemoryPropertyFlags uint32
 
 type MemoryHeapFlags uint32
 
+type AccessFlags uint32
+
 type BufferUsageFlags uint32
 
 type BufferCreateFlags uint32
@@ -279,6 +281,8 @@ type IndexType int32
 type LogicOp int32
 
 type MemoryHeapFlagBits int32
+
+type AccessFlagBits int32
 
 type MemoryPropertyFlagBits int32
 
@@ -637,6 +641,38 @@ type ImageSubresourceRange struct {
 	LevelCount     uint32
 	BaseArrayLayer uint32
 	LayerCount     uint32
+}
+
+type MemoryBarrier struct {
+	SType         StructureType
+	Next          unsafe.Pointer
+	SrcAccessMask AccessFlags
+	DstAccessMask AccessFlags
+}
+
+type BufferMemoryBarrier struct {
+	SType               StructureType
+	Next                unsafe.Pointer
+	SrcAccessMask       AccessFlags
+	DstAccessMask       AccessFlags
+	SrcQueueFamilyIndex uint32
+	DstQueueFamilyIndex uint32
+	Buffer              Buffer
+	Offset              DeviceSize
+	Size                DeviceSize
+}
+
+type ImageMemoryBarrier struct {
+	SType               StructureType
+	Next                unsafe.Pointer
+	SrcAccessMask       AccessFlags
+	DstAccessMask       AccessFlags
+	OldLayout           ImageLayout
+	NewLayout           ImageLayout
+	SrcQueueFamilyIndex uint32
+	DstQueueFamilyIndex uint32
+	Image               Image
+	SubresourceRange    ImageSubresourceRange
 }
 
 type ImageCreateInfo struct {

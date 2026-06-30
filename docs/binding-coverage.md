@@ -4,8 +4,8 @@
 
 | Profile | Intended use | Commands | Types | Constants | Extensions |
 | --- | --- | ---: | ---: | ---: | ---: |
-| `renderer` | Low-level offscreen/compositor renderer subset | 100 | 335 | 793 | 14 |
-| `wsi` | Default generated package: renderer subset plus Linux surface/swapchain and image readback | 121 | 374 | 848 | 19 |
+| `renderer` | Low-level offscreen/compositor renderer subset | 103 | 340 | 810 | 14 |
+| `wsi` | Default generated package: renderer subset plus Linux surface/swapchain and image readback | 124 | 379 | 865 | 19 |
 | `complete` | Audit / broad command generation for the pinned registry | 857 | 1074 | 1724 | 0 |
 
 The pinned registry currently contains 864 command declarations. The complete profile selects 857 unique Vulkan command names after duplicate Vulkan/Vulkan SC registry variants are normalized away.
@@ -15,6 +15,8 @@ The pinned registry currently contains 864 command declarations. The complete pr
 Committed generated files use the `wsi` profile. It includes:
 
 - the renderer command set from `renderer`;
+- required core memory-property queries (`vkGetPhysicalDeviceMemoryProperties` and `vkGetPhysicalDeviceMemoryProperties2`);
+- required core `vkCmdPipelineBarrier` coverage plus optional synchronization2 extension commands;
 - `vkCmdCopyImageToBuffer` for image readback from offscreen examples;
 - `VK_KHR_surface` and `VK_KHR_swapchain`;
 - Linux WSI platform extensions: `VK_KHR_wayland_surface`, `VK_KHR_xcb_surface`, and `VK_KHR_xlib_surface`.

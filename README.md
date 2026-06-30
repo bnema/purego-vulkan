@@ -8,7 +8,7 @@ The package is intentionally low-level. It exposes Vulkan ABI types, constants, 
 
 ## Status
 
-Early v0.x implementation. The committed generated package uses the `wsi` coverage profile: CPU-visible buffer uploads, buffer/image copies, graphics pipeline creation/destruction, draw commands, dynamic rendering, Linux surface/swapchain bindings, and image readback commands are covered. Other platforms, high-level rendering helpers, swapchain management policy, and scene abstractions are out of scope for this milestone.
+Early v0.x implementation. The committed generated package uses the `wsi` coverage profile: CPU-visible buffer uploads, memory-property queries, buffer/image copies, pipeline barriers, graphics pipeline creation/destruction, draw commands, dynamic rendering, Linux surface/swapchain bindings, and image readback commands are covered. Other platforms, high-level rendering helpers, swapchain management policy, and scene abstractions are out of scope for this milestone.
 
 ## Usage
 

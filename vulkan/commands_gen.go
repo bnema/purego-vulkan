@@ -11,6 +11,7 @@ var VkGetDeviceProcAddr func(Device, *byte) PFN_vkVoidFunction
 var VkGetInstanceProcAddr func(Instance, *byte) PFN_vkVoidFunction
 var VkGetPhysicalDeviceProperties func(PhysicalDevice, *PhysicalDeviceProperties)
 var VkGetPhysicalDeviceQueueFamilyProperties func(PhysicalDevice, *uint32, *QueueFamilyProperties)
+var VkGetPhysicalDeviceMemoryProperties func(PhysicalDevice, *PhysicalDeviceMemoryProperties)
 var VkCreateDevice func(PhysicalDevice, *DeviceCreateInfo, *AllocationCallbacks, *Device) Result
 var VkDestroyDevice func(Device, *AllocationCallbacks)
 var VkEnumerateInstanceVersion func(*uint32) Result
@@ -72,6 +73,7 @@ var VkCmdDraw func(CommandBuffer, uint32, uint32, uint32, uint32)
 var VkCmdDrawIndexed func(CommandBuffer, uint32, uint32, uint32, int32, uint32)
 var VkCmdCopyBufferToImage func(CommandBuffer, Buffer, Image, ImageLayout, uint32, *BufferImageCopy)
 var VkCmdCopyImageToBuffer func(CommandBuffer, Image, ImageLayout, Buffer, uint32, *BufferImageCopy)
+var VkCmdPipelineBarrier func(CommandBuffer, PipelineStageFlags, PipelineStageFlags, DependencyFlags, uint32, *MemoryBarrier, uint32, *BufferMemoryBarrier, uint32, *ImageMemoryBarrier)
 var VkDestroySurfaceKHR func(Instance, SurfaceKHR, *AllocationCallbacks)
 var VkGetPhysicalDeviceSurfaceSupportKHR func(PhysicalDevice, uint32, SurfaceKHR, *Bool32) Result
 var VkGetPhysicalDeviceSurfaceCapabilitiesKHR func(PhysicalDevice, SurfaceKHR, *SurfaceCapabilitiesKHR) Result
@@ -96,6 +98,7 @@ var VkGetPhysicalDeviceFormatProperties2KHR func(PhysicalDevice, Format, *Format
 var VkGetPhysicalDeviceImageFormatProperties2KHR func(PhysicalDevice, *PhysicalDeviceImageFormatInfo2, *ImageFormatProperties2) Result
 var VkGetPhysicalDeviceQueueFamilyProperties2 func(PhysicalDevice, *uint32, *QueueFamilyProperties2)
 var VkGetPhysicalDeviceQueueFamilyProperties2KHR func(PhysicalDevice, *uint32, *QueueFamilyProperties2)
+var VkGetPhysicalDeviceMemoryProperties2 func(PhysicalDevice, *PhysicalDeviceMemoryProperties2)
 var VkGetPhysicalDeviceMemoryProperties2KHR func(PhysicalDevice, *PhysicalDeviceMemoryProperties2)
 var VkGetPhysicalDeviceSparseImageFormatProperties2KHR func(PhysicalDevice, *PhysicalDeviceSparseImageFormatInfo2, *uint32, *SparseImageFormatProperties2)
 var VkGetMemoryFdKHR func(Device, *MemoryGetFdInfoKHR, *int32) Result
@@ -143,6 +146,7 @@ func instanceCommandPointers() map[string]any {
 		"vkGetDeviceProcAddr":                                &VkGetDeviceProcAddr,
 		"vkGetPhysicalDeviceProperties":                      &VkGetPhysicalDeviceProperties,
 		"vkGetPhysicalDeviceQueueFamilyProperties":           &VkGetPhysicalDeviceQueueFamilyProperties,
+		"vkGetPhysicalDeviceMemoryProperties":                &VkGetPhysicalDeviceMemoryProperties,
 		"vkCreateDevice":                                     &VkCreateDevice,
 		"vkEnumerateDeviceExtensionProperties":               &VkEnumerateDeviceExtensionProperties,
 		"vkDestroySurfaceKHR":                                &VkDestroySurfaceKHR,
@@ -164,6 +168,7 @@ func instanceCommandPointers() map[string]any {
 		"vkGetPhysicalDeviceImageFormatProperties2KHR":       &VkGetPhysicalDeviceImageFormatProperties2KHR,
 		"vkGetPhysicalDeviceQueueFamilyProperties2":          &VkGetPhysicalDeviceQueueFamilyProperties2,
 		"vkGetPhysicalDeviceQueueFamilyProperties2KHR":       &VkGetPhysicalDeviceQueueFamilyProperties2KHR,
+		"vkGetPhysicalDeviceMemoryProperties2":               &VkGetPhysicalDeviceMemoryProperties2,
 		"vkGetPhysicalDeviceMemoryProperties2KHR":            &VkGetPhysicalDeviceMemoryProperties2KHR,
 		"vkGetPhysicalDeviceSparseImageFormatProperties2KHR": &VkGetPhysicalDeviceSparseImageFormatProperties2KHR,
 		"vkGetPhysicalDeviceExternalSemaphorePropertiesKHR":  &VkGetPhysicalDeviceExternalSemaphorePropertiesKHR,
@@ -229,6 +234,7 @@ func deviceCommandPointers() map[string]any {
 		"vkCmdDrawIndexed":                         &VkCmdDrawIndexed,
 		"vkCmdCopyBufferToImage":                   &VkCmdCopyBufferToImage,
 		"vkCmdCopyImageToBuffer":                   &VkCmdCopyImageToBuffer,
+		"vkCmdPipelineBarrier":                     &VkCmdPipelineBarrier,
 		"vkCreateSwapchainKHR":                     &VkCreateSwapchainKHR,
 		"vkDestroySwapchainKHR":                    &VkDestroySwapchainKHR,
 		"vkGetSwapchainImagesKHR":                  &VkGetSwapchainImagesKHR,

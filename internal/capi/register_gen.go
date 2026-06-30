@@ -42,6 +42,9 @@ func RegisterInstance(handle uintptr, lookup LookupFunc, fptrs map[string]any) e
 	if err := registerRequired([]string{"vkGetPhysicalDeviceQueueFamilyProperties"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
+	if err := registerRequired([]string{"vkGetPhysicalDeviceMemoryProperties"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
 	if err := registerRequired([]string{"vkCreateDevice"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
@@ -70,7 +73,9 @@ func RegisterInstance(handle uintptr, lookup LookupFunc, fptrs map[string]any) e
 	if err := registerRequired([]string{"vkGetPhysicalDeviceQueueFamilyProperties2", "vkGetPhysicalDeviceQueueFamilyProperties2KHR"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
-	registerOptional([]string{"vkGetPhysicalDeviceMemoryProperties2KHR"}, handle, lookup, fptrs)
+	if err := registerRequired([]string{"vkGetPhysicalDeviceMemoryProperties2", "vkGetPhysicalDeviceMemoryProperties2KHR"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
 	registerOptional([]string{"vkGetPhysicalDeviceSparseImageFormatProperties2KHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkGetPhysicalDeviceExternalSemaphorePropertiesKHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkGetPhysicalDevicePresentRectanglesKHR"}, handle, lookup, fptrs)
@@ -244,6 +249,9 @@ func RegisterDevice(handle uintptr, lookup LookupFunc, fptrs map[string]any) err
 		return err
 	}
 	if err := registerRequired([]string{"vkCmdCopyImageToBuffer"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
+	if err := registerRequired([]string{"vkCmdPipelineBarrier"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
 	registerOptional([]string{"vkCreateSwapchainKHR"}, handle, lookup, fptrs)

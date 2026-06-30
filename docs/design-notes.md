@@ -29,6 +29,8 @@ The default `wsi` profile includes:
 - core instance and device enumeration;
 - CPU-visible buffer upload primitives (`vkMapMemory`, `vkUnmapMemory`, memory binding, buffers, and barriers);
 - buffer/image transfer commands (`vkCmdCopyBufferToImage`, `vkCmdCopyImageToBuffer`, and image layout/access structures);
+- required memory-property queries for allocation decisions (`vkGetPhysicalDeviceMemoryProperties` and `vkGetPhysicalDeviceMemoryProperties2`);
+- required classic `vkCmdPipelineBarrier` support as the Vulkan 1.0 synchronization fallback, with synchronization2 extension commands exposed when present;
 - command buffer, fence, semaphore, image, memory, descriptor, sampler, shader module, pipeline-layout, graphics-pipeline creation, and pipeline destruction setup;
 - draw command recording (`vkCmdBindPipeline`, descriptor/vertex/index binding, `vkCmdDraw`, and `vkCmdDrawIndexed`);
 - dynamic rendering commands and structures for render-target setup without generated render-pass builders;
