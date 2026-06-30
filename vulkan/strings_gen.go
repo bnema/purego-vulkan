@@ -8,6 +8,14 @@ func ResultString(r Result) string {
 		return "VK_ERROR_INVALID_EXTERNAL_HANDLE_KHR"
 	case ErrorInvalidDRMFormatModifierPlaneLayoutEXT:
 		return "VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT"
+	case ErrorSurfaceLostKHR:
+		return "VK_ERROR_SURFACE_LOST_KHR"
+	case ErrorNativeWindowInUseKHR:
+		return "VK_ERROR_NATIVE_WINDOW_IN_USE_KHR"
+	case SuboptimalKHR:
+		return "VK_SUBOPTIMAL_KHR"
+	case ErrorOutOfDateKHR:
+		return "VK_ERROR_OUT_OF_DATE_KHR"
 	case Success:
 		return "VK_SUCCESS"
 	case NotReady:

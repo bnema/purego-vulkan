@@ -22,6 +22,14 @@ func EmitTypes(sel *model.SelectedRegistry) (string, error) {
 			continue
 		}
 		switch t.Category {
+		case "":
+			if _, ok := nativePointerTypes[t.Name]; ok {
+				continue
+			}
+			if _, ok := nativeScalarGoTypes[t.Name]; ok {
+				continue
+			}
+			fmt.Fprintf(&b, "type %s uintptr\n\n", t.GoName)
 		case "handle", "basetype", "bitmask", "enum", "funcpointer":
 			if t.GoType == "" {
 				continue
@@ -453,7 +461,7 @@ func alignUp(value, align int) int {
 func commandsNeedUnsafe(commands []model.SelectedCommand) bool {
 	for _, cmd := range commands {
 		for _, param := range cmd.Params {
-			if param.Type == "void" {
+			if usesUnsafePointer(param.Type, param.PointerDepth) {
 				return true
 			}
 		}
@@ -487,10 +495,10 @@ func resultSignature(ret string) string {
 }
 
 func goParamType(p model.ParamDecl) string {
-	base := goTypeName(p.Type)
-	if p.Type == "void" && p.PointerDepth > 0 {
+	if usesUnsafePointer(p.Type, p.PointerDepth) {
 		return voidPointerType(p.PointerDepth)
 	}
+	base := goTypeName(p.Type)
 	if len(p.ArrayLens) > 0 {
 		for i := len(p.ArrayLens) - 1; i >= 0; i-- {
 			base = "[" + arrayLenName(p.ArrayLens[i]) + "]" + base
@@ -511,10 +519,10 @@ func voidPointerType(pointerDepth int) string {
 }
 
 func goFieldType(m model.MemberDecl) string {
-	base := goTypeName(m.Type)
-	if m.Type == "void" && m.PointerDepth > 0 {
+	if usesUnsafePointer(m.Type, m.PointerDepth) {
 		return voidPointerType(m.PointerDepth)
 	}
+	base := goTypeName(m.Type)
 	if len(m.ArrayLens) > 0 {
 		for i := len(m.ArrayLens) - 1; i >= 0; i-- {
 			base = "[" + arrayLenName(m.ArrayLens[i]) + "]" + base
@@ -536,6 +544,9 @@ func arrayLenName(value string) string {
 }
 
 func goTypeName(vkType string) string {
+	if goType, ok := nativeScalarGoTypes[vkType]; ok {
+		return goType
+	}
 	switch vkType {
 	case "void":
 		return "unsafe.Pointer"
@@ -568,6 +579,24 @@ func goTypeName(vkType string) string {
 	default:
 		return strings.TrimPrefix(vkType, "Vk")
 	}
+}
+
+var nativePointerTypes = map[string]bool{
+	"Display":          true,
+	"wl_display":       true,
+	"wl_surface":       true,
+	"xcb_connection_t": true,
+}
+
+var nativeScalarGoTypes = map[string]string{
+	"Window":         "uintptr",
+	"VisualID":       "uintptr",
+	"xcb_window_t":   "uint32",
+	"xcb_visualid_t": "uint32",
+}
+
+func usesUnsafePointer(vkType string, pointerDepth int) bool {
+	return pointerDepth > 0 && (vkType == "void" || nativePointerTypes[vkType])
 }
 
 func rawFuncName(name string) string {

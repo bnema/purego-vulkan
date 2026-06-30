@@ -80,6 +80,58 @@ func TestEmitRegisterHelpers(t *testing.T) {
 	}
 }
 
+func TestEmitTypesDefinesOpaqueNativeBasetypes(t *testing.T) {
+	sel := &model.SelectedRegistry{Types: []model.SelectedType{
+		{Name: "ANativeWindow", GoName: "ANativeWindow", Category: "basetype", GoType: "uintptr", Source: model.TypeDecl{Category: "basetype", RawText: "struct ANativeWindow ;"}},
+		{Name: "VkRemoteAddressNV", GoName: "RemoteAddressNV", Category: "basetype", GoType: "unsafe.Pointer", Source: model.TypeDecl{Category: "basetype", Type: "void"}},
+	}}
+	out, err := EmitTypes(sel)
+	if err != nil {
+		t.Fatalf("EmitTypes() error = %v", err)
+	}
+	for _, want := range []string{
+		"type ANativeWindow uintptr",
+		"type RemoteAddressNV unsafe.Pointer",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("EmitTypes() missing %q\n%s", want, out)
+		}
+	}
+}
+
+func TestEmitTypesUsesSafeRepresentationsForNativePlatformHandles(t *testing.T) {
+	sel := &model.SelectedRegistry{Types: []model.SelectedType{
+		{Name: "VkWaylandSurfaceCreateInfoKHR", GoName: "WaylandSurfaceCreateInfoKHR", Category: "struct", Members: []model.MemberDecl{
+			{Name: "display", Type: "wl_display", PointerDepth: 1},
+			{Name: "surface", Type: "wl_surface", PointerDepth: 1},
+		}},
+		{Name: "VkXcbSurfaceCreateInfoKHR", GoName: "XcbSurfaceCreateInfoKHR", Category: "struct", Members: []model.MemberDecl{
+			{Name: "connection", Type: "xcb_connection_t", PointerDepth: 1},
+			{Name: "window", Type: "xcb_window_t"},
+		}},
+	}}
+	out, err := EmitTypes(sel)
+	if err != nil {
+		t.Fatalf("EmitTypes() error = %v", err)
+	}
+	for _, want := range []string{
+		"import \"unsafe\"",
+		"Display unsafe.Pointer",
+		"Surface unsafe.Pointer",
+		"Connection unsafe.Pointer",
+		"Window     uint32",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("EmitTypes() missing %q\n%s", want, out)
+		}
+	}
+	for _, bad := range []string{"*wl_display", "*wl_surface", "*xcb_connection_t", "xcb_window_t"} {
+		if strings.Contains(out, bad) {
+			t.Fatalf("EmitTypes() emitted native C type %q\n%s", bad, out)
+		}
+	}
+}
+
 func TestEmitCommands(t *testing.T) {
 	out, err := EmitCommands(testSelectedRegistry())
 	if err != nil {

@@ -100,6 +100,7 @@ type xmlProto struct {
 
 type xmlParam struct {
 	InnerXML string `xml:",innerxml"`
+	API      string `xml:"api,attr"`
 	Len      string `xml:"len,attr"`
 	Optional string `xml:"optional,attr"`
 }
@@ -241,9 +242,26 @@ func (c xmlCommand) toModel() model.CommandDecl {
 		decl.Name = c.NameAttr
 	}
 	for _, p := range c.Params {
+		if !supportsVulkanAPI(p.API) {
+			continue
+		}
 		decl.Params = append(decl.Params, p.toModel())
 	}
 	return decl
+}
+
+func supportsVulkanAPI(api string) bool {
+	api = strings.TrimSpace(api)
+	if api == "" {
+		return true
+	}
+	for token := range strings.SplitSeq(api, ",") {
+		token = strings.TrimSpace(token)
+		if token == "vulkan" || token == "vulkanbase" {
+			return true
+		}
+	}
+	return false
 }
 
 func (p xmlParam) toModel() model.ParamDecl {

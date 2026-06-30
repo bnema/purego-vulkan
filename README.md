@@ -8,7 +8,7 @@ The package is intentionally low-level. It exposes Vulkan ABI types, constants, 
 
 ## Status
 
-Early v0.x implementation. The initial target is a Linux/DRM compositor renderer path. The generated subset is renderer-ready at the low level: CPU-visible buffer uploads, buffer-to-image copies, graphics pipeline creation/destruction, draw commands, and dynamic rendering are covered. Other platforms, high-level rendering helpers, swapchain management, and scene abstractions are out of scope for this milestone.
+Early v0.x implementation. The committed generated package uses the `wsi` coverage profile: CPU-visible buffer uploads, buffer/image copies, graphics pipeline creation/destruction, draw commands, dynamic rendering, Linux surface/swapchain bindings, and image readback commands are covered. Other platforms, high-level rendering helpers, swapchain management policy, and scene abstractions are out of scope for this milestone.
 
 ## Usage
 
@@ -49,7 +49,17 @@ make check
 
 `make check` runs generation, tests, and `git diff --exit-code` to ensure generated files are fresh.
 
-The development target is raw renderer binding coverage, not framework code. Keep upload orchestration, pipeline policy, render-target ownership, and command-buffer recording in the consumer; this module supplies the low-level Vulkan commands and structs needed for CPU-visible staging/upload buffers, buffer-to-image copies, graphics pipelines, draw calls, and `VK_KHR_dynamic_rendering` / core dynamic-rendering paths.
+The development target is raw Vulkan binding coverage, not framework code. Keep upload orchestration, swapchain ownership, pipeline policy, render-target ownership, and command-buffer recording in the consumer; this module supplies the low-level Vulkan commands and structs needed for CPU-visible staging/upload buffers, buffer/image copies, graphics pipelines, draw calls, dynamic rendering, and Linux WSI.
+
+Coverage profiles:
+
+```sh
+go run ./cmd/vulkangen --profile renderer  # renderer-only subset
+go run ./cmd/vulkangen --profile wsi       # default committed profile
+go run ./cmd/vulkangen --profile complete  # broad pinned-registry audit profile
+```
+
+See `docs/binding-coverage.md` for current registry coverage counts and intentional exclusions.
 
 ## Generated files
 

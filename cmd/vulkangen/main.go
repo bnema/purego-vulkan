@@ -15,12 +15,14 @@ import (
 type config struct {
 	registryPath string
 	outDir       string
+	profile      string
 }
 
 func main() {
 	var cfg config
 	flag.StringVar(&cfg.registryPath, "registry", "./registry/vk.xml", "path to Vulkan vk.xml registry")
 	flag.StringVar(&cfg.outDir, "out", ".", "project root output directory")
+	flag.StringVar(&cfg.profile, "profile", string(overrides.ProfileWSI), "generation profile: renderer, wsi, or complete")
 	flag.Parse()
 
 	if err := run(cfg); err != nil {
@@ -46,7 +48,11 @@ func run(cfg config) error {
 	if err != nil {
 		return err
 	}
-	sel, err := model.Select(reg, overrides.DefaultSelection())
+	selection, err := overrides.SelectionForProfile(reg, overrides.Profile(cfg.profile))
+	if err != nil {
+		return err
+	}
+	sel, err := model.Select(reg, selection)
 	if err != nil {
 		return err
 	}

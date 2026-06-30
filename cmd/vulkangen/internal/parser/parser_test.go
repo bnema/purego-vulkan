@@ -88,6 +88,41 @@ func TestParseRegistryFixture(t *testing.T) {
 	}
 }
 
+func TestParseFiltersVulkanSCOnlyCommandParams(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "registry.xml")
+	data := []byte(`<registry>
+	<commands>
+		<command>
+			<proto><type>VkResult</type> <name>vkCreateSwapchainKHR</name></proto>
+			<param><type>VkDevice</type> <name>device</name></param>
+			<param api="vulkan,vulkanbase">const <type>VkSwapchainCreateInfoKHR</type>* <name>pCreateInfo</name></param>
+			<param api="vulkansc">const <type>VkSwapchainCreateInfoKHR</type>* <name>pCreateInfo</name></param>
+			<param>const <type>VkAllocationCallbacks</type>* <name>pAllocator</name></param>
+			<param><type>VkSwapchainKHR</type>* <name>pSwapchain</name></param>
+		</command>
+	</commands>
+</registry>`)
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+
+	reg, err := ParseFile(path)
+	if err != nil {
+		t.Fatalf("ParseFile() error = %v", err)
+	}
+	cmd := reg.CommandByName("vkCreateSwapchainKHR")
+	if cmd == nil {
+		t.Fatal("vkCreateSwapchainKHR missing")
+	}
+	if len(cmd.Params) != 4 {
+		t.Fatalf("params = %+v, want Vulkan params without duplicate Vulkan SC variant", cmd.Params)
+	}
+	if cmd.Params[1].Name != "pCreateInfo" || cmd.Params[2].Name != "pAllocator" {
+		t.Fatalf("filtered params = %+v", cmd.Params)
+	}
+}
+
 func TestParseRejectsEmptyRegistry(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "empty.xml")

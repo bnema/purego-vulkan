@@ -273,6 +273,7 @@ func requiredDeviceSymbols() map[string]uintptr {
 		"vkFlushMappedMemoryRanges",
 		"vkInvalidateMappedMemoryRanges",
 		"vkCmdCopyBufferToImage",
+		"vkCmdCopyImageToBuffer",
 		"vkCreateGraphicsPipelines",
 		"vkDestroyPipeline",
 		"vkCmdBindPipeline",

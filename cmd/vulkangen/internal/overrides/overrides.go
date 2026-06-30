@@ -1,7 +1,9 @@
 package overrides
 
 import (
+	"fmt"
 	"maps"
+	"strings"
 
 	"github.com/bnema/purego-vulkan/cmd/vulkangen/internal/model"
 )
@@ -114,13 +116,100 @@ var CommandOverrides = map[string]model.CommandOverride{
 	"vkGetImageDrmFormatModifierPropertiesEXT": {Dispatch: model.DispatchDevice, Optional: true},
 }
 
+type Profile string
+
+const (
+	ProfileRenderer Profile = "renderer"
+	ProfileWSI      Profile = "wsi"
+	ProfileComplete Profile = "complete"
+)
+
 func DefaultSelection() model.SelectionConfig {
+	return rendererSelection()
+}
+
+func SelectionForProfile(reg *model.Registry, profile Profile) (model.SelectionConfig, error) {
+	switch profile {
+	case "", ProfileRenderer:
+		return rendererSelection(), nil
+	case ProfileWSI:
+		return wsiSelection(), nil
+	case ProfileComplete:
+		if reg == nil {
+			return model.SelectionConfig{}, fmt.Errorf("complete profile requires a registry")
+		}
+		return completeSelection(reg), nil
+	default:
+		return model.SelectionConfig{}, fmt.Errorf("unknown Vulkan generation profile %q", profile)
+	}
+}
+
+func rendererSelection() model.SelectionConfig {
 	return model.SelectionConfig{
 		Commands:         append([]string(nil), InitialCommands...),
 		Extensions:       append([]string(nil), RequiredExtensions...),
 		CoreVersions:     []string{"VK_VERSION_1_0", "VK_VERSION_1_1", "VK_VERSION_1_2"},
 		CommandOverrides: cloneCommandOverrides(),
 	}
+}
+
+func wsiSelection() model.SelectionConfig {
+	cfg := rendererSelection()
+	cfg.Commands = append(cfg.Commands, "vkCmdCopyImageToBuffer")
+	cfg.Extensions = append(cfg.Extensions,
+		"VK_KHR_surface",
+		"VK_KHR_swapchain",
+		"VK_KHR_wayland_surface",
+		"VK_KHR_xcb_surface",
+		"VK_KHR_xlib_surface",
+	)
+	return cfg
+}
+
+func completeSelection(reg *model.Registry) model.SelectionConfig {
+	cfg := rendererSelection()
+	cfg.Commands = allCommandNames(reg)
+	cfg.Extensions = nil
+	cfg.CoreVersions = allVulkanCoreVersions(reg)
+	cfg.CommandOverrides = cloneCommandOverrides()
+
+	required := make(map[string]bool, len(InitialCommands))
+	for _, name := range InitialCommands {
+		required[name] = true
+	}
+	for _, name := range cfg.Commands {
+		if required[name] {
+			continue
+		}
+		override := cfg.CommandOverrides[name]
+		override.Optional = true
+		cfg.CommandOverrides[name] = override
+	}
+	return cfg
+}
+
+func allCommandNames(reg *model.Registry) []string {
+	seen := make(map[string]bool, len(reg.Commands))
+	out := make([]string, 0, len(reg.Commands))
+	for _, cmd := range reg.Commands {
+		if cmd.Name == "" || seen[cmd.Name] {
+			continue
+		}
+		seen[cmd.Name] = true
+		out = append(out, cmd.Name)
+	}
+	return out
+}
+
+func allVulkanCoreVersions(reg *model.Registry) []string {
+	out := make([]string, 0, len(reg.Features))
+	for _, feature := range reg.Features {
+		if feature.Name == "" || !strings.HasPrefix(feature.Name, "VK_VERSION_") || !strings.Contains(feature.API, "vulkan") {
+			continue
+		}
+		out = append(out, feature.Name)
+	}
+	return out
 }
 
 func cloneCommandOverrides() map[string]model.CommandOverride {

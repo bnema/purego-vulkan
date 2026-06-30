@@ -145,6 +145,23 @@ func TestSelectIncludesVulkanTypedefDependencies(t *testing.T) {
 	}
 }
 
+func TestSelectRepresentsOpaqueNativeBasetypes(t *testing.T) {
+	reg := &model.Registry{Types: []model.TypeDecl{
+		{Name: "ANativeWindow", Category: "basetype", RawText: "struct ANativeWindow ;"},
+		{Name: "VkRemoteAddressNV", Category: "basetype", Type: "void"},
+	}}
+	sel, err := model.Select(reg, model.SelectionConfig{RootTypes: []string{"ANativeWindow", "VkRemoteAddressNV"}})
+	if err != nil {
+		t.Fatalf("Select() error = %v", err)
+	}
+	if native := sel.TypeByName("ANativeWindow"); native == nil || native.GoType != "uintptr" {
+		t.Fatalf("ANativeWindow selected as %+v, want uintptr opaque handle", native)
+	}
+	if remote := sel.TypeByName("VkRemoteAddressNV"); remote == nil || remote.GoType != "unsafe.Pointer" {
+		t.Fatalf("VkRemoteAddressNV selected as %+v, want unsafe.Pointer", remote)
+	}
+}
+
 func TestSelectIncludesFunctionPointerReturnTypes(t *testing.T) {
 	reg := testRegistry()
 	reg.Types = append(reg.Types, model.TypeDecl{Name: "PFN_vkVoidFunction", Category: "funcpointer"})
