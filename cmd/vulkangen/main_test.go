@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/bnema/purego-vulkan/cmd/vulkangen/internal/overrides"
 )
@@ -21,7 +23,9 @@ func TestGenerationProfilesEmitCompilablePackages(t *testing.T) {
 				t.Fatalf("run(%s) error = %v", profile, err)
 			}
 			writeGeneratedCompileHarness(t, outDir)
-			cmd := exec.Command("go", "test", "./...")
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+			defer cancel()
+			cmd := exec.CommandContext(ctx, "go", "test", "./...")
 			cmd.Dir = outDir
 			out, err := cmd.CombinedOutput()
 			if err != nil {
@@ -37,7 +41,7 @@ func writeGeneratedCompileHarness(t *testing.T, outDir string) {
 		t.Fatalf("write generated go.mod: %v", err)
 	}
 	registerPath := filepath.Join(outDir, "internal", "capi", "register.go")
-	if err := os.MkdirAll(filepath.Dir(registerPath), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(registerPath), 0o750); err != nil {
 		t.Fatalf("create capi dir: %v", err)
 	}
 	if err := os.WriteFile(registerPath, []byte("package capi\n\nfunc RegisterFunc(any, uintptr) {}\n"), 0o644); err != nil {

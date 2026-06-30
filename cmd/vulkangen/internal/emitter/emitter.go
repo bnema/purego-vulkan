@@ -582,7 +582,11 @@ func goTypeName(vkType string) string {
 }
 
 var nativePointerTypes = map[string]bool{
+	"AHardwareBuffer":  true,
+	"ANativeWindow":    true,
+	"CAMetalLayer":     true,
 	"Display":          true,
+	"OHNativeWindow":   true,
 	"wl_display":       true,
 	"wl_surface":       true,
 	"xcb_connection_t": true,

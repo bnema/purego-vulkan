@@ -84,6 +84,9 @@ func TestEmitTypesDefinesOpaqueNativeBasetypes(t *testing.T) {
 	sel := &model.SelectedRegistry{Types: []model.SelectedType{
 		{Name: "ANativeWindow", GoName: "ANativeWindow", Category: "basetype", GoType: "uintptr", Source: model.TypeDecl{Category: "basetype", RawText: "struct ANativeWindow ;"}},
 		{Name: "VkRemoteAddressNV", GoName: "RemoteAddressNV", Category: "basetype", GoType: "unsafe.Pointer", Source: model.TypeDecl{Category: "basetype", Type: "void"}},
+		{Name: "VkAndroidSurfaceCreateInfoKHR", GoName: "AndroidSurfaceCreateInfoKHR", Category: "struct", Members: []model.MemberDecl{
+			{Name: "window", Type: "ANativeWindow", PointerDepth: 1},
+		}},
 	}}
 	out, err := EmitTypes(sel)
 	if err != nil {
@@ -92,10 +95,14 @@ func TestEmitTypesDefinesOpaqueNativeBasetypes(t *testing.T) {
 	for _, want := range []string{
 		"type ANativeWindow uintptr",
 		"type RemoteAddressNV unsafe.Pointer",
+		"Window unsafe.Pointer",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("EmitTypes() missing %q\n%s", want, out)
 		}
+	}
+	if strings.Contains(out, "*ANativeWindow") {
+		t.Fatalf("EmitTypes() emitted native opaque pointer as *ANativeWindow\n%s", out)
 	}
 }
 

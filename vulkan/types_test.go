@@ -6,6 +6,7 @@ import (
 )
 
 func TestGeneratedWSILayouts(t *testing.T) {
+	require64BitLayout(t)
 	tests := []struct {
 		name      string
 		size      uintptr
@@ -57,6 +58,7 @@ func TestGeneratedWSILayouts(t *testing.T) {
 }
 
 func TestGeneratedRendererHardeningLayouts(t *testing.T) {
+	require64BitLayout(t)
 	tests := []struct {
 		name      string
 		size      uintptr
@@ -85,6 +87,13 @@ func TestGeneratedRendererHardeningLayouts(t *testing.T) {
 		if tt.size != tt.wantSize || tt.alignment != tt.wantAlign {
 			t.Fatalf("%s layout = size %d align %d, want size %d align %d", tt.name, tt.size, tt.alignment, tt.wantSize, tt.wantAlign)
 		}
+	}
+}
+
+func require64BitLayout(t *testing.T) {
+	t.Helper()
+	if unsafe.Sizeof(uintptr(0)) != 8 {
+		t.Skip("generated Vulkan ABI layout expectations are for 64-bit targets")
 	}
 }
 
