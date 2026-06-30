@@ -49,6 +49,48 @@ func TestGeneratedWSILayouts(t *testing.T) {
 			wantSize:  64,
 			wantAlign: 8,
 		},
+		{
+			name:      "DeviceGroupPresentCapabilitiesKHR",
+			size:      unsafe.Sizeof(DeviceGroupPresentCapabilitiesKHR{}),
+			alignment: unsafe.Alignof(DeviceGroupPresentCapabilitiesKHR{}),
+			wantSize:  152,
+			wantAlign: 8,
+		},
+		{
+			name:      "ImageSwapchainCreateInfoKHR",
+			size:      unsafe.Sizeof(ImageSwapchainCreateInfoKHR{}),
+			alignment: unsafe.Alignof(ImageSwapchainCreateInfoKHR{}),
+			wantSize:  24,
+			wantAlign: 8,
+		},
+		{
+			name:      "BindImageMemorySwapchainInfoKHR",
+			size:      unsafe.Sizeof(BindImageMemorySwapchainInfoKHR{}),
+			alignment: unsafe.Alignof(BindImageMemorySwapchainInfoKHR{}),
+			wantSize:  32,
+			wantAlign: 8,
+		},
+		{
+			name:      "AcquireNextImageInfoKHR",
+			size:      unsafe.Sizeof(AcquireNextImageInfoKHR{}),
+			alignment: unsafe.Alignof(AcquireNextImageInfoKHR{}),
+			wantSize:  56,
+			wantAlign: 8,
+		},
+		{
+			name:      "DeviceGroupPresentInfoKHR",
+			size:      unsafe.Sizeof(DeviceGroupPresentInfoKHR{}),
+			alignment: unsafe.Alignof(DeviceGroupPresentInfoKHR{}),
+			wantSize:  40,
+			wantAlign: 8,
+		},
+		{
+			name:      "DeviceGroupSwapchainCreateInfoKHR",
+			size:      unsafe.Sizeof(DeviceGroupSwapchainCreateInfoKHR{}),
+			alignment: unsafe.Alignof(DeviceGroupSwapchainCreateInfoKHR{}),
+			wantSize:  24,
+			wantAlign: 8,
+		},
 	}
 	for _, tt := range tests {
 		if tt.size != tt.wantSize || tt.alignment != tt.wantAlign {

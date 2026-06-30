@@ -445,8 +445,9 @@ func TestDefaultSelectionOnPinnedRegistryHasRendererReadySurface(t *testing.T) {
 		if cmd.Dispatch != wantDispatch {
 			t.Fatalf("%s dispatch = %q, want %q", name, cmd.Dispatch, wantDispatch)
 		}
-		if cmd.Optional && name != "vkCmdBeginRenderingKHR" && name != "vkCmdEndRenderingKHR" && name != "vkGetPhysicalDeviceMemoryProperties2KHR" {
-			t.Fatalf("renderer command %s optional = true", name)
+		wantOptional := name == "vkCmdBeginRenderingKHR" || name == "vkCmdEndRenderingKHR" || name == "vkGetPhysicalDeviceMemoryProperties2KHR"
+		if cmd.Optional != wantOptional {
+			t.Fatalf("%s optional = %t, want %t", name, cmd.Optional, wantOptional)
 		}
 	}
 

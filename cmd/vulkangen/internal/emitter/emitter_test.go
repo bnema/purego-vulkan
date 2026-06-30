@@ -108,6 +108,10 @@ func TestEmitTypesDefinesOpaqueNativeBasetypes(t *testing.T) {
 
 func TestEmitTypesUsesSafeRepresentationsForNativePlatformHandles(t *testing.T) {
 	sel := &model.SelectedRegistry{Types: []model.SelectedType{
+		{Name: "wl_display", GoName: "wl_display", Category: ""},
+		{Name: "wl_surface", GoName: "wl_surface", Category: ""},
+		{Name: "xcb_connection_t", GoName: "xcb_connection_t", Category: ""},
+		{Name: "xcb_window_t", GoName: "xcb_window_t", Category: ""},
 		{Name: "VkWaylandSurfaceCreateInfoKHR", GoName: "WaylandSurfaceCreateInfoKHR", Category: "struct", Members: []model.MemberDecl{
 			{Name: "display", Type: "wl_display", PointerDepth: 1},
 			{Name: "surface", Type: "wl_surface", PointerDepth: 1},
@@ -132,7 +136,11 @@ func TestEmitTypesUsesSafeRepresentationsForNativePlatformHandles(t *testing.T) 
 			t.Fatalf("EmitTypes() missing %q\n%s", want, out)
 		}
 	}
-	for _, bad := range []string{"*wl_display", "*wl_surface", "*xcb_connection_t", "xcb_window_t"} {
+	for _, bad := range []string{
+		"*wl_display", "*wl_surface", "*xcb_connection_t",
+		"type wl_display", "type wl_surface", "type xcb_connection_t", "type xcb_window_t",
+		"xcb_window_t",
+	} {
 		if strings.Contains(out, bad) {
 			t.Fatalf("EmitTypes() emitted native C type %q\n%s", bad, out)
 		}

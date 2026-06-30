@@ -207,12 +207,21 @@ func allCommandNames(reg *model.Registry) []string {
 func allVulkanCoreVersions(reg *model.Registry) []string {
 	out := make([]string, 0, len(reg.Features))
 	for _, feature := range reg.Features {
-		if feature.Name == "" || !strings.HasPrefix(feature.Name, "VK_VERSION_") || !strings.Contains(feature.API, "vulkan") {
+		if feature.Name == "" || !strings.HasPrefix(feature.Name, "VK_VERSION_") || !hasAPIToken(feature.API, "vulkan") {
 			continue
 		}
 		out = append(out, feature.Name)
 	}
 	return out
+}
+
+func hasAPIToken(value, want string) bool {
+	for token := range strings.SplitSeq(value, ",") {
+		if strings.TrimSpace(token) == want {
+			return true
+		}
+	}
+	return false
 }
 
 func cloneCommandOverrides() map[string]model.CommandOverride {
