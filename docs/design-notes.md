@@ -57,6 +57,7 @@ The selected extension set includes:
 - `VK_EXT_image_drm_format_modifier`
 - `VK_EXT_physical_device_drm`
 - `VK_KHR_external_semaphore`
+- `VK_KHR_external_semaphore_capabilities`
 - `VK_KHR_external_semaphore_fd`
 - `VK_KHR_synchronization2`
 - `VK_EXT_queue_family_foreign`
