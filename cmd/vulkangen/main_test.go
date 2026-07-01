@@ -12,15 +12,24 @@ import (
 )
 
 func TestGenerationProfilesEmitCompilablePackages(t *testing.T) {
-	for _, profile := range []overrides.Profile{overrides.ProfileRenderer, overrides.ProfileWSI, overrides.ProfileComplete} {
-		t.Run(string(profile), func(t *testing.T) {
+	tests := []struct {
+		name    string
+		profile string
+	}{
+		{name: "default", profile: ""},
+		{name: string(overrides.ProfileRenderer), profile: string(overrides.ProfileRenderer)},
+		{name: string(overrides.ProfileWSI), profile: string(overrides.ProfileWSI)},
+		{name: string(overrides.ProfileComplete), profile: string(overrides.ProfileComplete)},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			outDir := t.TempDir()
 			if err := run(config{
 				registryPath: filepath.Join("..", "..", "registry", "vk.xml"),
 				outDir:       outDir,
-				profile:      string(profile),
+				profile:      tt.profile,
 			}); err != nil {
-				t.Fatalf("run(%s) error = %v", profile, err)
+				t.Fatalf("run(%s) error = %v", tt.name, err)
 			}
 			writeGeneratedCompileHarness(t, outDir)
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
@@ -29,7 +38,7 @@ func TestGenerationProfilesEmitCompilablePackages(t *testing.T) {
 			cmd.Dir = outDir
 			out, err := cmd.CombinedOutput()
 			if err != nil {
-				t.Fatalf("generated %s profile did not compile: %v\n%s", profile, err, out)
+				t.Fatalf("generated %s profile did not compile: %v\n%s", tt.name, err, out)
 			}
 		})
 	}
