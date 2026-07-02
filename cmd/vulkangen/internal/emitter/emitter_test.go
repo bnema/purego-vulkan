@@ -80,6 +80,73 @@ func TestEmitRegisterHelpers(t *testing.T) {
 	}
 }
 
+func TestEmitTypesDefinesOpaqueNativeBasetypes(t *testing.T) {
+	sel := &model.SelectedRegistry{Types: []model.SelectedType{
+		{Name: "ANativeWindow", GoName: "ANativeWindow", Category: "basetype", GoType: "uintptr", Source: model.TypeDecl{Category: "basetype", RawText: "struct ANativeWindow ;"}},
+		{Name: "VkRemoteAddressNV", GoName: "RemoteAddressNV", Category: "basetype", GoType: "unsafe.Pointer", Source: model.TypeDecl{Category: "basetype", Type: "void"}},
+		{Name: "VkAndroidSurfaceCreateInfoKHR", GoName: "AndroidSurfaceCreateInfoKHR", Category: "struct", Members: []model.MemberDecl{
+			{Name: "window", Type: "ANativeWindow", PointerDepth: 1},
+		}},
+	}}
+	out, err := EmitTypes(sel)
+	if err != nil {
+		t.Fatalf("EmitTypes() error = %v", err)
+	}
+	for _, want := range []string{
+		"type ANativeWindow uintptr",
+		"type RemoteAddressNV unsafe.Pointer",
+		"Window unsafe.Pointer",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("EmitTypes() missing %q\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "*ANativeWindow") {
+		t.Fatalf("EmitTypes() emitted native opaque pointer as *ANativeWindow\n%s", out)
+	}
+}
+
+func TestEmitTypesUsesSafeRepresentationsForNativePlatformHandles(t *testing.T) {
+	sel := &model.SelectedRegistry{Types: []model.SelectedType{
+		{Name: "wl_display", GoName: "wl_display", Category: ""},
+		{Name: "wl_surface", GoName: "wl_surface", Category: ""},
+		{Name: "xcb_connection_t", GoName: "xcb_connection_t", Category: ""},
+		{Name: "xcb_window_t", GoName: "xcb_window_t", Category: ""},
+		{Name: "VkWaylandSurfaceCreateInfoKHR", GoName: "WaylandSurfaceCreateInfoKHR", Category: "struct", Members: []model.MemberDecl{
+			{Name: "display", Type: "wl_display", PointerDepth: 1},
+			{Name: "surface", Type: "wl_surface", PointerDepth: 1},
+		}},
+		{Name: "VkXcbSurfaceCreateInfoKHR", GoName: "XcbSurfaceCreateInfoKHR", Category: "struct", Members: []model.MemberDecl{
+			{Name: "connection", Type: "xcb_connection_t", PointerDepth: 1},
+			{Name: "window", Type: "xcb_window_t"},
+		}},
+	}}
+	out, err := EmitTypes(sel)
+	if err != nil {
+		t.Fatalf("EmitTypes() error = %v", err)
+	}
+	for _, want := range []string{
+		"import \"unsafe\"",
+		"Display unsafe.Pointer",
+		"Surface unsafe.Pointer",
+		"Connection unsafe.Pointer",
+		"Window     uint32",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("EmitTypes() missing %q\n%s", want, out)
+		}
+	}
+	for _, bad := range []string{
+		"*wl_display", "*wl_surface", "*xcb_connection_t",
+		"type wl_display", "type wl_surface", "type xcb_connection_t", "type xcb_window_t",
+		"xcb_window_t",
+	} {
+		if strings.Contains(out, bad) {
+			t.Fatalf("EmitTypes() emitted native C type %q\n%s", bad, out)
+		}
+	}
+}
+
 func TestEmitCommands(t *testing.T) {
 	out, err := EmitCommands(testSelectedRegistry())
 	if err != nil {

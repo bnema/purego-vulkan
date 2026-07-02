@@ -52,6 +52,8 @@ type MemoryPropertyFlags uint32
 
 type MemoryHeapFlags uint32
 
+type AccessFlags uint32
+
 type BufferUsageFlags uint32
 
 type BufferCreateFlags uint32
@@ -113,6 +115,20 @@ type PipelineStageFlags2KHR = PipelineStageFlags2
 type RenderingFlags uint32
 
 type RenderingFlagsKHR = RenderingFlags
+
+type CompositeAlphaFlagsKHR uint32
+
+type SurfaceTransformFlagsKHR uint32
+
+type SwapchainCreateFlagsKHR uint32
+
+type WaylandSurfaceCreateFlagsKHR uint32
+
+type XlibSurfaceCreateFlagsKHR uint32
+
+type XcbSurfaceCreateFlagsKHR uint32
+
+type DeviceGroupPresentModeFlagsKHR uint32
 
 type ExternalMemoryHandleTypeFlags uint32
 
@@ -181,6 +197,10 @@ type Framebuffer uint64
 type RenderPass uint64
 
 type PipelineCache uint64
+
+type SurfaceKHR uint64
+
+type SwapchainKHR uint64
 
 type AttachmentLoadOp int32
 
@@ -262,6 +282,8 @@ type LogicOp int32
 
 type MemoryHeapFlagBits int32
 
+type AccessFlagBits int32
+
 type MemoryPropertyFlagBits int32
 
 type PhysicalDeviceType int32
@@ -324,6 +346,14 @@ type PipelineDepthStencilStateCreateFlagBits int32
 
 type PipelineColorBlendStateCreateFlagBits int32
 
+type ColorSpaceKHR int32
+
+type CompositeAlphaFlagBitsKHR int32
+
+type PresentModeKHR int32
+
+type SurfaceTransformFlagBitsKHR int32
+
 type ExternalMemoryHandleTypeFlagBits int32
 
 type ExternalSemaphoreHandleTypeFlagBits int32
@@ -337,6 +367,10 @@ type ExternalSemaphoreFeatureFlagBitsKHR = ExternalSemaphoreFeatureFlagBits
 type SemaphoreImportFlagBits int32
 
 type SemaphoreImportFlagBitsKHR = SemaphoreImportFlagBits
+
+type DeviceGroupPresentModeFlagBitsKHR int32
+
+type SwapchainCreateFlagBitsKHR int32
 
 type SubmitFlagBits int32
 
@@ -607,6 +641,38 @@ type ImageSubresourceRange struct {
 	LevelCount     uint32
 	BaseArrayLayer uint32
 	LayerCount     uint32
+}
+
+type MemoryBarrier struct {
+	SType         StructureType
+	Next          unsafe.Pointer
+	SrcAccessMask AccessFlags
+	DstAccessMask AccessFlags
+}
+
+type BufferMemoryBarrier struct {
+	SType               StructureType
+	Next                unsafe.Pointer
+	SrcAccessMask       AccessFlags
+	DstAccessMask       AccessFlags
+	SrcQueueFamilyIndex uint32
+	DstQueueFamilyIndex uint32
+	Buffer              Buffer
+	Offset              DeviceSize
+	Size                DeviceSize
+}
+
+type ImageMemoryBarrier struct {
+	SType               StructureType
+	Next                unsafe.Pointer
+	SrcAccessMask       AccessFlags
+	DstAccessMask       AccessFlags
+	OldLayout           ImageLayout
+	NewLayout           ImageLayout
+	SrcQueueFamilyIndex uint32
+	DstQueueFamilyIndex uint32
+	Image               Image
+	SubresourceRange    ImageSubresourceRange
 }
 
 type ImageCreateInfo struct {
@@ -1155,6 +1221,80 @@ type SubmitInfo struct {
 	SignalSemaphores     *Semaphore
 }
 
+type SurfaceCapabilitiesKHR struct {
+	MinImageCount           uint32
+	MaxImageCount           uint32
+	CurrentExtent           Extent2D
+	MinImageExtent          Extent2D
+	MaxImageExtent          Extent2D
+	MaxImageArrayLayers     uint32
+	SupportedTransforms     SurfaceTransformFlagsKHR
+	CurrentTransform        SurfaceTransformFlagBitsKHR
+	SupportedCompositeAlpha CompositeAlphaFlagsKHR
+	SupportedUsageFlags     ImageUsageFlags
+}
+
+type WaylandSurfaceCreateInfoKHR struct {
+	SType   StructureType
+	Next    unsafe.Pointer
+	Flags   WaylandSurfaceCreateFlagsKHR
+	Display unsafe.Pointer
+	Surface unsafe.Pointer
+}
+
+type XlibSurfaceCreateInfoKHR struct {
+	SType  StructureType
+	Next   unsafe.Pointer
+	Flags  XlibSurfaceCreateFlagsKHR
+	Dpy    unsafe.Pointer
+	Window uintptr
+}
+
+type XcbSurfaceCreateInfoKHR struct {
+	SType      StructureType
+	Next       unsafe.Pointer
+	Flags      XcbSurfaceCreateFlagsKHR
+	Connection unsafe.Pointer
+	Window     uint32
+}
+
+type SurfaceFormatKHR struct {
+	Format     Format
+	ColorSpace ColorSpaceKHR
+}
+
+type SwapchainCreateInfoKHR struct {
+	SType                 StructureType
+	Next                  unsafe.Pointer
+	Flags                 SwapchainCreateFlagsKHR
+	Surface               SurfaceKHR
+	MinImageCount         uint32
+	ImageFormat           Format
+	ImageColorSpace       ColorSpaceKHR
+	ImageExtent           Extent2D
+	ImageArrayLayers      uint32
+	ImageUsage            ImageUsageFlags
+	ImageSharingMode      SharingMode
+	QueueFamilyIndexCount uint32
+	QueueFamilyIndices    *uint32
+	PreTransform          SurfaceTransformFlagBitsKHR
+	CompositeAlpha        CompositeAlphaFlagBitsKHR
+	PresentMode           PresentModeKHR
+	Clipped               Bool32
+	OldSwapchain          SwapchainKHR
+}
+
+type PresentInfoKHR struct {
+	SType              StructureType
+	Next               unsafe.Pointer
+	WaitSemaphoreCount uint32
+	WaitSemaphores     *Semaphore
+	SwapchainCount     uint32
+	Swapchains         *SwapchainKHR
+	ImageIndices       *uint32
+	Results            *Result
+}
+
 type PhysicalDeviceFeatures2 struct {
 	SType    StructureType
 	Next     unsafe.Pointer
@@ -1352,6 +1492,50 @@ type BindImageMemoryInfo struct {
 }
 
 type BindImageMemoryInfoKHR = BindImageMemoryInfo
+
+type DeviceGroupPresentCapabilitiesKHR struct {
+	SType       StructureType
+	Next        unsafe.Pointer
+	PresentMask [MaxDeviceGroupSize]uint32
+	Modes       DeviceGroupPresentModeFlagsKHR
+}
+
+type ImageSwapchainCreateInfoKHR struct {
+	SType     StructureType
+	Next      unsafe.Pointer
+	Swapchain SwapchainKHR
+}
+
+type BindImageMemorySwapchainInfoKHR struct {
+	SType      StructureType
+	Next       unsafe.Pointer
+	Swapchain  SwapchainKHR
+	ImageIndex uint32
+}
+
+type AcquireNextImageInfoKHR struct {
+	SType      StructureType
+	Next       unsafe.Pointer
+	Swapchain  SwapchainKHR
+	Timeout    uint64
+	Semaphore  Semaphore
+	Fence      Fence
+	DeviceMask uint32
+}
+
+type DeviceGroupPresentInfoKHR struct {
+	SType          StructureType
+	Next           unsafe.Pointer
+	SwapchainCount uint32
+	DeviceMasks    *uint32
+	Mode           DeviceGroupPresentModeFlagBitsKHR
+}
+
+type DeviceGroupSwapchainCreateInfoKHR struct {
+	SType StructureType
+	Next  unsafe.Pointer
+	Modes DeviceGroupPresentModeFlagsKHR
+}
 
 type BufferMemoryRequirementsInfo2 struct {
 	SType  StructureType

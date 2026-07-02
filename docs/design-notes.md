@@ -14,23 +14,39 @@ Vulkan commands are loaded through Vulkan dispatch rather than as a flat `dlsym`
 
 Required commands return descriptive errors when missing. Optional extension commands remain nil when the loader or driver does not expose them. The dispatch loaders serialize and clear their package-level purego registration staging before each load so optional symbols cannot leak between devices or instances.
 
-## Generated subset
+## Generated profiles
 
-The generator reads the pinned Khronos registry at `registry/vk.xml` and emits the selected Linux compositor subset:
+The generator reads the pinned Khronos registry at `registry/vk.xml` and emits one of three profiles:
+
+- `renderer`: the original low-level compositor renderer subset;
+- `wsi`: the default committed profile, adding Linux WSI/swapchain commands and image readback;
+- `complete`: a broad pinned-registry profile for audit and consumers that need commands outside the default package.
+
+See `docs/binding-coverage.md` for current command/type/constant/extension counts.
+
+The default `wsi` profile includes:
 
 - core instance and device enumeration;
 - CPU-visible buffer upload primitives (`vkMapMemory`, `vkUnmapMemory`, memory binding, buffers, and barriers);
-- buffer-to-image upload commands (`vkCmdCopyBufferToImage` and image layout/access structures);
+- buffer/image transfer commands (`vkCmdCopyBufferToImage`, `vkCmdCopyImageToBuffer`, and image layout/access structures);
+- required memory-property queries for allocation decisions (`vkGetPhysicalDeviceMemoryProperties` and `vkGetPhysicalDeviceMemoryProperties2`);
+- required classic `vkCmdPipelineBarrier` support as the Vulkan 1.0 synchronization fallback, with synchronization2 extension commands exposed when present;
 - command buffer, fence, semaphore, image, memory, descriptor, sampler, shader module, pipeline-layout, graphics-pipeline creation, and pipeline destruction setup;
 - draw command recording (`vkCmdBindPipeline`, descriptor/vertex/index binding, `vkCmdDraw`, and `vkCmdDrawIndexed`);
 - dynamic rendering commands and structures for render-target setup without generated render-pass builders;
 - external memory fd / DMA-BUF support;
 - external semaphore fd support;
 - DRM format modifier and physical-device DRM property structures;
-- synchronization2 command and structure support where present.
+- synchronization2 command and structure support where present;
+- Linux WSI and presentation bindings for `VK_KHR_surface`, `VK_KHR_swapchain`, `VK_KHR_wayland_surface`, `VK_KHR_xcb_surface`, and `VK_KHR_xlib_surface`.
 
 The selected extension set includes:
 
+- `VK_KHR_surface`
+- `VK_KHR_swapchain`
+- `VK_KHR_wayland_surface`
+- `VK_KHR_xcb_surface`
+- `VK_KHR_xlib_surface`
 - `VK_KHR_dynamic_rendering`
 - `VK_KHR_get_physical_device_properties2`
 - `VK_KHR_bind_memory2`
@@ -41,6 +57,7 @@ The selected extension set includes:
 - `VK_EXT_image_drm_format_modifier`
 - `VK_EXT_physical_device_drm`
 - `VK_KHR_external_semaphore`
+- `VK_KHR_external_semaphore_capabilities`
 - `VK_KHR_external_semaphore_fd`
 - `VK_KHR_synchronization2`
 - `VK_EXT_queue_family_foreign`
@@ -55,7 +72,7 @@ Render targets should use dynamic rendering (`vkCmdBeginRendering` / `vkCmdEndRe
 
 ## v0.x exclusions
 
-This package intentionally avoids high-level Vulkan ownership abstractions. It does not provide swapchain management, render-pass builders, framebuffer builders, descriptor allocators, pipeline-cache policy, scene graphs, callback-heavy debug messenger surfaces, upload managers, render-graph abstractions, or compositor-specific import policy. Those belong in consumer packages that can make product-specific trade-offs.
+This package intentionally avoids high-level Vulkan ownership abstractions. It provides raw surface/swapchain bindings but does not provide swapchain management, render-pass builders, framebuffer builders, descriptor allocators, pipeline-cache policy, scene graphs, callback-heavy debug messenger surfaces, upload managers, render-graph abstractions, native window creation, or compositor-specific import policy. Those belong in consumer packages that can make product-specific trade-offs.
 
 Classic render-pass/framebuffer commands and pipeline-cache commands are not part of the renderer-ready target unless already needed as parameter types (for example, `PipelineCache` as a nullable handle passed to `vkCreateGraphicsPipelines`). Prefer `VK_NULL_HANDLE` / zero pipeline cache and dynamic rendering for the current compositor path.
 

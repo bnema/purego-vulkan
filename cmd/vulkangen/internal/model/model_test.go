@@ -145,6 +145,23 @@ func TestSelectIncludesVulkanTypedefDependencies(t *testing.T) {
 	}
 }
 
+func TestSelectRepresentsOpaqueNativeBasetypes(t *testing.T) {
+	reg := &model.Registry{Types: []model.TypeDecl{
+		{Name: "ANativeWindow", Category: "basetype", RawText: "struct ANativeWindow ;"},
+		{Name: "VkRemoteAddressNV", Category: "basetype", Type: "void"},
+	}}
+	sel, err := model.Select(reg, model.SelectionConfig{RootTypes: []string{"ANativeWindow", "VkRemoteAddressNV"}})
+	if err != nil {
+		t.Fatalf("Select() error = %v", err)
+	}
+	if native := sel.TypeByName("ANativeWindow"); native == nil || native.GoType != "uintptr" {
+		t.Fatalf("ANativeWindow selected as %+v, want uintptr opaque handle", native)
+	}
+	if remote := sel.TypeByName("VkRemoteAddressNV"); remote == nil || remote.GoType != "unsafe.Pointer" {
+		t.Fatalf("VkRemoteAddressNV selected as %+v, want unsafe.Pointer", remote)
+	}
+}
+
 func TestSelectIncludesFunctionPointerReturnTypes(t *testing.T) {
 	reg := testRegistry()
 	reg.Types = append(reg.Types, model.TypeDecl{Name: "PFN_vkVoidFunction", Category: "funcpointer"})
@@ -409,9 +426,10 @@ func TestDefaultSelectionOnPinnedRegistryHasRendererReadySurface(t *testing.T) {
 	}
 
 	for _, name := range []string{
+		"vkGetPhysicalDeviceMemoryProperties", "vkGetPhysicalDeviceMemoryProperties2", "vkGetPhysicalDeviceMemoryProperties2KHR",
 		"vkCreateBuffer", "vkDestroyBuffer", "vkGetBufferMemoryRequirements", "vkBindBufferMemory",
 		"vkMapMemory", "vkUnmapMemory", "vkFlushMappedMemoryRanges", "vkInvalidateMappedMemoryRanges",
-		"vkCmdCopyBufferToImage",
+		"vkCmdCopyBufferToImage", "vkCmdPipelineBarrier",
 		"vkCreateGraphicsPipelines", "vkDestroyPipeline",
 		"vkCmdBindPipeline", "vkCmdBindDescriptorSets", "vkCmdBindVertexBuffers", "vkCmdBindIndexBuffer", "vkCmdDraw", "vkCmdDrawIndexed",
 		"vkCmdBeginRendering", "vkCmdEndRendering", "vkCmdBeginRenderingKHR", "vkCmdEndRenderingKHR",
@@ -420,14 +438,23 @@ func TestDefaultSelectionOnPinnedRegistryHasRendererReadySurface(t *testing.T) {
 		if cmd == nil {
 			t.Fatalf("renderer command %s missing", name)
 		}
-		if cmd.Dispatch != model.DispatchDevice {
-			t.Fatalf("%s dispatch = %q, want device", name, cmd.Dispatch)
+		wantDispatch := model.DispatchDevice
+		if name == "vkGetPhysicalDeviceMemoryProperties" || name == "vkGetPhysicalDeviceMemoryProperties2" || name == "vkGetPhysicalDeviceMemoryProperties2KHR" {
+			wantDispatch = model.DispatchInstance
+		}
+		if cmd.Dispatch != wantDispatch {
+			t.Fatalf("%s dispatch = %q, want %q", name, cmd.Dispatch, wantDispatch)
+		}
+		wantOptional := name == "vkCmdBeginRenderingKHR" || name == "vkCmdEndRenderingKHR" || name == "vkGetPhysicalDeviceMemoryProperties2KHR"
+		if cmd.Optional != wantOptional {
+			t.Fatalf("%s optional = %t, want %t", name, cmd.Optional, wantOptional)
 		}
 	}
 
 	for _, name := range []string{
+		"VkPhysicalDeviceMemoryProperties", "VkMemoryType", "VkMemoryHeap",
 		"VkBuffer", "VkBufferCreateInfo", "VkBufferUsageFlags", "VkBufferUsageFlagBits", "VkMappedMemoryRange",
-		"VkBufferImageCopy", "VkImageSubresourceLayers",
+		"VkBufferImageCopy", "VkImageSubresourceLayers", "VkMemoryBarrier", "VkBufferMemoryBarrier", "VkImageMemoryBarrier",
 		"VkPipeline", "VkPipelineCache", "VkGraphicsPipelineCreateInfo", "VkPipelineShaderStageCreateInfo", "VkPipelineVertexInputStateCreateInfo", "VkPipelineInputAssemblyStateCreateInfo", "VkPipelineViewportStateCreateInfo", "VkPipelineRasterizationStateCreateInfo", "VkPipelineMultisampleStateCreateInfo", "VkPipelineColorBlendStateCreateInfo", "VkPipelineDynamicStateCreateInfo",
 		"VkRenderingInfo", "VkRenderingInfoKHR", "VkRenderingAttachmentInfo", "VkRenderingAttachmentInfoKHR", "VkPipelineRenderingCreateInfo", "VkPipelineRenderingCreateInfoKHR", "VkPhysicalDeviceDynamicRenderingFeatures", "VkPhysicalDeviceDynamicRenderingFeaturesKHR",
 	} {

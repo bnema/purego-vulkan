@@ -42,12 +42,26 @@ func RegisterInstance(handle uintptr, lookup LookupFunc, fptrs map[string]any) e
 	if err := registerRequired([]string{"vkGetPhysicalDeviceQueueFamilyProperties"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
+	if err := registerRequired([]string{"vkGetPhysicalDeviceMemoryProperties"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
 	if err := registerRequired([]string{"vkCreateDevice"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
 	if err := registerRequired([]string{"vkEnumerateDeviceExtensionProperties"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
+	registerOptional([]string{"vkDestroySurfaceKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkGetPhysicalDeviceSurfaceSupportKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkGetPhysicalDeviceSurfaceCapabilitiesKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkGetPhysicalDeviceSurfaceFormatsKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkGetPhysicalDeviceSurfacePresentModesKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkCreateWaylandSurfaceKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkGetPhysicalDeviceWaylandPresentationSupportKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkCreateXlibSurfaceKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkGetPhysicalDeviceXlibPresentationSupportKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkCreateXcbSurfaceKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkGetPhysicalDeviceXcbPresentationSupportKHR"}, handle, lookup, fptrs)
 	if err := registerRequired([]string{"vkGetPhysicalDeviceFeatures2", "vkGetPhysicalDeviceFeatures2KHR"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
@@ -59,9 +73,12 @@ func RegisterInstance(handle uintptr, lookup LookupFunc, fptrs map[string]any) e
 	if err := registerRequired([]string{"vkGetPhysicalDeviceQueueFamilyProperties2", "vkGetPhysicalDeviceQueueFamilyProperties2KHR"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
-	registerOptional([]string{"vkGetPhysicalDeviceMemoryProperties2KHR"}, handle, lookup, fptrs)
+	if err := registerRequired([]string{"vkGetPhysicalDeviceMemoryProperties2", "vkGetPhysicalDeviceMemoryProperties2KHR"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
 	registerOptional([]string{"vkGetPhysicalDeviceSparseImageFormatProperties2KHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkGetPhysicalDeviceExternalSemaphorePropertiesKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkGetPhysicalDevicePresentRectanglesKHR"}, handle, lookup, fptrs)
 	return nil
 }
 
@@ -231,6 +248,17 @@ func RegisterDevice(handle uintptr, lookup LookupFunc, fptrs map[string]any) err
 	if err := registerRequired([]string{"vkCmdCopyBufferToImage"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
+	if err := registerRequired([]string{"vkCmdCopyImageToBuffer"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
+	if err := registerRequired([]string{"vkCmdPipelineBarrier"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
+	registerOptional([]string{"vkCreateSwapchainKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkDestroySwapchainKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkGetSwapchainImagesKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkAcquireNextImageKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkQueuePresentKHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkGetMemoryFdKHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkGetMemoryFdPropertiesKHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkGetSemaphoreFdKHR"}, handle, lookup, fptrs)
@@ -239,6 +267,9 @@ func RegisterDevice(handle uintptr, lookup LookupFunc, fptrs map[string]any) err
 	if err := registerRequired([]string{"vkBindImageMemory2", "vkBindImageMemory2KHR"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
+	registerOptional([]string{"vkGetDeviceGroupPresentCapabilitiesKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkGetDeviceGroupSurfacePresentModesKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkAcquireNextImage2KHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkGetBufferMemoryRequirements2KHR"}, handle, lookup, fptrs)
 	if err := registerRequired([]string{"vkGetImageMemoryRequirements2", "vkGetImageMemoryRequirements2KHR"}, handle, lookup, fptrs); err != nil {
 		return err

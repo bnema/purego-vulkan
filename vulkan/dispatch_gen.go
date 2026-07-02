@@ -19,8 +19,20 @@ type InstanceDispatch struct {
 	GetDeviceProcAddr                                func(Device, *byte) PFN_vkVoidFunction
 	GetPhysicalDeviceProperties                      func(PhysicalDevice, *PhysicalDeviceProperties)
 	GetPhysicalDeviceQueueFamilyProperties           func(PhysicalDevice, *uint32, *QueueFamilyProperties)
+	GetPhysicalDeviceMemoryProperties                func(PhysicalDevice, *PhysicalDeviceMemoryProperties)
 	CreateDevice                                     func(PhysicalDevice, *DeviceCreateInfo, *AllocationCallbacks, *Device) Result
 	EnumerateDeviceExtensionProperties               func(PhysicalDevice, *byte, *uint32, *ExtensionProperties) Result
+	DestroySurfaceKHR                                func(Instance, SurfaceKHR, *AllocationCallbacks)
+	GetPhysicalDeviceSurfaceSupportKHR               func(PhysicalDevice, uint32, SurfaceKHR, *Bool32) Result
+	GetPhysicalDeviceSurfaceCapabilitiesKHR          func(PhysicalDevice, SurfaceKHR, *SurfaceCapabilitiesKHR) Result
+	GetPhysicalDeviceSurfaceFormatsKHR               func(PhysicalDevice, SurfaceKHR, *uint32, *SurfaceFormatKHR) Result
+	GetPhysicalDeviceSurfacePresentModesKHR          func(PhysicalDevice, SurfaceKHR, *uint32, *PresentModeKHR) Result
+	CreateWaylandSurfaceKHR                          func(Instance, *WaylandSurfaceCreateInfoKHR, *AllocationCallbacks, *SurfaceKHR) Result
+	GetPhysicalDeviceWaylandPresentationSupportKHR   func(PhysicalDevice, uint32, unsafe.Pointer) Bool32
+	CreateXlibSurfaceKHR                             func(Instance, *XlibSurfaceCreateInfoKHR, *AllocationCallbacks, *SurfaceKHR) Result
+	GetPhysicalDeviceXlibPresentationSupportKHR      func(PhysicalDevice, uint32, unsafe.Pointer, uintptr) Bool32
+	CreateXcbSurfaceKHR                              func(Instance, *XcbSurfaceCreateInfoKHR, *AllocationCallbacks, *SurfaceKHR) Result
+	GetPhysicalDeviceXcbPresentationSupportKHR       func(PhysicalDevice, uint32, unsafe.Pointer, uint32) Bool32
 	GetPhysicalDeviceFeatures2                       func(PhysicalDevice, *PhysicalDeviceFeatures2)
 	GetPhysicalDeviceFeatures2KHR                    func(PhysicalDevice, *PhysicalDeviceFeatures2)
 	GetPhysicalDeviceProperties2                     func(PhysicalDevice, *PhysicalDeviceProperties2)
@@ -29,9 +41,11 @@ type InstanceDispatch struct {
 	GetPhysicalDeviceImageFormatProperties2KHR       func(PhysicalDevice, *PhysicalDeviceImageFormatInfo2, *ImageFormatProperties2) Result
 	GetPhysicalDeviceQueueFamilyProperties2          func(PhysicalDevice, *uint32, *QueueFamilyProperties2)
 	GetPhysicalDeviceQueueFamilyProperties2KHR       func(PhysicalDevice, *uint32, *QueueFamilyProperties2)
+	GetPhysicalDeviceMemoryProperties2               func(PhysicalDevice, *PhysicalDeviceMemoryProperties2)
 	GetPhysicalDeviceMemoryProperties2KHR            func(PhysicalDevice, *PhysicalDeviceMemoryProperties2)
 	GetPhysicalDeviceSparseImageFormatProperties2KHR func(PhysicalDevice, *PhysicalDeviceSparseImageFormatInfo2, *uint32, *SparseImageFormatProperties2)
 	GetPhysicalDeviceExternalSemaphorePropertiesKHR  func(PhysicalDevice, *PhysicalDeviceExternalSemaphoreInfo, *ExternalSemaphoreProperties)
+	GetPhysicalDevicePresentRectanglesKHR            func(PhysicalDevice, SurfaceKHR, *uint32, *Rect2D) Result
 }
 
 type DeviceDispatch struct {
@@ -91,6 +105,13 @@ type DeviceDispatch struct {
 	CmdDraw                                func(CommandBuffer, uint32, uint32, uint32, uint32)
 	CmdDrawIndexed                         func(CommandBuffer, uint32, uint32, uint32, int32, uint32)
 	CmdCopyBufferToImage                   func(CommandBuffer, Buffer, Image, ImageLayout, uint32, *BufferImageCopy)
+	CmdCopyImageToBuffer                   func(CommandBuffer, Image, ImageLayout, Buffer, uint32, *BufferImageCopy)
+	CmdPipelineBarrier                     func(CommandBuffer, PipelineStageFlags, PipelineStageFlags, DependencyFlags, uint32, *MemoryBarrier, uint32, *BufferMemoryBarrier, uint32, *ImageMemoryBarrier)
+	CreateSwapchainKHR                     func(Device, *SwapchainCreateInfoKHR, *AllocationCallbacks, *SwapchainKHR) Result
+	DestroySwapchainKHR                    func(Device, SwapchainKHR, *AllocationCallbacks)
+	GetSwapchainImagesKHR                  func(Device, SwapchainKHR, *uint32, *Image) Result
+	AcquireNextImageKHR                    func(Device, SwapchainKHR, uint64, Semaphore, Fence, *uint32) Result
+	QueuePresentKHR                        func(Queue, *PresentInfoKHR) Result
 	GetMemoryFdKHR                         func(Device, *MemoryGetFdInfoKHR, *int32) Result
 	GetMemoryFdPropertiesKHR               func(Device, ExternalMemoryHandleTypeFlagBits, int32, *MemoryFdPropertiesKHR) Result
 	GetSemaphoreFdKHR                      func(Device, *SemaphoreGetFdInfoKHR, *int32) Result
@@ -98,6 +119,9 @@ type DeviceDispatch struct {
 	BindBufferMemory2KHR                   func(Device, uint32, *BindBufferMemoryInfo) Result
 	BindImageMemory2                       func(Device, uint32, *BindImageMemoryInfo) Result
 	BindImageMemory2KHR                    func(Device, uint32, *BindImageMemoryInfo) Result
+	GetDeviceGroupPresentCapabilitiesKHR   func(Device, *DeviceGroupPresentCapabilitiesKHR) Result
+	GetDeviceGroupSurfacePresentModesKHR   func(Device, SurfaceKHR, *DeviceGroupPresentModeFlagsKHR) Result
+	AcquireNextImage2KHR                   func(Device, *AcquireNextImageInfoKHR, *uint32) Result
 	GetBufferMemoryRequirements2KHR        func(Device, *BufferMemoryRequirementsInfo2, *MemoryRequirements2)
 	GetImageMemoryRequirements2            func(Device, *ImageMemoryRequirementsInfo2, *MemoryRequirements2)
 	GetImageMemoryRequirements2KHR         func(Device, *ImageMemoryRequirementsInfo2, *MemoryRequirements2)

@@ -499,7 +499,7 @@ func (s *selectionState) extensionDepsToAdd(expr string) ([]string, bool) {
 			return nil, true
 		}
 		ext, ok := s.idx.extensions[expr]
-		if !ok || ext.Platform != "" || ext.Supported == "disabled" {
+		if !ok || !isSupportedPlatform(ext.Platform) || ext.Supported == "disabled" {
 			return nil, false
 		}
 		return []string{expr}, true
@@ -582,7 +582,7 @@ func (s *selectionState) addExtension(name string, optionalCommands bool, contex
 		s.addMissing("extension", name, context)
 		return
 	}
-	if ext.Platform != "" || ext.Supported == "disabled" {
+	if !isSupportedPlatform(ext.Platform) || ext.Supported == "disabled" {
 		return
 	}
 	if s.selectedExts[name] {
@@ -899,7 +899,16 @@ func (s *selectionState) goTypeFor(decl TypeDecl, seen map[string]bool) (string,
 	if decl.Category == "enum" {
 		return "int32", false
 	}
-	if decl.Category == "basetype" || decl.Category == "bitmask" {
+	if decl.Category == "basetype" {
+		if decl.Type == "" {
+			return "uintptr", false
+		}
+		if decl.Type == "void" {
+			return "unsafe.Pointer", false
+		}
+		return goScalarType(decl.Type), false
+	}
+	if decl.Category == "bitmask" {
 		return goScalarType(decl.Type), false
 	}
 	if decl.Category == "funcpointer" {
@@ -944,6 +953,15 @@ func uniqueMembers(members []MemberDecl) []MemberDecl {
 		out = append(out, member)
 	}
 	return out
+}
+
+func isSupportedPlatform(platform string) bool {
+	switch platform {
+	case "", "wayland", "xcb", "xlib", "xlib_xrandr":
+		return true
+	default:
+		return false
+	}
 }
 
 func isGlobalCommand(name string) bool {
