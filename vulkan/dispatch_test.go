@@ -78,6 +78,9 @@ func TestLoadInstanceDispatchRequiresCoreCommands(t *testing.T) {
 	if dispatch.GetPhysicalDeviceProperties2 == nil || dispatch.GetPhysicalDeviceProperties2KHR == nil {
 		t.Fatal("core/KHR alias group was not populated from one available symbol")
 	}
+	if dispatch.GetPhysicalDeviceFormatProperties2 == nil || dispatch.GetPhysicalDeviceFormatProperties2KHR == nil {
+		t.Fatal("format properties2 core/KHR alias group was not populated from one available symbol")
+	}
 
 	resetDispatchForTest()
 	VkGetInstanceProcAddr = fakeGetInstanceProcAddr(requiredInstanceSymbolsExcept("vkGetPhysicalDeviceMemoryProperties2"))
@@ -274,6 +277,7 @@ func requiredInstanceSymbols() map[string]uintptr {
 		"vkEnumerateDeviceExtensionProperties",
 		"vkGetPhysicalDeviceFeatures2",
 		"vkGetPhysicalDeviceProperties2",
+		"vkGetPhysicalDeviceFormatProperties2",
 		"vkGetPhysicalDeviceQueueFamilyProperties2",
 	})
 }

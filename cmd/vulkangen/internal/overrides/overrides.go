@@ -18,6 +18,7 @@ var InitialCommands = []string{
 	"vkEnumeratePhysicalDevices",
 	"vkGetPhysicalDeviceProperties",
 	"vkGetPhysicalDeviceProperties2",
+	"vkGetPhysicalDeviceFormatProperties2",
 	"vkGetPhysicalDeviceMemoryProperties",
 	"vkGetPhysicalDeviceMemoryProperties2",
 	"vkGetPhysicalDeviceFeatures2",

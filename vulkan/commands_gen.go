@@ -96,6 +96,7 @@ var VkGetPhysicalDeviceFeatures2 func(PhysicalDevice, *PhysicalDeviceFeatures2)
 var VkGetPhysicalDeviceFeatures2KHR func(PhysicalDevice, *PhysicalDeviceFeatures2)
 var VkGetPhysicalDeviceProperties2 func(PhysicalDevice, *PhysicalDeviceProperties2)
 var VkGetPhysicalDeviceProperties2KHR func(PhysicalDevice, *PhysicalDeviceProperties2)
+var VkGetPhysicalDeviceFormatProperties2 func(PhysicalDevice, Format, *FormatProperties2)
 var VkGetPhysicalDeviceFormatProperties2KHR func(PhysicalDevice, Format, *FormatProperties2)
 var VkGetPhysicalDeviceImageFormatProperties2KHR func(PhysicalDevice, *PhysicalDeviceImageFormatInfo2, *ImageFormatProperties2) Result
 var VkGetPhysicalDeviceQueueFamilyProperties2 func(PhysicalDevice, *uint32, *QueueFamilyProperties2)
@@ -172,6 +173,7 @@ func instanceCommandPointers() map[string]any {
 		"vkGetPhysicalDeviceFeatures2KHR":                    &VkGetPhysicalDeviceFeatures2KHR,
 		"vkGetPhysicalDeviceProperties2":                     &VkGetPhysicalDeviceProperties2,
 		"vkGetPhysicalDeviceProperties2KHR":                  &VkGetPhysicalDeviceProperties2KHR,
+		"vkGetPhysicalDeviceFormatProperties2":               &VkGetPhysicalDeviceFormatProperties2,
 		"vkGetPhysicalDeviceFormatProperties2KHR":            &VkGetPhysicalDeviceFormatProperties2KHR,
 		"vkGetPhysicalDeviceImageFormatProperties2KHR":       &VkGetPhysicalDeviceImageFormatProperties2KHR,
 		"vkGetPhysicalDeviceQueueFamilyProperties2":          &VkGetPhysicalDeviceQueueFamilyProperties2,

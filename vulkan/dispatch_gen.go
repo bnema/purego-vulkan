@@ -37,6 +37,7 @@ type InstanceDispatch struct {
 	GetPhysicalDeviceFeatures2KHR                    func(PhysicalDevice, *PhysicalDeviceFeatures2)
 	GetPhysicalDeviceProperties2                     func(PhysicalDevice, *PhysicalDeviceProperties2)
 	GetPhysicalDeviceProperties2KHR                  func(PhysicalDevice, *PhysicalDeviceProperties2)
+	GetPhysicalDeviceFormatProperties2               func(PhysicalDevice, Format, *FormatProperties2)
 	GetPhysicalDeviceFormatProperties2KHR            func(PhysicalDevice, Format, *FormatProperties2)
 	GetPhysicalDeviceImageFormatProperties2KHR       func(PhysicalDevice, *PhysicalDeviceImageFormatInfo2, *ImageFormatProperties2) Result
 	GetPhysicalDeviceQueueFamilyProperties2          func(PhysicalDevice, *uint32, *QueueFamilyProperties2)

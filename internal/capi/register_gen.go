@@ -68,7 +68,9 @@ func RegisterInstance(handle uintptr, lookup LookupFunc, fptrs map[string]any) e
 	if err := registerRequired([]string{"vkGetPhysicalDeviceProperties2", "vkGetPhysicalDeviceProperties2KHR"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
-	registerOptional([]string{"vkGetPhysicalDeviceFormatProperties2KHR"}, handle, lookup, fptrs)
+	if err := registerRequired([]string{"vkGetPhysicalDeviceFormatProperties2", "vkGetPhysicalDeviceFormatProperties2KHR"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
 	registerOptional([]string{"vkGetPhysicalDeviceImageFormatProperties2KHR"}, handle, lookup, fptrs)
 	if err := registerRequired([]string{"vkGetPhysicalDeviceQueueFamilyProperties2", "vkGetPhysicalDeviceQueueFamilyProperties2KHR"}, handle, lookup, fptrs); err != nil {
 		return err
