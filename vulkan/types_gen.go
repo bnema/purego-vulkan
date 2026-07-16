@@ -104,6 +104,10 @@ type DescriptorPoolCreateFlags uint32
 
 type DependencyFlags uint32
 
+type SemaphoreWaitFlags uint32
+
+type SemaphoreWaitFlagsKHR = SemaphoreWaitFlags
+
 type AccessFlags2 uint64
 
 type AccessFlags2KHR = AccessFlags2
@@ -329,6 +333,14 @@ type DependencyFlagBits int32
 type PipelineLayoutCreateFlagBits int32
 
 type ResolveModeFlagBits int32
+
+type SemaphoreType int32
+
+type SemaphoreTypeKHR = SemaphoreType
+
+type SemaphoreWaitFlagBits int32
+
+type SemaphoreWaitFlagBitsKHR = SemaphoreWaitFlagBits
 
 type AccessFlagBits2 int32
 
@@ -626,6 +638,12 @@ type BufferCreateInfo struct {
 	SharingMode           SharingMode
 	QueueFamilyIndexCount uint32
 	QueueFamilyIndices    *uint32
+}
+
+type ImageSubresource struct {
+	AspectMask ImageAspectFlags
+	MipLevel   uint32
+	ArrayLayer uint32
 }
 
 type ImageSubresourceLayers struct {
@@ -1576,6 +1594,62 @@ type SparseImageMemoryRequirements2 struct {
 }
 
 type SparseImageMemoryRequirements2KHR = SparseImageMemoryRequirements2
+
+type PhysicalDeviceTimelineSemaphoreFeatures struct {
+	SType             StructureType
+	Next              unsafe.Pointer
+	TimelineSemaphore Bool32
+}
+
+type PhysicalDeviceTimelineSemaphoreFeaturesKHR = PhysicalDeviceTimelineSemaphoreFeatures
+
+type PhysicalDeviceTimelineSemaphoreProperties struct {
+	SType                               StructureType
+	Next                                unsafe.Pointer
+	MaxTimelineSemaphoreValueDifference uint64
+}
+
+type PhysicalDeviceTimelineSemaphorePropertiesKHR = PhysicalDeviceTimelineSemaphoreProperties
+
+type SemaphoreTypeCreateInfo struct {
+	SType         StructureType
+	Next          unsafe.Pointer
+	SemaphoreType SemaphoreType
+	InitialValue  uint64
+}
+
+type SemaphoreTypeCreateInfoKHR = SemaphoreTypeCreateInfo
+
+type TimelineSemaphoreSubmitInfo struct {
+	SType                     StructureType
+	Next                      unsafe.Pointer
+	WaitSemaphoreValueCount   uint32
+	WaitSemaphoreValues       *uint64
+	SignalSemaphoreValueCount uint32
+	SignalSemaphoreValues     *uint64
+}
+
+type TimelineSemaphoreSubmitInfoKHR = TimelineSemaphoreSubmitInfo
+
+type SemaphoreWaitInfo struct {
+	SType          StructureType
+	Next           unsafe.Pointer
+	Flags          SemaphoreWaitFlags
+	SemaphoreCount uint32
+	Semaphores     *Semaphore
+	Values         *uint64
+}
+
+type SemaphoreWaitInfoKHR = SemaphoreWaitInfo
+
+type SemaphoreSignalInfo struct {
+	SType     StructureType
+	Next      unsafe.Pointer
+	Semaphore Semaphore
+	Value     uint64
+}
+
+type SemaphoreSignalInfoKHR = SemaphoreSignalInfo
 
 type DrmFormatModifierPropertiesListEXT struct {
 	SType                       StructureType

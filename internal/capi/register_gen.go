@@ -158,6 +158,9 @@ func RegisterDevice(handle uintptr, lookup LookupFunc, fptrs map[string]any) err
 	if err := registerRequired([]string{"vkDestroyImage"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
+	if err := registerRequired([]string{"vkGetImageSubresourceLayout"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
 	if err := registerRequired([]string{"vkCreateImageView"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
@@ -251,6 +254,9 @@ func RegisterDevice(handle uintptr, lookup LookupFunc, fptrs map[string]any) err
 	if err := registerRequired([]string{"vkCmdCopyImageToBuffer"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
+	if err := registerRequired([]string{"vkCmdClearColorImage"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
 	if err := registerRequired([]string{"vkCmdPipelineBarrier"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
@@ -275,6 +281,9 @@ func RegisterDevice(handle uintptr, lookup LookupFunc, fptrs map[string]any) err
 		return err
 	}
 	registerOptional([]string{"vkGetImageSparseMemoryRequirements2KHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkGetSemaphoreCounterValue", "vkGetSemaphoreCounterValueKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkWaitSemaphores", "vkWaitSemaphoresKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkSignalSemaphore", "vkSignalSemaphoreKHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkGetImageDrmFormatModifierPropertiesEXT"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkCmdSetEvent2KHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkCmdResetEvent2KHR"}, handle, lookup, fptrs)

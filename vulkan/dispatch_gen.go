@@ -75,6 +75,7 @@ type DeviceDispatch struct {
 	DestroyBuffer                          func(Device, Buffer, *AllocationCallbacks)
 	CreateImage                            func(Device, *ImageCreateInfo, *AllocationCallbacks, *Image) Result
 	DestroyImage                           func(Device, Image, *AllocationCallbacks)
+	GetImageSubresourceLayout              func(Device, Image, *ImageSubresource, *SubresourceLayout)
 	CreateImageView                        func(Device, *ImageViewCreateInfo, *AllocationCallbacks, *ImageView) Result
 	DestroyImageView                       func(Device, ImageView, *AllocationCallbacks)
 	CreateShaderModule                     func(Device, *ShaderModuleCreateInfo, *AllocationCallbacks, *ShaderModule) Result
@@ -106,6 +107,7 @@ type DeviceDispatch struct {
 	CmdDrawIndexed                         func(CommandBuffer, uint32, uint32, uint32, int32, uint32)
 	CmdCopyBufferToImage                   func(CommandBuffer, Buffer, Image, ImageLayout, uint32, *BufferImageCopy)
 	CmdCopyImageToBuffer                   func(CommandBuffer, Image, ImageLayout, Buffer, uint32, *BufferImageCopy)
+	CmdClearColorImage                     func(CommandBuffer, Image, ImageLayout, *ClearColorValue, uint32, *ImageSubresourceRange)
 	CmdPipelineBarrier                     func(CommandBuffer, PipelineStageFlags, PipelineStageFlags, DependencyFlags, uint32, *MemoryBarrier, uint32, *BufferMemoryBarrier, uint32, *ImageMemoryBarrier)
 	CreateSwapchainKHR                     func(Device, *SwapchainCreateInfoKHR, *AllocationCallbacks, *SwapchainKHR) Result
 	DestroySwapchainKHR                    func(Device, SwapchainKHR, *AllocationCallbacks)
@@ -126,6 +128,12 @@ type DeviceDispatch struct {
 	GetImageMemoryRequirements2            func(Device, *ImageMemoryRequirementsInfo2, *MemoryRequirements2)
 	GetImageMemoryRequirements2KHR         func(Device, *ImageMemoryRequirementsInfo2, *MemoryRequirements2)
 	GetImageSparseMemoryRequirements2KHR   func(Device, *ImageSparseMemoryRequirementsInfo2, *uint32, *SparseImageMemoryRequirements2)
+	GetSemaphoreCounterValue               func(Device, Semaphore, *uint64) Result
+	GetSemaphoreCounterValueKHR            func(Device, Semaphore, *uint64) Result
+	WaitSemaphores                         func(Device, *SemaphoreWaitInfo, uint64) Result
+	WaitSemaphoresKHR                      func(Device, *SemaphoreWaitInfo, uint64) Result
+	SignalSemaphore                        func(Device, *SemaphoreSignalInfo) Result
+	SignalSemaphoreKHR                     func(Device, *SemaphoreSignalInfo) Result
 	GetImageDrmFormatModifierPropertiesEXT func(Device, Image, *ImageDrmFormatModifierPropertiesEXT) Result
 	CmdSetEvent2KHR                        func(CommandBuffer, Event, *DependencyInfo)
 	CmdResetEvent2KHR                      func(CommandBuffer, Event, PipelineStageFlags2)

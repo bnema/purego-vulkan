@@ -158,13 +158,30 @@ func rendererSelection() model.SelectionConfig {
 
 func wsiSelection() model.SelectionConfig {
 	cfg := rendererSelection()
-	cfg.Commands = append(cfg.Commands, "vkCmdCopyImageToBuffer")
+	cfg.Commands = append(cfg.Commands,
+		"vkCmdCopyImageToBuffer",
+		"vkCmdClearColorImage",
+		"vkGetImageSubresourceLayout",
+		"vkWaitSemaphores",
+		"vkSignalSemaphore",
+		"vkGetSemaphoreCounterValue",
+	)
+	for _, name := range []string{
+		"vkWaitSemaphores",
+		"vkSignalSemaphore",
+		"vkGetSemaphoreCounterValue",
+	} {
+		override := cfg.CommandOverrides[name]
+		override.Optional = true
+		cfg.CommandOverrides[name] = override
+	}
 	cfg.Extensions = append(cfg.Extensions,
 		"VK_KHR_surface",
 		"VK_KHR_swapchain",
 		"VK_KHR_wayland_surface",
 		"VK_KHR_xcb_surface",
 		"VK_KHR_xlib_surface",
+		"VK_KHR_timeline_semaphore",
 	)
 	return cfg
 }
