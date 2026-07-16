@@ -1595,6 +1595,20 @@ type SparseImageMemoryRequirements2 struct {
 
 type SparseImageMemoryRequirements2KHR = SparseImageMemoryRequirements2
 
+type MemoryDedicatedRequirements struct {
+	SType                       StructureType
+	Next                        unsafe.Pointer
+	PrefersDedicatedAllocation  Bool32
+	RequiresDedicatedAllocation Bool32
+}
+
+type MemoryDedicatedAllocateInfo struct {
+	SType  StructureType
+	Next   unsafe.Pointer
+	Image  Image
+	Buffer Buffer
+}
+
 type PhysicalDeviceTimelineSemaphoreFeatures struct {
 	SType             StructureType
 	Next              unsafe.Pointer

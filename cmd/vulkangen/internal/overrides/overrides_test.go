@@ -68,6 +68,11 @@ func TestWSIProfileSelectsLinuxPresentationAndReadbackSurface(t *testing.T) {
 			t.Fatalf("WSI profile missing native platform type %s", name)
 		}
 	}
+	for _, name := range []string{"VkMemoryDedicatedRequirements", "VkMemoryDedicatedAllocateInfo"} {
+		if sel.TypeByName(name) == nil {
+			t.Fatalf("WSI profile missing exportable-image type %s", name)
+		}
+	}
 }
 
 func TestCompleteProfileSelectsPinnedRegistryCommandCoverageAsOptionalExpansion(t *testing.T) {

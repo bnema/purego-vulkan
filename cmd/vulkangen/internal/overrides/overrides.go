@@ -150,6 +150,12 @@ func SelectionForProfile(reg *model.Registry, profile Profile) (model.SelectionC
 
 func rendererSelection() model.SelectionConfig {
 	return model.SelectionConfig{
+		// Dedicated allocation is required for exportable DRM modifier images.
+		// The structs are not direct command parameters, so retain them as roots.
+		RootTypes: []string{
+			"VkMemoryDedicatedRequirements",
+			"VkMemoryDedicatedAllocateInfo",
+		},
 		Commands:         append([]string(nil), InitialCommands...),
 		Extensions:       append([]string(nil), RequiredExtensions...),
 		CoreVersions:     []string{"VK_VERSION_1_0", "VK_VERSION_1_1", "VK_VERSION_1_2"},
