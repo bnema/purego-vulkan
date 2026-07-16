@@ -99,6 +99,31 @@ func TestGeneratedWSILayouts(t *testing.T) {
 	}
 }
 
+// TestGeneratedTimelineSemaphoreLayouts checks the 64-bit C ABI layouts declared
+// for the timeline semaphore structures in registry/vk.xml.
+func TestGeneratedTimelineSemaphoreLayouts(t *testing.T) {
+	require64BitLayout(t)
+	tests := []struct {
+		name      string
+		size      uintptr
+		alignment uintptr
+		wantSize  uintptr
+		wantAlign uintptr
+	}{
+		{"PhysicalDeviceTimelineSemaphoreFeatures", unsafe.Sizeof(PhysicalDeviceTimelineSemaphoreFeatures{}), unsafe.Alignof(PhysicalDeviceTimelineSemaphoreFeatures{}), 24, 8},
+		{"PhysicalDeviceTimelineSemaphoreProperties", unsafe.Sizeof(PhysicalDeviceTimelineSemaphoreProperties{}), unsafe.Alignof(PhysicalDeviceTimelineSemaphoreProperties{}), 24, 8},
+		{"SemaphoreTypeCreateInfo", unsafe.Sizeof(SemaphoreTypeCreateInfo{}), unsafe.Alignof(SemaphoreTypeCreateInfo{}), 32, 8},
+		{"TimelineSemaphoreSubmitInfo", unsafe.Sizeof(TimelineSemaphoreSubmitInfo{}), unsafe.Alignof(TimelineSemaphoreSubmitInfo{}), 48, 8},
+		{"SemaphoreWaitInfo", unsafe.Sizeof(SemaphoreWaitInfo{}), unsafe.Alignof(SemaphoreWaitInfo{}), 40, 8},
+		{"SemaphoreSignalInfo", unsafe.Sizeof(SemaphoreSignalInfo{}), unsafe.Alignof(SemaphoreSignalInfo{}), 32, 8},
+	}
+	for _, tt := range tests {
+		if tt.size != tt.wantSize || tt.alignment != tt.wantAlign {
+			t.Fatalf("%s layout = size %d align %d, want size %d align %d", tt.name, tt.size, tt.alignment, tt.wantSize, tt.wantAlign)
+		}
+	}
+}
+
 func TestGeneratedRendererHardeningLayouts(t *testing.T) {
 	require64BitLayout(t)
 	tests := []struct {
