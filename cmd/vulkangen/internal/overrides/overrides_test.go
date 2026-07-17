@@ -20,22 +20,33 @@ func TestWSIProfileSelectsLinuxPresentationAndReadbackSurface(t *testing.T) {
 		t.Fatalf("Select(wsi) error = %v", err)
 	}
 
-	for _, name := range []string{
-		"vkCreateWaylandSurfaceKHR",
-		"vkCreateXcbSurfaceKHR",
-		"vkCreateXlibSurfaceKHR",
-		"vkCreateSwapchainKHR",
-		"vkGetSwapchainImagesKHR",
-		"vkAcquireNextImageKHR",
-		"vkQueuePresentKHR",
-		"vkCmdCopyImageToBuffer",
+	for _, tt := range []struct {
+		name     string
+		optional bool
+	}{
+		{"vkCreateWaylandSurfaceKHR", true},
+		{"vkCreateXcbSurfaceKHR", true},
+		{"vkCreateXlibSurfaceKHR", true},
+		{"vkCreateSwapchainKHR", true},
+		{"vkGetSwapchainImagesKHR", true},
+		{"vkAcquireNextImageKHR", true},
+		{"vkQueuePresentKHR", true},
+		{"vkCmdCopyImageToBuffer", false},
+		{"vkCmdClearColorImage", false},
+		{"vkGetImageSubresourceLayout", false},
+		{"vkGetSemaphoreCounterValue", true},
+		{"vkGetSemaphoreCounterValueKHR", true},
+		{"vkWaitSemaphores", true},
+		{"vkWaitSemaphoresKHR", true},
+		{"vkSignalSemaphore", true},
+		{"vkSignalSemaphoreKHR", true},
 	} {
-		cmd := sel.CommandByName(name)
+		cmd := sel.CommandByName(tt.name)
 		if cmd == nil {
-			t.Fatalf("WSI profile missing command %s", name)
+			t.Fatalf("WSI profile missing command %s", tt.name)
 		}
-		if name != "vkCmdCopyImageToBuffer" && !cmd.Optional {
-			t.Fatalf("WSI extension command %s optional = false", name)
+		if cmd.Optional != tt.optional {
+			t.Fatalf("WSI command %s optional = %t, want %t", tt.name, cmd.Optional, tt.optional)
 		}
 	}
 
@@ -45,6 +56,7 @@ func TestWSIProfileSelectsLinuxPresentationAndReadbackSurface(t *testing.T) {
 		"VK_KHR_wayland_surface",
 		"VK_KHR_xcb_surface",
 		"VK_KHR_xlib_surface",
+		"VK_KHR_timeline_semaphore",
 	} {
 		if sel.ExtensionByName(name) == nil {
 			t.Fatalf("WSI profile missing extension %s", name)
@@ -54,6 +66,16 @@ func TestWSIProfileSelectsLinuxPresentationAndReadbackSurface(t *testing.T) {
 	for _, name := range []string{"wl_display", "wl_surface", "xcb_connection_t", "xcb_window_t", "Display", "Window"} {
 		if sel.TypeByName(name) == nil {
 			t.Fatalf("WSI profile missing native platform type %s", name)
+		}
+	}
+	for _, name := range []string{
+		"VkMemoryDedicatedRequirements",
+		"VkMemoryDedicatedRequirementsKHR",
+		"VkMemoryDedicatedAllocateInfo",
+		"VkMemoryDedicatedAllocateInfoKHR",
+	} {
+		if sel.TypeByName(name) == nil {
+			t.Fatalf("WSI profile missing exportable-image type %s", name)
 		}
 	}
 }

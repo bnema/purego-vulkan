@@ -78,6 +78,9 @@ func TestLoadInstanceDispatchRequiresCoreCommands(t *testing.T) {
 	if dispatch.GetPhysicalDeviceProperties2 == nil || dispatch.GetPhysicalDeviceProperties2KHR == nil {
 		t.Fatal("core/KHR alias group was not populated from one available symbol")
 	}
+	if dispatch.GetPhysicalDeviceFormatProperties2 == nil || dispatch.GetPhysicalDeviceFormatProperties2KHR == nil {
+		t.Fatal("format properties2 core/KHR alias group was not populated from one available symbol")
+	}
 
 	resetDispatchForTest()
 	VkGetInstanceProcAddr = fakeGetInstanceProcAddr(requiredInstanceSymbolsExcept("vkGetPhysicalDeviceMemoryProperties2"))
@@ -87,6 +90,24 @@ func TestLoadInstanceDispatchRequiresCoreCommands(t *testing.T) {
 	}
 	if dispatch.GetPhysicalDeviceMemoryProperties2 == nil || dispatch.GetPhysicalDeviceMemoryProperties2KHR == nil {
 		t.Fatal("memory properties2 core/KHR alias group was not populated from KHR symbol")
+	}
+}
+
+func TestWSIProfileHasTimelineSemaphoreCommands(t *testing.T) {
+	dispatchType := reflect.TypeFor[DeviceDispatch]()
+	for _, name := range []string{
+		"WaitSemaphores",
+		"WaitSemaphoresKHR",
+		"SignalSemaphore",
+		"SignalSemaphoreKHR",
+		"GetSemaphoreCounterValue",
+		"GetSemaphoreCounterValueKHR",
+		"CmdClearColorImage",
+		"GetImageSubresourceLayout",
+	} {
+		if _, ok := dispatchType.FieldByName(name); !ok {
+			t.Errorf("DeviceDispatch is missing %s", name)
+		}
 	}
 }
 
@@ -128,6 +149,36 @@ func TestLoadDeviceDispatchLeavesOptionalExtensionCommandsNil(t *testing.T) {
 	}
 }
 
+func TestLoadDeviceDispatchFallsBackToTimelineSemaphoreKHRAliases(t *testing.T) {
+	resetDispatchForTest()
+	defer resetDispatchForTest()
+
+	symbols := requiredDeviceSymbols()
+	symbols["vkGetSemaphoreCounterValueKHR"] = 0xa001
+	symbols["vkWaitSemaphoresKHR"] = 0xa002
+	symbols["vkSignalSemaphoreKHR"] = 0xa003
+	instanceDispatch := &InstanceDispatch{GetDeviceProcAddr: fakeGetDeviceProcAddr(symbols)}
+	dispatch, err := LoadDeviceDispatch(instanceDispatch, Device(4))
+	if err != nil {
+		t.Fatalf("LoadDeviceDispatch() error = %v", err)
+	}
+	for _, check := range []struct {
+		name string
+		fn   any
+	}{
+		{"GetSemaphoreCounterValue", dispatch.GetSemaphoreCounterValue},
+		{"GetSemaphoreCounterValueKHR", dispatch.GetSemaphoreCounterValueKHR},
+		{"WaitSemaphores", dispatch.WaitSemaphores},
+		{"WaitSemaphoresKHR", dispatch.WaitSemaphoresKHR},
+		{"SignalSemaphore", dispatch.SignalSemaphore},
+		{"SignalSemaphoreKHR", dispatch.SignalSemaphoreKHR},
+	} {
+		if check.fn == nil || reflect.ValueOf(check.fn).IsNil() {
+			t.Fatalf("timeline semaphore %s alias was not loaded from the KHR symbol", check.name)
+		}
+	}
+}
+
 func TestLoadDeviceDispatchFallsBackToDynamicRenderingKHRAliases(t *testing.T) {
 	resetDispatchForTest()
 	defer resetDispatchForTest()
@@ -154,6 +205,7 @@ func assertRendererDeviceDispatch(t *testing.T, dispatch *DeviceDispatch) {
 		name string
 		fn   any
 	}{
+		{"GetImageSubresourceLayout", dispatch.GetImageSubresourceLayout},
 		{"CreateBuffer", dispatch.CreateBuffer},
 		{"DestroyBuffer", dispatch.DestroyBuffer},
 		{"GetBufferMemoryRequirements", dispatch.GetBufferMemoryRequirements},
@@ -164,6 +216,7 @@ func assertRendererDeviceDispatch(t *testing.T, dispatch *DeviceDispatch) {
 		{"InvalidateMappedMemoryRanges", dispatch.InvalidateMappedMemoryRanges},
 		{"CmdCopyBufferToImage", dispatch.CmdCopyBufferToImage},
 		{"CmdCopyImageToBuffer", dispatch.CmdCopyImageToBuffer},
+		{"CmdClearColorImage", dispatch.CmdClearColorImage},
 		{"CmdPipelineBarrier", dispatch.CmdPipelineBarrier},
 		{"CreateGraphicsPipelines", dispatch.CreateGraphicsPipelines},
 		{"DestroyPipeline", dispatch.DestroyPipeline},
@@ -224,6 +277,7 @@ func requiredInstanceSymbols() map[string]uintptr {
 		"vkEnumerateDeviceExtensionProperties",
 		"vkGetPhysicalDeviceFeatures2",
 		"vkGetPhysicalDeviceProperties2",
+		"vkGetPhysicalDeviceFormatProperties2",
 		"vkGetPhysicalDeviceQueueFamilyProperties2",
 	})
 }
@@ -255,6 +309,7 @@ func requiredDeviceSymbols() map[string]uintptr {
 		"vkAllocateMemory",
 		"vkFreeMemory",
 		"vkGetImageMemoryRequirements",
+		"vkGetImageSubresourceLayout",
 		"vkBindImageMemory",
 		"vkCreateFence",
 		"vkDestroyFence",
@@ -297,6 +352,7 @@ func requiredDeviceSymbols() map[string]uintptr {
 		"vkInvalidateMappedMemoryRanges",
 		"vkCmdCopyBufferToImage",
 		"vkCmdCopyImageToBuffer",
+		"vkCmdClearColorImage",
 		"vkCmdPipelineBarrier",
 		"vkCreateGraphicsPipelines",
 		"vkDestroyPipeline",

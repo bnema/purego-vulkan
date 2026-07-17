@@ -99,6 +99,63 @@ func TestGeneratedWSILayouts(t *testing.T) {
 	}
 }
 
+// TestGeneratedTimelineSemaphoreLayouts checks the 64-bit C ABI layouts declared
+// for the timeline semaphore structures in registry/vk.xml.
+func TestGeneratedTimelineSemaphoreLayouts(t *testing.T) {
+	require64BitLayout(t)
+	tests := []struct {
+		name      string
+		size      uintptr
+		alignment uintptr
+		wantSize  uintptr
+		wantAlign uintptr
+	}{
+		{"PhysicalDeviceTimelineSemaphoreFeatures", unsafe.Sizeof(PhysicalDeviceTimelineSemaphoreFeatures{}), unsafe.Alignof(PhysicalDeviceTimelineSemaphoreFeatures{}), 24, 8},
+		{"PhysicalDeviceTimelineSemaphoreProperties", unsafe.Sizeof(PhysicalDeviceTimelineSemaphoreProperties{}), unsafe.Alignof(PhysicalDeviceTimelineSemaphoreProperties{}), 24, 8},
+		{"SemaphoreTypeCreateInfo", unsafe.Sizeof(SemaphoreTypeCreateInfo{}), unsafe.Alignof(SemaphoreTypeCreateInfo{}), 32, 8},
+		{"TimelineSemaphoreSubmitInfo", unsafe.Sizeof(TimelineSemaphoreSubmitInfo{}), unsafe.Alignof(TimelineSemaphoreSubmitInfo{}), 48, 8},
+		{"SemaphoreWaitInfo", unsafe.Sizeof(SemaphoreWaitInfo{}), unsafe.Alignof(SemaphoreWaitInfo{}), 40, 8},
+		{"SemaphoreSignalInfo", unsafe.Sizeof(SemaphoreSignalInfo{}), unsafe.Alignof(SemaphoreSignalInfo{}), 32, 8},
+	}
+	for _, tt := range tests {
+		if tt.size != tt.wantSize || tt.alignment != tt.wantAlign {
+			t.Fatalf("%s layout = size %d align %d, want size %d align %d", tt.name, tt.size, tt.alignment, tt.wantSize, tt.wantAlign)
+		}
+	}
+}
+
+func TestGeneratedDedicatedAllocationKHRAliases(t *testing.T) {
+	require64BitLayout(t)
+
+	var requirements MemoryDedicatedRequirementsKHR
+	requirements.PrefersDedicatedAllocation = 1
+	requirements.RequiresDedicatedAllocation = 1
+	var allocateInfo MemoryDedicatedAllocateInfoKHR
+	allocateInfo.Image = Image(1)
+	allocateInfo.Buffer = Buffer(1)
+
+	// Passing KHR values to core parameters requires aliases, rather than duplicate types.
+	requireCoreDedicatedRequirements(requirements)
+	requireCoreDedicatedAllocateInfo(allocateInfo)
+
+	if got, want := unsafe.Sizeof(requirements), unsafe.Sizeof(MemoryDedicatedRequirements{}); got != want {
+		t.Fatalf("MemoryDedicatedRequirementsKHR size = %d, want core size %d", got, want)
+	}
+	if got, want := unsafe.Alignof(requirements), unsafe.Alignof(MemoryDedicatedRequirements{}); got != want {
+		t.Fatalf("MemoryDedicatedRequirementsKHR alignment = %d, want core alignment %d", got, want)
+	}
+	if got, want := unsafe.Sizeof(allocateInfo), unsafe.Sizeof(MemoryDedicatedAllocateInfo{}); got != want {
+		t.Fatalf("MemoryDedicatedAllocateInfoKHR size = %d, want core size %d", got, want)
+	}
+	if got, want := unsafe.Alignof(allocateInfo), unsafe.Alignof(MemoryDedicatedAllocateInfo{}); got != want {
+		t.Fatalf("MemoryDedicatedAllocateInfoKHR alignment = %d, want core alignment %d", got, want)
+	}
+}
+
+func requireCoreDedicatedRequirements(MemoryDedicatedRequirements) {}
+
+func requireCoreDedicatedAllocateInfo(MemoryDedicatedAllocateInfo) {}
+
 func TestGeneratedRendererHardeningLayouts(t *testing.T) {
 	require64BitLayout(t)
 	tests := []struct {

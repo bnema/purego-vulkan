@@ -560,6 +560,7 @@ func TestDefaultSelectionOnPinnedRegistryHasNoDuplicateOrBrokenAliasCommands(t *
 func TestSelectionFiltersToLinuxCompositorSubset(t *testing.T) {
 	reg := testRegistry()
 	cfg := overrides.DefaultSelection()
+	cfg.RootTypes = nil // This reduced fixture does not model image allocation types.
 	cfg.Commands = []string{"vkCreateInstance"}
 	cfg.Extensions = []string{"VK_KHR_external_memory_fd", "VK_KHR_win32_keyed_mutex"}
 	sel, err := model.Select(reg, cfg)

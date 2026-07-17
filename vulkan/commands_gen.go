@@ -42,6 +42,7 @@ var VkCreateBuffer func(Device, *BufferCreateInfo, *AllocationCallbacks, *Buffer
 var VkDestroyBuffer func(Device, Buffer, *AllocationCallbacks)
 var VkCreateImage func(Device, *ImageCreateInfo, *AllocationCallbacks, *Image) Result
 var VkDestroyImage func(Device, Image, *AllocationCallbacks)
+var VkGetImageSubresourceLayout func(Device, Image, *ImageSubresource, *SubresourceLayout)
 var VkCreateImageView func(Device, *ImageViewCreateInfo, *AllocationCallbacks, *ImageView) Result
 var VkDestroyImageView func(Device, ImageView, *AllocationCallbacks)
 var VkCreateShaderModule func(Device, *ShaderModuleCreateInfo, *AllocationCallbacks, *ShaderModule) Result
@@ -73,6 +74,7 @@ var VkCmdDraw func(CommandBuffer, uint32, uint32, uint32, uint32)
 var VkCmdDrawIndexed func(CommandBuffer, uint32, uint32, uint32, int32, uint32)
 var VkCmdCopyBufferToImage func(CommandBuffer, Buffer, Image, ImageLayout, uint32, *BufferImageCopy)
 var VkCmdCopyImageToBuffer func(CommandBuffer, Image, ImageLayout, Buffer, uint32, *BufferImageCopy)
+var VkCmdClearColorImage func(CommandBuffer, Image, ImageLayout, *ClearColorValue, uint32, *ImageSubresourceRange)
 var VkCmdPipelineBarrier func(CommandBuffer, PipelineStageFlags, PipelineStageFlags, DependencyFlags, uint32, *MemoryBarrier, uint32, *BufferMemoryBarrier, uint32, *ImageMemoryBarrier)
 var VkDestroySurfaceKHR func(Instance, SurfaceKHR, *AllocationCallbacks)
 var VkGetPhysicalDeviceSurfaceSupportKHR func(PhysicalDevice, uint32, SurfaceKHR, *Bool32) Result
@@ -94,6 +96,7 @@ var VkGetPhysicalDeviceFeatures2 func(PhysicalDevice, *PhysicalDeviceFeatures2)
 var VkGetPhysicalDeviceFeatures2KHR func(PhysicalDevice, *PhysicalDeviceFeatures2)
 var VkGetPhysicalDeviceProperties2 func(PhysicalDevice, *PhysicalDeviceProperties2)
 var VkGetPhysicalDeviceProperties2KHR func(PhysicalDevice, *PhysicalDeviceProperties2)
+var VkGetPhysicalDeviceFormatProperties2 func(PhysicalDevice, Format, *FormatProperties2)
 var VkGetPhysicalDeviceFormatProperties2KHR func(PhysicalDevice, Format, *FormatProperties2)
 var VkGetPhysicalDeviceImageFormatProperties2KHR func(PhysicalDevice, *PhysicalDeviceImageFormatInfo2, *ImageFormatProperties2) Result
 var VkGetPhysicalDeviceQueueFamilyProperties2 func(PhysicalDevice, *uint32, *QueueFamilyProperties2)
@@ -117,6 +120,12 @@ var VkGetBufferMemoryRequirements2KHR func(Device, *BufferMemoryRequirementsInfo
 var VkGetImageMemoryRequirements2 func(Device, *ImageMemoryRequirementsInfo2, *MemoryRequirements2)
 var VkGetImageMemoryRequirements2KHR func(Device, *ImageMemoryRequirementsInfo2, *MemoryRequirements2)
 var VkGetImageSparseMemoryRequirements2KHR func(Device, *ImageSparseMemoryRequirementsInfo2, *uint32, *SparseImageMemoryRequirements2)
+var VkGetSemaphoreCounterValue func(Device, Semaphore, *uint64) Result
+var VkGetSemaphoreCounterValueKHR func(Device, Semaphore, *uint64) Result
+var VkWaitSemaphores func(Device, *SemaphoreWaitInfo, uint64) Result
+var VkWaitSemaphoresKHR func(Device, *SemaphoreWaitInfo, uint64) Result
+var VkSignalSemaphore func(Device, *SemaphoreSignalInfo) Result
+var VkSignalSemaphoreKHR func(Device, *SemaphoreSignalInfo) Result
 var VkGetImageDrmFormatModifierPropertiesEXT func(Device, Image, *ImageDrmFormatModifierPropertiesEXT) Result
 var VkCmdSetEvent2KHR func(CommandBuffer, Event, *DependencyInfo)
 var VkCmdResetEvent2KHR func(CommandBuffer, Event, PipelineStageFlags2)
@@ -164,6 +173,7 @@ func instanceCommandPointers() map[string]any {
 		"vkGetPhysicalDeviceFeatures2KHR":                    &VkGetPhysicalDeviceFeatures2KHR,
 		"vkGetPhysicalDeviceProperties2":                     &VkGetPhysicalDeviceProperties2,
 		"vkGetPhysicalDeviceProperties2KHR":                  &VkGetPhysicalDeviceProperties2KHR,
+		"vkGetPhysicalDeviceFormatProperties2":               &VkGetPhysicalDeviceFormatProperties2,
 		"vkGetPhysicalDeviceFormatProperties2KHR":            &VkGetPhysicalDeviceFormatProperties2KHR,
 		"vkGetPhysicalDeviceImageFormatProperties2KHR":       &VkGetPhysicalDeviceImageFormatProperties2KHR,
 		"vkGetPhysicalDeviceQueueFamilyProperties2":          &VkGetPhysicalDeviceQueueFamilyProperties2,
@@ -203,6 +213,7 @@ func deviceCommandPointers() map[string]any {
 		"vkDestroyBuffer":                          &VkDestroyBuffer,
 		"vkCreateImage":                            &VkCreateImage,
 		"vkDestroyImage":                           &VkDestroyImage,
+		"vkGetImageSubresourceLayout":              &VkGetImageSubresourceLayout,
 		"vkCreateImageView":                        &VkCreateImageView,
 		"vkDestroyImageView":                       &VkDestroyImageView,
 		"vkCreateShaderModule":                     &VkCreateShaderModule,
@@ -234,6 +245,7 @@ func deviceCommandPointers() map[string]any {
 		"vkCmdDrawIndexed":                         &VkCmdDrawIndexed,
 		"vkCmdCopyBufferToImage":                   &VkCmdCopyBufferToImage,
 		"vkCmdCopyImageToBuffer":                   &VkCmdCopyImageToBuffer,
+		"vkCmdClearColorImage":                     &VkCmdClearColorImage,
 		"vkCmdPipelineBarrier":                     &VkCmdPipelineBarrier,
 		"vkCreateSwapchainKHR":                     &VkCreateSwapchainKHR,
 		"vkDestroySwapchainKHR":                    &VkDestroySwapchainKHR,
@@ -254,6 +266,12 @@ func deviceCommandPointers() map[string]any {
 		"vkGetImageMemoryRequirements2":            &VkGetImageMemoryRequirements2,
 		"vkGetImageMemoryRequirements2KHR":         &VkGetImageMemoryRequirements2KHR,
 		"vkGetImageSparseMemoryRequirements2KHR":   &VkGetImageSparseMemoryRequirements2KHR,
+		"vkGetSemaphoreCounterValue":               &VkGetSemaphoreCounterValue,
+		"vkGetSemaphoreCounterValueKHR":            &VkGetSemaphoreCounterValueKHR,
+		"vkWaitSemaphores":                         &VkWaitSemaphores,
+		"vkWaitSemaphoresKHR":                      &VkWaitSemaphoresKHR,
+		"vkSignalSemaphore":                        &VkSignalSemaphore,
+		"vkSignalSemaphoreKHR":                     &VkSignalSemaphoreKHR,
 		"vkGetImageDrmFormatModifierPropertiesEXT": &VkGetImageDrmFormatModifierPropertiesEXT,
 		"vkCmdSetEvent2KHR":                        &VkCmdSetEvent2KHR,
 		"vkCmdResetEvent2KHR":                      &VkCmdResetEvent2KHR,

@@ -18,6 +18,7 @@ var InitialCommands = []string{
 	"vkEnumeratePhysicalDevices",
 	"vkGetPhysicalDeviceProperties",
 	"vkGetPhysicalDeviceProperties2",
+	"vkGetPhysicalDeviceFormatProperties2",
 	"vkGetPhysicalDeviceMemoryProperties",
 	"vkGetPhysicalDeviceMemoryProperties2",
 	"vkGetPhysicalDeviceFeatures2",
@@ -96,6 +97,7 @@ var RequiredExtensions = []string{
 	"VK_KHR_get_physical_device_properties2",
 	"VK_KHR_bind_memory2",
 	"VK_KHR_get_memory_requirements2",
+	"VK_KHR_dedicated_allocation",
 	"VK_KHR_external_memory",
 	"VK_KHR_external_memory_fd",
 	"VK_EXT_external_memory_dma_buf",
@@ -149,6 +151,12 @@ func SelectionForProfile(reg *model.Registry, profile Profile) (model.SelectionC
 
 func rendererSelection() model.SelectionConfig {
 	return model.SelectionConfig{
+		// Dedicated allocation is required for exportable DRM modifier images.
+		// The structs are not direct command parameters, so retain them as roots.
+		RootTypes: []string{
+			"VkMemoryDedicatedRequirements",
+			"VkMemoryDedicatedAllocateInfo",
+		},
 		Commands:         append([]string(nil), InitialCommands...),
 		Extensions:       append([]string(nil), RequiredExtensions...),
 		CoreVersions:     []string{"VK_VERSION_1_0", "VK_VERSION_1_1", "VK_VERSION_1_2"},
@@ -158,13 +166,30 @@ func rendererSelection() model.SelectionConfig {
 
 func wsiSelection() model.SelectionConfig {
 	cfg := rendererSelection()
-	cfg.Commands = append(cfg.Commands, "vkCmdCopyImageToBuffer")
+	cfg.Commands = append(cfg.Commands,
+		"vkCmdCopyImageToBuffer",
+		"vkCmdClearColorImage",
+		"vkGetImageSubresourceLayout",
+		"vkWaitSemaphores",
+		"vkSignalSemaphore",
+		"vkGetSemaphoreCounterValue",
+	)
+	for _, name := range []string{
+		"vkWaitSemaphores",
+		"vkSignalSemaphore",
+		"vkGetSemaphoreCounterValue",
+	} {
+		override := cfg.CommandOverrides[name]
+		override.Optional = true
+		cfg.CommandOverrides[name] = override
+	}
 	cfg.Extensions = append(cfg.Extensions,
 		"VK_KHR_surface",
 		"VK_KHR_swapchain",
 		"VK_KHR_wayland_surface",
 		"VK_KHR_xcb_surface",
 		"VK_KHR_xlib_surface",
+		"VK_KHR_timeline_semaphore",
 	)
 	return cfg
 }

@@ -68,7 +68,9 @@ func RegisterInstance(handle uintptr, lookup LookupFunc, fptrs map[string]any) e
 	if err := registerRequired([]string{"vkGetPhysicalDeviceProperties2", "vkGetPhysicalDeviceProperties2KHR"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
-	registerOptional([]string{"vkGetPhysicalDeviceFormatProperties2KHR"}, handle, lookup, fptrs)
+	if err := registerRequired([]string{"vkGetPhysicalDeviceFormatProperties2", "vkGetPhysicalDeviceFormatProperties2KHR"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
 	registerOptional([]string{"vkGetPhysicalDeviceImageFormatProperties2KHR"}, handle, lookup, fptrs)
 	if err := registerRequired([]string{"vkGetPhysicalDeviceQueueFamilyProperties2", "vkGetPhysicalDeviceQueueFamilyProperties2KHR"}, handle, lookup, fptrs); err != nil {
 		return err
@@ -156,6 +158,9 @@ func RegisterDevice(handle uintptr, lookup LookupFunc, fptrs map[string]any) err
 		return err
 	}
 	if err := registerRequired([]string{"vkDestroyImage"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
+	if err := registerRequired([]string{"vkGetImageSubresourceLayout"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
 	if err := registerRequired([]string{"vkCreateImageView"}, handle, lookup, fptrs); err != nil {
@@ -251,6 +256,9 @@ func RegisterDevice(handle uintptr, lookup LookupFunc, fptrs map[string]any) err
 	if err := registerRequired([]string{"vkCmdCopyImageToBuffer"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
+	if err := registerRequired([]string{"vkCmdClearColorImage"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
 	if err := registerRequired([]string{"vkCmdPipelineBarrier"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
@@ -275,6 +283,9 @@ func RegisterDevice(handle uintptr, lookup LookupFunc, fptrs map[string]any) err
 		return err
 	}
 	registerOptional([]string{"vkGetImageSparseMemoryRequirements2KHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkGetSemaphoreCounterValue", "vkGetSemaphoreCounterValueKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkWaitSemaphores", "vkWaitSemaphoresKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkSignalSemaphore", "vkSignalSemaphoreKHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkGetImageDrmFormatModifierPropertiesEXT"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkCmdSetEvent2KHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkCmdResetEvent2KHR"}, handle, lookup, fptrs)
