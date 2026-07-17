@@ -1602,12 +1602,16 @@ type MemoryDedicatedRequirements struct {
 	RequiresDedicatedAllocation Bool32
 }
 
+type MemoryDedicatedRequirementsKHR = MemoryDedicatedRequirements
+
 type MemoryDedicatedAllocateInfo struct {
 	SType  StructureType
 	Next   unsafe.Pointer
 	Image  Image
 	Buffer Buffer
 }
+
+type MemoryDedicatedAllocateInfoKHR = MemoryDedicatedAllocateInfo
 
 type PhysicalDeviceTimelineSemaphoreFeatures struct {
 	SType             StructureType

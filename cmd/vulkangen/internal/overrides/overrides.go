@@ -97,6 +97,7 @@ var RequiredExtensions = []string{
 	"VK_KHR_get_physical_device_properties2",
 	"VK_KHR_bind_memory2",
 	"VK_KHR_get_memory_requirements2",
+	"VK_KHR_dedicated_allocation",
 	"VK_KHR_external_memory",
 	"VK_KHR_external_memory_fd",
 	"VK_EXT_external_memory_dma_buf",
