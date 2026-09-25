@@ -39,6 +39,7 @@ type InstanceDispatch struct {
 	GetPhysicalDeviceProperties2KHR                  func(PhysicalDevice, *PhysicalDeviceProperties2)
 	GetPhysicalDeviceFormatProperties2               func(PhysicalDevice, Format, *FormatProperties2)
 	GetPhysicalDeviceFormatProperties2KHR            func(PhysicalDevice, Format, *FormatProperties2)
+	GetPhysicalDeviceImageFormatProperties2          func(PhysicalDevice, *PhysicalDeviceImageFormatInfo2, *ImageFormatProperties2) Result
 	GetPhysicalDeviceImageFormatProperties2KHR       func(PhysicalDevice, *PhysicalDeviceImageFormatInfo2, *ImageFormatProperties2) Result
 	GetPhysicalDeviceQueueFamilyProperties2          func(PhysicalDevice, *uint32, *QueueFamilyProperties2)
 	GetPhysicalDeviceQueueFamilyProperties2KHR       func(PhysicalDevice, *uint32, *QueueFamilyProperties2)
@@ -106,6 +107,7 @@ type DeviceDispatch struct {
 	CmdBindVertexBuffers                   func(CommandBuffer, uint32, uint32, *Buffer, *DeviceSize)
 	CmdDraw                                func(CommandBuffer, uint32, uint32, uint32, uint32)
 	CmdDrawIndexed                         func(CommandBuffer, uint32, uint32, uint32, int32, uint32)
+	CmdBlitImage                           func(CommandBuffer, Image, ImageLayout, Image, ImageLayout, uint32, *ImageBlit, Filter)
 	CmdCopyBufferToImage                   func(CommandBuffer, Buffer, Image, ImageLayout, uint32, *BufferImageCopy)
 	CmdCopyImageToBuffer                   func(CommandBuffer, Image, ImageLayout, Buffer, uint32, *BufferImageCopy)
 	CmdClearColorImage                     func(CommandBuffer, Image, ImageLayout, *ClearColorValue, uint32, *ImageSubresourceRange)

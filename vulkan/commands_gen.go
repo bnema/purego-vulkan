@@ -72,6 +72,7 @@ var VkCmdBindIndexBuffer func(CommandBuffer, Buffer, DeviceSize, IndexType)
 var VkCmdBindVertexBuffers func(CommandBuffer, uint32, uint32, *Buffer, *DeviceSize)
 var VkCmdDraw func(CommandBuffer, uint32, uint32, uint32, uint32)
 var VkCmdDrawIndexed func(CommandBuffer, uint32, uint32, uint32, int32, uint32)
+var VkCmdBlitImage func(CommandBuffer, Image, ImageLayout, Image, ImageLayout, uint32, *ImageBlit, Filter)
 var VkCmdCopyBufferToImage func(CommandBuffer, Buffer, Image, ImageLayout, uint32, *BufferImageCopy)
 var VkCmdCopyImageToBuffer func(CommandBuffer, Image, ImageLayout, Buffer, uint32, *BufferImageCopy)
 var VkCmdClearColorImage func(CommandBuffer, Image, ImageLayout, *ClearColorValue, uint32, *ImageSubresourceRange)
@@ -98,6 +99,7 @@ var VkGetPhysicalDeviceProperties2 func(PhysicalDevice, *PhysicalDevicePropertie
 var VkGetPhysicalDeviceProperties2KHR func(PhysicalDevice, *PhysicalDeviceProperties2)
 var VkGetPhysicalDeviceFormatProperties2 func(PhysicalDevice, Format, *FormatProperties2)
 var VkGetPhysicalDeviceFormatProperties2KHR func(PhysicalDevice, Format, *FormatProperties2)
+var VkGetPhysicalDeviceImageFormatProperties2 func(PhysicalDevice, *PhysicalDeviceImageFormatInfo2, *ImageFormatProperties2) Result
 var VkGetPhysicalDeviceImageFormatProperties2KHR func(PhysicalDevice, *PhysicalDeviceImageFormatInfo2, *ImageFormatProperties2) Result
 var VkGetPhysicalDeviceQueueFamilyProperties2 func(PhysicalDevice, *uint32, *QueueFamilyProperties2)
 var VkGetPhysicalDeviceQueueFamilyProperties2KHR func(PhysicalDevice, *uint32, *QueueFamilyProperties2)
@@ -175,6 +177,7 @@ func instanceCommandPointers() map[string]any {
 		"vkGetPhysicalDeviceProperties2KHR":                  &VkGetPhysicalDeviceProperties2KHR,
 		"vkGetPhysicalDeviceFormatProperties2":               &VkGetPhysicalDeviceFormatProperties2,
 		"vkGetPhysicalDeviceFormatProperties2KHR":            &VkGetPhysicalDeviceFormatProperties2KHR,
+		"vkGetPhysicalDeviceImageFormatProperties2":          &VkGetPhysicalDeviceImageFormatProperties2,
 		"vkGetPhysicalDeviceImageFormatProperties2KHR":       &VkGetPhysicalDeviceImageFormatProperties2KHR,
 		"vkGetPhysicalDeviceQueueFamilyProperties2":          &VkGetPhysicalDeviceQueueFamilyProperties2,
 		"vkGetPhysicalDeviceQueueFamilyProperties2KHR":       &VkGetPhysicalDeviceQueueFamilyProperties2KHR,
@@ -243,6 +246,7 @@ func deviceCommandPointers() map[string]any {
 		"vkCmdBindVertexBuffers":                   &VkCmdBindVertexBuffers,
 		"vkCmdDraw":                                &VkCmdDraw,
 		"vkCmdDrawIndexed":                         &VkCmdDrawIndexed,
+		"vkCmdBlitImage":                           &VkCmdBlitImage,
 		"vkCmdCopyBufferToImage":                   &VkCmdCopyBufferToImage,
 		"vkCmdCopyImageToBuffer":                   &VkCmdCopyImageToBuffer,
 		"vkCmdClearColorImage":                     &VkCmdClearColorImage,

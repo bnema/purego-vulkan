@@ -71,7 +71,9 @@ func RegisterInstance(handle uintptr, lookup LookupFunc, fptrs map[string]any) e
 	if err := registerRequired([]string{"vkGetPhysicalDeviceFormatProperties2", "vkGetPhysicalDeviceFormatProperties2KHR"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
-	registerOptional([]string{"vkGetPhysicalDeviceImageFormatProperties2KHR"}, handle, lookup, fptrs)
+	if err := registerRequired([]string{"vkGetPhysicalDeviceImageFormatProperties2", "vkGetPhysicalDeviceImageFormatProperties2KHR"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
 	if err := registerRequired([]string{"vkGetPhysicalDeviceQueueFamilyProperties2", "vkGetPhysicalDeviceQueueFamilyProperties2KHR"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
@@ -248,6 +250,9 @@ func RegisterDevice(handle uintptr, lookup LookupFunc, fptrs map[string]any) err
 		return err
 	}
 	if err := registerRequired([]string{"vkCmdDrawIndexed"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
+	if err := registerRequired([]string{"vkCmdBlitImage"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
 	if err := registerRequired([]string{"vkCmdCopyBufferToImage"}, handle, lookup, fptrs); err != nil {

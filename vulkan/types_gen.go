@@ -730,6 +730,13 @@ type ImageViewCreateInfo struct {
 	SubresourceRange ImageSubresourceRange
 }
 
+type ImageBlit struct {
+	SrcSubresource ImageSubresourceLayers
+	SrcOffsets     [2]Offset3D
+	DstSubresource ImageSubresourceLayers
+	DstOffsets     [2]Offset3D
+}
+
 type BufferImageCopy struct {
 	BufferOffset      DeviceSize
 	BufferRowLength   uint32
