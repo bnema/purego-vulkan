@@ -106,6 +106,7 @@ var VkGetPhysicalDeviceQueueFamilyProperties2KHR func(PhysicalDevice, *uint32, *
 var VkGetPhysicalDeviceMemoryProperties2 func(PhysicalDevice, *PhysicalDeviceMemoryProperties2)
 var VkGetPhysicalDeviceMemoryProperties2KHR func(PhysicalDevice, *PhysicalDeviceMemoryProperties2)
 var VkGetPhysicalDeviceSparseImageFormatProperties2KHR func(PhysicalDevice, *PhysicalDeviceSparseImageFormatInfo2, *uint32, *SparseImageFormatProperties2)
+var VkGetPhysicalDeviceExternalBufferPropertiesKHR func(PhysicalDevice, *PhysicalDeviceExternalBufferInfo, *ExternalBufferProperties)
 var VkGetMemoryFdKHR func(Device, *MemoryGetFdInfoKHR, *int32) Result
 var VkGetMemoryFdPropertiesKHR func(Device, ExternalMemoryHandleTypeFlagBits, int32, *MemoryFdPropertiesKHR) Result
 var VkGetPhysicalDeviceExternalSemaphorePropertiesKHR func(PhysicalDevice, *PhysicalDeviceExternalSemaphoreInfo, *ExternalSemaphoreProperties)
@@ -184,6 +185,7 @@ func instanceCommandPointers() map[string]any {
 		"vkGetPhysicalDeviceMemoryProperties2":               &VkGetPhysicalDeviceMemoryProperties2,
 		"vkGetPhysicalDeviceMemoryProperties2KHR":            &VkGetPhysicalDeviceMemoryProperties2KHR,
 		"vkGetPhysicalDeviceSparseImageFormatProperties2KHR": &VkGetPhysicalDeviceSparseImageFormatProperties2KHR,
+		"vkGetPhysicalDeviceExternalBufferPropertiesKHR":     &VkGetPhysicalDeviceExternalBufferPropertiesKHR,
 		"vkGetPhysicalDeviceExternalSemaphorePropertiesKHR":  &VkGetPhysicalDeviceExternalSemaphorePropertiesKHR,
 		"vkGetPhysicalDevicePresentRectanglesKHR":            &VkGetPhysicalDevicePresentRectanglesKHR,
 	}

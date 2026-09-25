@@ -136,6 +136,12 @@ type DeviceGroupPresentModeFlagsKHR uint32
 
 type ExternalMemoryHandleTypeFlags uint32
 
+type ExternalMemoryHandleTypeFlagsKHR = ExternalMemoryHandleTypeFlags
+
+type ExternalMemoryFeatureFlags uint32
+
+type ExternalMemoryFeatureFlagsKHR = ExternalMemoryFeatureFlags
+
 type ExternalSemaphoreHandleTypeFlags uint32
 
 type ExternalSemaphoreHandleTypeFlagsKHR = ExternalSemaphoreHandleTypeFlags
@@ -367,6 +373,12 @@ type PresentModeKHR int32
 type SurfaceTransformFlagBitsKHR int32
 
 type ExternalMemoryHandleTypeFlagBits int32
+
+type ExternalMemoryHandleTypeFlagBitsKHR = ExternalMemoryHandleTypeFlagBits
+
+type ExternalMemoryFeatureFlagBits int32
+
+type ExternalMemoryFeatureFlagBitsKHR = ExternalMemoryFeatureFlagBits
 
 type ExternalSemaphoreHandleTypeFlagBits int32
 
@@ -1399,6 +1411,48 @@ type PhysicalDeviceSparseImageFormatInfo2 struct {
 }
 
 type PhysicalDeviceSparseImageFormatInfo2KHR = PhysicalDeviceSparseImageFormatInfo2
+
+type ExternalMemoryProperties struct {
+	ExternalMemoryFeatures        ExternalMemoryFeatureFlags
+	ExportFromImportedHandleTypes ExternalMemoryHandleTypeFlags
+	CompatibleHandleTypes         ExternalMemoryHandleTypeFlags
+}
+
+type ExternalMemoryPropertiesKHR = ExternalMemoryProperties
+
+type PhysicalDeviceExternalImageFormatInfo struct {
+	SType      StructureType
+	Next       unsafe.Pointer
+	HandleType ExternalMemoryHandleTypeFlagBits
+}
+
+type PhysicalDeviceExternalImageFormatInfoKHR = PhysicalDeviceExternalImageFormatInfo
+
+type ExternalImageFormatProperties struct {
+	SType                    StructureType
+	Next                     unsafe.Pointer
+	ExternalMemoryProperties ExternalMemoryProperties
+}
+
+type ExternalImageFormatPropertiesKHR = ExternalImageFormatProperties
+
+type PhysicalDeviceExternalBufferInfo struct {
+	SType      StructureType
+	Next       unsafe.Pointer
+	Flags      BufferCreateFlags
+	Usage      BufferUsageFlags
+	HandleType ExternalMemoryHandleTypeFlagBits
+}
+
+type PhysicalDeviceExternalBufferInfoKHR = PhysicalDeviceExternalBufferInfo
+
+type ExternalBufferProperties struct {
+	SType                    StructureType
+	Next                     unsafe.Pointer
+	ExternalMemoryProperties ExternalMemoryProperties
+}
+
+type ExternalBufferPropertiesKHR = ExternalBufferProperties
 
 type PhysicalDeviceIDProperties struct {
 	SType           StructureType
