@@ -278,6 +278,7 @@ func requiredInstanceSymbols() map[string]uintptr {
 		"vkGetPhysicalDeviceFeatures2",
 		"vkGetPhysicalDeviceProperties2",
 		"vkGetPhysicalDeviceFormatProperties2",
+		"vkGetPhysicalDeviceImageFormatProperties2",
 		"vkGetPhysicalDeviceQueueFamilyProperties2",
 	})
 }
@@ -351,6 +352,7 @@ func requiredDeviceSymbols() map[string]uintptr {
 		"vkFlushMappedMemoryRanges",
 		"vkInvalidateMappedMemoryRanges",
 		"vkCmdCopyBufferToImage",
+		"vkCmdBlitImage",
 		"vkCmdCopyImageToBuffer",
 		"vkCmdClearColorImage",
 		"vkCmdPipelineBarrier",
