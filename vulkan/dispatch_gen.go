@@ -46,6 +46,7 @@ type InstanceDispatch struct {
 	GetPhysicalDeviceMemoryProperties2               func(PhysicalDevice, *PhysicalDeviceMemoryProperties2)
 	GetPhysicalDeviceMemoryProperties2KHR            func(PhysicalDevice, *PhysicalDeviceMemoryProperties2)
 	GetPhysicalDeviceSparseImageFormatProperties2KHR func(PhysicalDevice, *PhysicalDeviceSparseImageFormatInfo2, *uint32, *SparseImageFormatProperties2)
+	GetPhysicalDeviceExternalBufferPropertiesKHR     func(PhysicalDevice, *PhysicalDeviceExternalBufferInfo, *ExternalBufferProperties)
 	GetPhysicalDeviceExternalSemaphorePropertiesKHR  func(PhysicalDevice, *PhysicalDeviceExternalSemaphoreInfo, *ExternalSemaphoreProperties)
 	GetPhysicalDevicePresentRectanglesKHR            func(PhysicalDevice, SurfaceKHR, *uint32, *Rect2D) Result
 }

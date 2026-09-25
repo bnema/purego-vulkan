@@ -81,6 +81,7 @@ func RegisterInstance(handle uintptr, lookup LookupFunc, fptrs map[string]any) e
 		return err
 	}
 	registerOptional([]string{"vkGetPhysicalDeviceSparseImageFormatProperties2KHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkGetPhysicalDeviceExternalBufferPropertiesKHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkGetPhysicalDeviceExternalSemaphorePropertiesKHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkGetPhysicalDevicePresentRectanglesKHR"}, handle, lookup, fptrs)
 	return nil
