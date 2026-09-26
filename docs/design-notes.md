@@ -78,14 +78,14 @@ Classic render-pass/framebuffer commands and pipeline-cache commands are not par
 
 ## Consumer integration checklist
 
-- Use a local `replace github.com/bnema/purego-vulkan => ../purego-vulkan` during bring-up.
+- Depend on a tagged version; use a Go workspace (`go work`) to develop the bindings and a consumer together.
 - Keep Vulkan binding code inside `purego-vulkan`.
-- Keep compositor-specific rendering, import policy, and DRM presentation inside `go-wm-poc/adapters/vulkan`.
-- Do not copy generated files into the compositor repository.
+- Keep rendering, import policy, and presentation in the consumer.
+- Do not copy generated files into the consumer.
 - Upload handoff: consumer chooses memory types, staging-buffer lifetime, flush/invalidate policy, and barriers; this package supplies buffer, memory-map, bind, copy, and synchronization command bindings.
 - Pipeline handoff: consumer owns shader modules, pipeline layouts, descriptor layouts, graphics-pipeline create-info assembly, and destruction ordering; this package supplies the raw create/destroy commands and structs.
 - Draw handoff: consumer records command buffers, binds pipelines/descriptors/vertex/index buffers, and issues draw calls through the device dispatch table.
 - Render-target handoff: consumer imports or creates images, selects layouts/load-store ops/attachment formats, enables core/KHR dynamic rendering, and treats `LoadDeviceDispatch` failure as a device-capability rejection when dynamic-rendering symbols are unavailable.
-- Run `make check` in this repository before updating the compositor integration.
+- Run `make check` in this repository before tagging a release for consumers.
 
 The `examples/enumerate` program is the smoke test for consumers: it initializes Vulkan, prints loader version, reports compositor-critical extension availability, creates an instance, and lists physical devices.

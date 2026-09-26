@@ -2,3 +2,5 @@
 *.out
 coverage.txt
 .DS_Store
+/enumerate
+.worktrees/
