@@ -77,6 +77,7 @@ var VkCmdCopyBufferToImage func(CommandBuffer, Buffer, Image, ImageLayout, uint3
 var VkCmdCopyImageToBuffer func(CommandBuffer, Image, ImageLayout, Buffer, uint32, *BufferImageCopy)
 var VkCmdClearColorImage func(CommandBuffer, Image, ImageLayout, *ClearColorValue, uint32, *ImageSubresourceRange)
 var VkCmdPipelineBarrier func(CommandBuffer, PipelineStageFlags, PipelineStageFlags, DependencyFlags, uint32, *MemoryBarrier, uint32, *BufferMemoryBarrier, uint32, *ImageMemoryBarrier)
+var VkCmdPushConstants func(CommandBuffer, PipelineLayout, ShaderStageFlags, uint32, uint32, unsafe.Pointer)
 var VkDestroySurfaceKHR func(Instance, SurfaceKHR, *AllocationCallbacks)
 var VkGetPhysicalDeviceSurfaceSupportKHR func(PhysicalDevice, uint32, SurfaceKHR, *Bool32) Result
 var VkGetPhysicalDeviceSurfaceCapabilitiesKHR func(PhysicalDevice, SurfaceKHR, *SurfaceCapabilitiesKHR) Result
@@ -253,6 +254,7 @@ func deviceCommandPointers() map[string]any {
 		"vkCmdCopyImageToBuffer":                   &VkCmdCopyImageToBuffer,
 		"vkCmdClearColorImage":                     &VkCmdClearColorImage,
 		"vkCmdPipelineBarrier":                     &VkCmdPipelineBarrier,
+		"vkCmdPushConstants":                       &VkCmdPushConstants,
 		"vkCreateSwapchainKHR":                     &VkCreateSwapchainKHR,
 		"vkDestroySwapchainKHR":                    &VkDestroySwapchainKHR,
 		"vkGetSwapchainImagesKHR":                  &VkGetSwapchainImagesKHR,

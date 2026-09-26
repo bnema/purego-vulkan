@@ -91,6 +91,7 @@ var InitialCommands = []string{
 	"vkCmdBindIndexBuffer",
 	"vkCmdDraw",
 	"vkCmdDrawIndexed",
+	"vkCmdPushConstants",
 	"vkCmdBeginRendering",
 	"vkCmdEndRendering",
 }

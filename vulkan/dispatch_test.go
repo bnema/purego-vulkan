@@ -226,6 +226,7 @@ func assertRendererDeviceDispatch(t *testing.T, dispatch *DeviceDispatch) {
 		{"CmdBindIndexBuffer", dispatch.CmdBindIndexBuffer},
 		{"CmdDraw", dispatch.CmdDraw},
 		{"CmdDrawIndexed", dispatch.CmdDrawIndexed},
+		{"CmdPushConstants", dispatch.CmdPushConstants},
 		{"CmdBeginRendering", dispatch.CmdBeginRendering},
 		{"CmdBeginRenderingKHR", dispatch.CmdBeginRenderingKHR},
 		{"CmdEndRendering", dispatch.CmdEndRendering},
@@ -364,6 +365,7 @@ func requiredDeviceSymbols() map[string]uintptr {
 		"vkCmdBindIndexBuffer",
 		"vkCmdDraw",
 		"vkCmdDrawIndexed",
+		"vkCmdPushConstants",
 		"vkCmdBeginRendering",
 		"vkCmdEndRendering",
 	})

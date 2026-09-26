@@ -431,7 +431,7 @@ func TestDefaultSelectionOnPinnedRegistryHasRendererReadySurface(t *testing.T) {
 		"vkMapMemory", "vkUnmapMemory", "vkFlushMappedMemoryRanges", "vkInvalidateMappedMemoryRanges",
 		"vkCmdCopyBufferToImage", "vkCmdPipelineBarrier",
 		"vkCreateGraphicsPipelines", "vkDestroyPipeline",
-		"vkCmdBindPipeline", "vkCmdBindDescriptorSets", "vkCmdBindVertexBuffers", "vkCmdBindIndexBuffer", "vkCmdDraw", "vkCmdDrawIndexed",
+		"vkCmdBindPipeline", "vkCmdBindDescriptorSets", "vkCmdBindVertexBuffers", "vkCmdBindIndexBuffer", "vkCmdDraw", "vkCmdDrawIndexed", "vkCmdPushConstants",
 		"vkCmdBeginRendering", "vkCmdEndRendering", "vkCmdBeginRenderingKHR", "vkCmdEndRenderingKHR",
 	} {
 		cmd := sel.CommandByName(name)

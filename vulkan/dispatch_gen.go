@@ -113,6 +113,7 @@ type DeviceDispatch struct {
 	CmdCopyImageToBuffer                   func(CommandBuffer, Image, ImageLayout, Buffer, uint32, *BufferImageCopy)
 	CmdClearColorImage                     func(CommandBuffer, Image, ImageLayout, *ClearColorValue, uint32, *ImageSubresourceRange)
 	CmdPipelineBarrier                     func(CommandBuffer, PipelineStageFlags, PipelineStageFlags, DependencyFlags, uint32, *MemoryBarrier, uint32, *BufferMemoryBarrier, uint32, *ImageMemoryBarrier)
+	CmdPushConstants                       func(CommandBuffer, PipelineLayout, ShaderStageFlags, uint32, uint32, unsafe.Pointer)
 	CreateSwapchainKHR                     func(Device, *SwapchainCreateInfoKHR, *AllocationCallbacks, *SwapchainKHR) Result
 	DestroySwapchainKHR                    func(Device, SwapchainKHR, *AllocationCallbacks)
 	GetSwapchainImagesKHR                  func(Device, SwapchainKHR, *uint32, *Image) Result

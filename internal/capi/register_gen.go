@@ -268,6 +268,9 @@ func RegisterDevice(handle uintptr, lookup LookupFunc, fptrs map[string]any) err
 	if err := registerRequired([]string{"vkCmdPipelineBarrier"}, handle, lookup, fptrs); err != nil {
 		return err
 	}
+	if err := registerRequired([]string{"vkCmdPushConstants"}, handle, lookup, fptrs); err != nil {
+		return err
+	}
 	registerOptional([]string{"vkCreateSwapchainKHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkDestroySwapchainKHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkGetSwapchainImagesKHR"}, handle, lookup, fptrs)
