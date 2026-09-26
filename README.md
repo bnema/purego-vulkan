@@ -73,12 +73,10 @@ git diff --exit-code
 
 ## Consumer integration
 
-During compositor bring-up, use a local module replacement such as:
-
-```go
-replace github.com/bnema/purego-vulkan => ../purego-vulkan
+```sh
+go get github.com/bnema/purego-vulkan@latest
 ```
 
-Keep generated Vulkan binding code in this repository. Compositor-specific rendering, import policy, and DRM presentation belong in `go-wm-poc/adapters/vulkan`; do not copy generated files into the compositor repository.
+To work on the bindings and a consumer together, use a Go workspace (`go work init . ../purego-vulkan`) instead of a `replace` directive. Rendering policy, image import and presentation belong in the consumer; do not copy generated files into it.
 
 See `docs/design-notes.md` for dispatch design, selected extensions, exclusions, and the consumer handoff checklist.

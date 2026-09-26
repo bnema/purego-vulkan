@@ -1,10 +1,10 @@
 .PHONY: generate test check
 
 generate:
-	rtk go generate ./...
+	go generate ./...
 
 test:
-	rtk go test ./...
+	go test ./...
 
 check: generate test
-	rtk git diff --exit-code
+	git diff --exit-code
