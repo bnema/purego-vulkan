@@ -174,17 +174,33 @@ func TestEmitDispatch(t *testing.T) {
 	}
 	for _, want := range []string{
 		"type GlobalDispatch struct",
-		"CreateInstance func(*InstanceCreateInfo, *AllocationCallbacks, *Instance) Result",
+		"func (d *GlobalDispatch) CreateInstance(",
 		"type InstanceDispatch struct",
-		"Instance                        Instance",
+		"Instance Instance",
 		"DestroyInstance",
 		"type DeviceDispatch struct",
-		"Device         Device",
-		"GetMemoryFdKHR func(Device, *MemoryGetFdInfoKHR, *int32) Result",
-		"MapMemory      func(Device, DeviceMemory, DeviceSize, DeviceSize, MemoryMapFlags, *unsafe.Pointer) Result",
+		"Device Device",
+		"func (d *DeviceDispatch) HasGetMemoryFdKHR() bool",
+		"func (d *DeviceDispatch) MapMemory(",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("EmitDispatch() missing %q\n%s", want, out)
+		}
+	}
+}
+
+func TestEmitDispatchFloatFallback(t *testing.T) {
+	sel := &model.SelectedRegistry{Commands: []model.SelectedCommand{
+		{Name: "vkCmdSetLineWidth", GoName: "CmdSetLineWidth", Return: "void", Dispatch: model.DispatchDevice, Params: []model.ParamDecl{{Type: "float"}}},
+		{Name: "vkCmdPipelineBarrier", GoName: "CmdPipelineBarrier", Return: "void", Dispatch: model.DispatchDevice, Params: []model.ParamDecl{{Type: "VkDevice"}, {Type: "VkDevice"}, {Type: "VkDevice"}, {Type: "VkDevice"}, {Type: "VkDevice"}, {Type: "VkDevice"}, {Type: "VkDevice"}}},
+	}}
+	out, err := EmitDispatch(sel)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"CmdSetLineWidth    func(float32)", "d.fp.CmdSetLineWidth(a0)", "HasCmdSetLineWidth() bool", "purego.Syscall15(d.fp.CmdPipelineBarrier"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %q in %s", want, out)
 		}
 	}
 }
@@ -214,7 +230,7 @@ func TestEmitDispatchOmitsUnsafeImportWhenUnused(t *testing.T) {
 	}
 	for _, want := range []string{
 		"type GlobalDispatch struct",
-		"CreateInstance func(*Instance) Result",
+		"func (d *GlobalDispatch) CreateInstance(",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("EmitDispatch() missing %q\n%s", want, out)

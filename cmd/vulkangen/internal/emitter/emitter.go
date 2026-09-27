@@ -143,9 +143,7 @@ func EmitCommands(sel *model.SelectedRegistry) (string, error) {
 func EmitDispatch(sel *model.SelectedRegistry) (string, error) {
 	var b bytes.Buffer
 	writeHeader(&b, "vulkan")
-	if commandsNeedUnsafe(sel.Commands) {
-		b.WriteString("import \"unsafe\"\n\n")
-	}
+	b.WriteString("import (\n\t\"unsafe\"\n\t\"github.com/bnema/purego\"\n)\n\n")
 	writeDispatchStruct(&b, "GlobalDispatch", "", commandsByDispatch(sel, model.DispatchGlobal))
 	writeDispatchStruct(&b, "InstanceDispatch", "Instance Instance", commandsByDispatch(sel, model.DispatchInstance))
 	writeDispatchStruct(&b, "DeviceDispatch", "Device Device", commandsByDispatch(sel, model.DispatchDevice))
@@ -168,7 +166,7 @@ func EmitStrings(sel *model.SelectedRegistry) (string, error) {
 func EmitRegister(sel *model.SelectedRegistry) (string, error) {
 	var b bytes.Buffer
 	writeHeader(&b, "capi")
-	b.WriteString("import (\n\t\"fmt\"\n\t\"strings\"\n)\n\n")
+	b.WriteString("import (\n\t\"fmt\"\n\t\"reflect\"\n\t\"strings\"\n)\n\n")
 	b.WriteString("type LookupFunc func(handle uintptr, name string) (uintptr, error)\n\n")
 	writeRegisterGroup(&b, "Global", commandsByDispatch(sel, model.DispatchGlobal))
 	writeRegisterGroup(&b, "Instance", commandsByDispatch(sel, model.DispatchInstance))
@@ -215,7 +213,12 @@ func registerAddress(names []string, addr uintptr, fptrs map[string]any) {
 		if !ok || fptr == nil {
 			continue
 		}
-		RegisterFunc(fptr, addr)
+		v := reflect.ValueOf(fptr).Elem()
+		if v.Kind() == reflect.Uintptr {
+			v.SetUint(uint64(addr))
+		} else {
+			RegisterFunc(fptr, addr)
+		}
 	}
 }
 `)
@@ -227,14 +230,98 @@ func writeHeader(b *bytes.Buffer, pkg string) {
 }
 
 func writeDispatchStruct(b *bytes.Buffer, name, first string, commands []model.SelectedCommand) {
+	procs := strings.ToLower(name[:1]) + name[1:] + "Procs"
+	fmt.Fprintf(b, "type %s struct {\n", procs)
+	for _, cmd := range commands {
+		if directCommand(cmd) {
+			fmt.Fprintf(b, "\t%s uintptr\n", cmd.GoName)
+		} else {
+			fmt.Fprintf(b, "\t%s func(%s)%s\n", cmd.GoName, paramsSignature(cmd.Params), resultSignature(cmd.Return))
+		}
+	}
+	b.WriteString("}\n\n")
 	fmt.Fprintf(b, "type %s struct {\n", name)
 	if first != "" {
 		fmt.Fprintf(b, "\t%s\n", first)
 	}
+	fmt.Fprintf(b, "\tfp %s\n}\n\n", procs)
+	fmt.Fprintf(b, "func (d *%s) commandPointers() map[string]any {\n\treturn map[string]any{\n", name)
 	for _, cmd := range commands {
-		fmt.Fprintf(b, "\t%s func(%s)%s\n", cmd.GoName, paramsSignature(cmd.Params), resultSignature(cmd.Return))
+		fmt.Fprintf(b, "\t\t%q: &d.fp.%s,\n", cmd.Name, cmd.GoName)
 	}
-	b.WriteString("}\n\n")
+	b.WriteString("\t}\n}\n\n")
+	for _, cmd := range commands {
+		fmt.Fprintf(b, "func (d *%s) Has%s() bool { return ", name, cmd.GoName)
+		if directCommand(cmd) {
+			fmt.Fprintf(b, "d.fp.%s != 0", cmd.GoName)
+		} else {
+			fmt.Fprintf(b, "d.fp.%s != nil", cmd.GoName)
+		}
+		b.WriteString(" }\n")
+		args := make([]string, 0, len(cmd.Params))
+		marshalled := make([]string, 0, 15)
+		for i, p := range cmd.Params {
+			arg := fmt.Sprintf("a%d", i)
+			args = append(args, arg+" "+goParamType(p))
+			if p.PointerDepth > 0 {
+				if goParamType(p) == "unsafe.Pointer" {
+					marshalled = append(marshalled, "uintptr("+arg+")")
+				} else {
+					marshalled = append(marshalled, "uintptr(unsafe.Pointer("+arg+"))")
+				}
+			} else {
+				marshalled = append(marshalled, "uintptr("+arg+")")
+			}
+		}
+		fmt.Fprintf(b, "func (d *%s) %s(%s)%s {\n", name, cmd.GoName, strings.Join(args, ", "), resultSignature(cmd.Return))
+		if !directCommand(cmd) {
+			fmt.Fprintf(b, "\t%s d.fp.%s(%s)\n", returnPrefix(cmd.Return), cmd.GoName, strings.Join(paramNames(len(args)), ", "))
+		} else {
+			arity := 6
+			if len(args) > 6 {
+				arity = 15
+			}
+			for len(marshalled) < arity {
+				marshalled = append(marshalled, "0")
+			}
+			prefix := ""
+			if cmd.Return != "void" && cmd.Return != "" {
+				prefix = "r1, _, _ := "
+			}
+			fmt.Fprintf(b, "\t%spurego.Syscall%d(d.fp.%s, %s)\n", prefix, arity, cmd.GoName, strings.Join(marshalled, ", "))
+			if prefix != "" {
+				fmt.Fprintf(b, "\treturn %s(r1)\n", goTypeName(cmd.Return))
+			}
+		}
+		b.WriteString("}\n\n")
+	}
+}
+
+func paramNames(n int) []string {
+	out := make([]string, n)
+	for i := range out {
+		out[i] = fmt.Sprintf("a%d", i)
+	}
+	return out
+}
+
+func returnPrefix(ret string) string {
+	if ret != "" && ret != "void" {
+		return "return"
+	}
+	return ""
+}
+
+func directCommand(cmd model.SelectedCommand) bool {
+	if len(cmd.Params) > 15 {
+		return false
+	}
+	for _, p := range cmd.Params {
+		if p.PointerDepth == 0 && (p.Type == "float" || p.Type == "double" || len(p.ArrayLens) > 0) {
+			return false
+		}
+	}
+	return true
 }
 
 func writeCommandPointerMap(b *bytes.Buffer, name string, commands []model.SelectedCommand) {

@@ -32,6 +32,11 @@ func TestGenerationProfilesEmitCompilablePackages(t *testing.T) {
 				t.Fatalf("run(%s) error = %v", tt.name, err)
 			}
 			writeGeneratedCompileHarness(t, outDir)
+			tidy := exec.Command("go", "mod", "tidy")
+			tidy.Dir = outDir
+			if out, err := tidy.CombinedOutput(); err != nil {
+				t.Fatalf("tidy generated module: %v: %s", err, out)
+			}
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
 			cmd := exec.CommandContext(ctx, "go", "test", "./...")
@@ -46,7 +51,7 @@ func TestGenerationProfilesEmitCompilablePackages(t *testing.T) {
 
 func writeGeneratedCompileHarness(t *testing.T, outDir string) {
 	t.Helper()
-	if err := os.WriteFile(filepath.Join(outDir, "go.mod"), []byte("module generatedprofile\n\ngo 1.24\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(outDir, "go.mod"), []byte("module generatedprofile\n\ngo 1.25\n\nrequire github.com/bnema/purego v0.11.0-bnema.3\n\nreplace github.com/bnema/purego => /home/brice/dev/projects/purego/.worktrees/typed-callbacks\n"), 0o644); err != nil {
 		t.Fatalf("write generated go.mod: %v", err)
 	}
 	registerPath := filepath.Join(outDir, "internal", "capi", "register.go")
