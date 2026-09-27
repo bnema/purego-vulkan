@@ -1,6 +1,7 @@
 package vulkan
 
 import (
+	"github.com/bnema/purego"
 	"reflect"
 	"strings"
 	"testing"
@@ -66,19 +67,19 @@ func TestLoadInstanceDispatchRequiresCoreCommands(t *testing.T) {
 	if dispatch.Instance != Instance(1) {
 		t.Fatalf("InstanceDispatch.Instance = %v, want 1", dispatch.Instance)
 	}
-	if dispatch.DestroyInstance == nil {
+	if !dispatch.HasDestroyInstance() {
 		t.Fatal("DestroyInstance was not loaded")
 	}
-	if dispatch.GetPhysicalDeviceMemoryProperties == nil {
+	if !dispatch.HasGetPhysicalDeviceMemoryProperties() {
 		t.Fatal("GetPhysicalDeviceMemoryProperties was not loaded")
 	}
-	if dispatch.GetPhysicalDeviceMemoryProperties2 == nil || dispatch.GetPhysicalDeviceMemoryProperties2KHR == nil {
+	if !dispatch.HasGetPhysicalDeviceMemoryProperties2() || !dispatch.HasGetPhysicalDeviceMemoryProperties2KHR() {
 		t.Fatal("memory properties2 core/KHR alias group was not populated from one available symbol")
 	}
-	if dispatch.GetPhysicalDeviceProperties2 == nil || dispatch.GetPhysicalDeviceProperties2KHR == nil {
+	if !dispatch.HasGetPhysicalDeviceProperties2() || !dispatch.HasGetPhysicalDeviceProperties2KHR() {
 		t.Fatal("core/KHR alias group was not populated from one available symbol")
 	}
-	if dispatch.GetPhysicalDeviceFormatProperties2 == nil || dispatch.GetPhysicalDeviceFormatProperties2KHR == nil {
+	if !dispatch.HasGetPhysicalDeviceFormatProperties2() || !dispatch.HasGetPhysicalDeviceFormatProperties2KHR() {
 		t.Fatal("format properties2 core/KHR alias group was not populated from one available symbol")
 	}
 
@@ -88,13 +89,13 @@ func TestLoadInstanceDispatchRequiresCoreCommands(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadInstanceDispatch() with KHR memory properties2 error = %v", err)
 	}
-	if dispatch.GetPhysicalDeviceMemoryProperties2 == nil || dispatch.GetPhysicalDeviceMemoryProperties2KHR == nil {
+	if !dispatch.HasGetPhysicalDeviceMemoryProperties2() || !dispatch.HasGetPhysicalDeviceMemoryProperties2KHR() {
 		t.Fatal("memory properties2 core/KHR alias group was not populated from KHR symbol")
 	}
 }
 
 func TestWSIProfileHasTimelineSemaphoreCommands(t *testing.T) {
-	dispatchType := reflect.TypeFor[DeviceDispatch]()
+	dispatchType := reflect.TypeFor[*DeviceDispatch]()
 	for _, name := range []string{
 		"WaitSemaphores",
 		"WaitSemaphoresKHR",
@@ -105,7 +106,7 @@ func TestWSIProfileHasTimelineSemaphoreCommands(t *testing.T) {
 		"CmdClearColorImage",
 		"GetImageSubresourceLayout",
 	} {
-		if _, ok := dispatchType.FieldByName(name); !ok {
+		if _, ok := dispatchType.MethodByName(name); !ok {
 			t.Errorf("DeviceDispatch is missing %s", name)
 		}
 	}
@@ -117,16 +118,16 @@ func TestLoadDeviceDispatchLeavesOptionalExtensionCommandsNil(t *testing.T) {
 
 	withOptional := requiredDeviceSymbols()
 	withOptional["vkGetMemoryFdKHR"] = 0x9000
-	instanceDispatch := &InstanceDispatch{GetDeviceProcAddr: fakeGetDeviceProcAddr(withOptional)}
+	instanceDispatch := &InstanceDispatch{fp: instanceDispatchProcs{GetDeviceProcAddr: purego.NewCallback(fakeGetDeviceProcAddr(withOptional))}}
 	dispatch, err := LoadDeviceDispatch(instanceDispatch, Device(2))
 	if err != nil {
 		t.Fatalf("first LoadDeviceDispatch() error = %v", err)
 	}
-	if dispatch.GetMemoryFdKHR == nil {
+	if !dispatch.HasGetMemoryFdKHR() {
 		t.Fatal("optional GetMemoryFdKHR was not loaded when symbol was present")
 	}
 
-	instanceDispatch = &InstanceDispatch{GetDeviceProcAddr: fakeGetDeviceProcAddr(requiredDeviceSymbols())}
+	instanceDispatch = &InstanceDispatch{fp: instanceDispatchProcs{GetDeviceProcAddr: purego.NewCallback(fakeGetDeviceProcAddr(requiredDeviceSymbols()))}}
 	dispatch, err = LoadDeviceDispatch(instanceDispatch, Device(3))
 	if err != nil {
 		t.Fatalf("second LoadDeviceDispatch() error = %v", err)
@@ -134,17 +135,17 @@ func TestLoadDeviceDispatchLeavesOptionalExtensionCommandsNil(t *testing.T) {
 	if dispatch.Device != Device(3) {
 		t.Fatalf("DeviceDispatch.Device = %v, want 3", dispatch.Device)
 	}
-	if dispatch.DestroyDevice == nil {
+	if !dispatch.HasDestroyDevice() {
 		t.Fatal("DestroyDevice was not loaded")
 	}
-	if dispatch.BindImageMemory2 == nil || dispatch.BindImageMemory2KHR == nil {
+	if !dispatch.HasBindImageMemory2() || !dispatch.HasBindImageMemory2KHR() {
 		t.Fatal("core/KHR device alias group was not populated from one available symbol")
 	}
 	assertRendererDeviceDispatch(t, dispatch)
-	if dispatch.GetMemoryFdKHR != nil {
+	if dispatch.HasGetMemoryFdKHR() {
 		t.Fatal("optional GetMemoryFdKHR loaded despite missing symbol")
 	}
-	if dispatch.GetImageDrmFormatModifierPropertiesEXT != nil {
+	if dispatch.HasGetImageDrmFormatModifierPropertiesEXT() {
 		t.Fatal("optional GetImageDrmFormatModifierPropertiesEXT loaded despite missing symbol")
 	}
 }
@@ -157,7 +158,7 @@ func TestLoadDeviceDispatchFallsBackToTimelineSemaphoreKHRAliases(t *testing.T) 
 	symbols["vkGetSemaphoreCounterValueKHR"] = 0xa001
 	symbols["vkWaitSemaphoresKHR"] = 0xa002
 	symbols["vkSignalSemaphoreKHR"] = 0xa003
-	instanceDispatch := &InstanceDispatch{GetDeviceProcAddr: fakeGetDeviceProcAddr(symbols)}
+	instanceDispatch := &InstanceDispatch{fp: instanceDispatchProcs{GetDeviceProcAddr: purego.NewCallback(fakeGetDeviceProcAddr(symbols))}}
 	dispatch, err := LoadDeviceDispatch(instanceDispatch, Device(4))
 	if err != nil {
 		t.Fatalf("LoadDeviceDispatch() error = %v", err)
@@ -173,7 +174,7 @@ func TestLoadDeviceDispatchFallsBackToTimelineSemaphoreKHRAliases(t *testing.T) 
 		{"SignalSemaphore", dispatch.SignalSemaphore},
 		{"SignalSemaphoreKHR", dispatch.SignalSemaphoreKHR},
 	} {
-		if check.fn == nil || reflect.ValueOf(check.fn).IsNil() {
+		if check.fn == nil {
 			t.Fatalf("timeline semaphore %s alias was not loaded from the KHR symbol", check.name)
 		}
 	}
@@ -186,15 +187,15 @@ func TestLoadDeviceDispatchFallsBackToDynamicRenderingKHRAliases(t *testing.T) {
 	symbols := requiredDeviceSymbolsExcept("vkCmdBeginRendering", "vkCmdEndRendering")
 	symbols["vkCmdBeginRenderingKHR"] = 0xa001
 	symbols["vkCmdEndRenderingKHR"] = 0xa002
-	instanceDispatch := &InstanceDispatch{GetDeviceProcAddr: fakeGetDeviceProcAddr(symbols)}
+	instanceDispatch := &InstanceDispatch{fp: instanceDispatchProcs{GetDeviceProcAddr: purego.NewCallback(fakeGetDeviceProcAddr(symbols))}}
 	dispatch, err := LoadDeviceDispatch(instanceDispatch, Device(4))
 	if err != nil {
 		t.Fatalf("LoadDeviceDispatch() error = %v", err)
 	}
-	if dispatch.CmdBeginRendering == nil || dispatch.CmdBeginRenderingKHR == nil {
+	if !dispatch.HasCmdBeginRendering() || !dispatch.HasCmdBeginRenderingKHR() {
 		t.Fatal("dynamic rendering begin core/KHR alias group was not populated from KHR symbol")
 	}
-	if dispatch.CmdEndRendering == nil || dispatch.CmdEndRenderingKHR == nil {
+	if !dispatch.HasCmdEndRendering() || !dispatch.HasCmdEndRenderingKHR() {
 		t.Fatal("dynamic rendering end core/KHR alias group was not populated from KHR symbol")
 	}
 }
@@ -233,7 +234,7 @@ func assertRendererDeviceDispatch(t *testing.T, dispatch *DeviceDispatch) {
 		{"CmdEndRenderingKHR", dispatch.CmdEndRenderingKHR},
 	}
 	for _, check := range checks {
-		if check.fn == nil || reflect.ValueOf(check.fn).IsNil() {
+		if check.fn == nil {
 			t.Fatalf("%s was not loaded", check.name)
 		}
 	}

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"reflect"
 	"runtime"
-	"strings"
 	"sync"
 
 	"github.com/bnema/purego-vulkan/internal/capi"
@@ -40,14 +39,14 @@ func loadGlobalDispatch() error {
 	}
 	dispatchMu.Lock()
 	defer dispatchMu.Unlock()
+	globalDispatch = GlobalDispatch{}
+	if err := capi.RegisterGlobal(0, lookupInstanceProcAddr, globalDispatch.commandPointers()); err != nil {
+		return fmt.Errorf("vulkan: load global dispatch: %w", err)
+	}
 	fptrs := globalCommandPointers()
 	clearCommandPointers(fptrs)
 	if err := capi.RegisterGlobal(0, lookupInstanceProcAddr, fptrs); err != nil {
-		return fmt.Errorf("vulkan: load global dispatch: %w", err)
-	}
-	globalDispatch = GlobalDispatch{}
-	if err := populateDispatch(&globalDispatch, fptrs); err != nil {
-		return fmt.Errorf("vulkan: build global dispatch: %w", err)
+		return err
 	}
 	return nil
 }
@@ -58,14 +57,14 @@ func LoadInstanceDispatch(instance Instance) (*InstanceDispatch, error) {
 	}
 	dispatchMu.Lock()
 	defer dispatchMu.Unlock()
+	dispatch := &InstanceDispatch{Instance: instance}
+	if err := capi.RegisterInstance(uintptr(instance), lookupInstanceProcAddr, dispatch.commandPointers()); err != nil {
+		return nil, fmt.Errorf("vulkan: load instance dispatch: %w", err)
+	}
 	fptrs := instanceCommandPointers()
 	clearCommandPointers(fptrs)
 	if err := capi.RegisterInstance(uintptr(instance), lookupInstanceProcAddr, fptrs); err != nil {
-		return nil, fmt.Errorf("vulkan: load instance dispatch: %w", err)
-	}
-	dispatch := &InstanceDispatch{Instance: instance}
-	if err := populateDispatch(dispatch, fptrs); err != nil {
-		return nil, fmt.Errorf("vulkan: build instance dispatch: %w", err)
+		return nil, err
 	}
 	return dispatch, nil
 }
@@ -74,7 +73,7 @@ func LoadDeviceDispatch(instance *InstanceDispatch, device Device) (*DeviceDispa
 	if instance == nil {
 		return nil, fmt.Errorf("vulkan: instance dispatch is nil")
 	}
-	if instance.GetDeviceProcAddr == nil {
+	if !instance.HasGetDeviceProcAddr() {
 		return nil, fmt.Errorf("vulkan: vkGetDeviceProcAddr is not loaded")
 	}
 	dispatchMu.Lock()
@@ -82,14 +81,14 @@ func LoadDeviceDispatch(instance *InstanceDispatch, device Device) (*DeviceDispa
 	lookup := func(handle uintptr, name string) (uintptr, error) {
 		return lookupDeviceProcAddr(instance.GetDeviceProcAddr, Device(handle), name), nil
 	}
+	dispatch := &DeviceDispatch{Device: device}
+	if err := capi.RegisterDevice(uintptr(device), lookup, dispatch.commandPointers()); err != nil {
+		return nil, fmt.Errorf("vulkan: load device dispatch: %w", err)
+	}
 	fptrs := deviceCommandPointers()
 	clearCommandPointers(fptrs)
 	if err := capi.RegisterDevice(uintptr(device), lookup, fptrs); err != nil {
-		return nil, fmt.Errorf("vulkan: load device dispatch: %w", err)
-	}
-	dispatch := &DeviceDispatch{Device: device}
-	if err := populateDispatch(dispatch, fptrs); err != nil {
-		return nil, fmt.Errorf("vulkan: build device dispatch: %w", err)
+		return nil, err
 	}
 	return dispatch, nil
 }
@@ -128,31 +127,4 @@ func clearCommandPointers(fptrs map[string]any) {
 		v := reflect.ValueOf(fptr).Elem()
 		v.Set(reflect.Zero(v.Type()))
 	}
-}
-
-func populateDispatch(dispatch any, fptrs map[string]any) error {
-	v := reflect.ValueOf(dispatch)
-	if v.Kind() != reflect.Pointer || v.Elem().Kind() != reflect.Struct {
-		return fmt.Errorf("dispatch target must be pointer to struct")
-	}
-	fields := v.Elem()
-	for symbol, fptr := range fptrs {
-		field := fields.FieldByName(commandFieldName(symbol))
-		if !field.IsValid() {
-			return fmt.Errorf("missing dispatch field for %s", symbol)
-		}
-		fn := reflect.ValueOf(fptr).Elem()
-		if fn.IsNil() {
-			continue
-		}
-		if !fn.Type().AssignableTo(field.Type()) {
-			return fmt.Errorf("dispatch field %s has type %s, want %s", commandFieldName(symbol), field.Type(), fn.Type())
-		}
-		field.Set(fn)
-	}
-	return nil
-}
-
-func commandFieldName(symbol string) string {
-	return strings.TrimPrefix(symbol, "vk")
 }

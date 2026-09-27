@@ -4,6 +4,7 @@ package capi
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -353,6 +354,11 @@ func registerAddress(names []string, addr uintptr, fptrs map[string]any) {
 		if !ok || fptr == nil {
 			continue
 		}
-		RegisterFunc(fptr, addr)
+		v := reflect.ValueOf(fptr).Elem()
+		if v.Kind() == reflect.Uintptr {
+			v.SetUint(uint64(addr))
+		} else {
+			RegisterFunc(fptr, addr)
+		}
 	}
 }

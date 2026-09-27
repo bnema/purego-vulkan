@@ -2,152 +2,1172 @@
 
 package vulkan
 
-import "unsafe"
+import (
+	"github.com/bnema/purego"
+	"unsafe"
+)
+
+type globalDispatchProcs struct {
+	CreateInstance                       uintptr
+	GetInstanceProcAddr                  uintptr
+	EnumerateInstanceVersion             uintptr
+	EnumerateInstanceLayerProperties     uintptr
+	EnumerateInstanceExtensionProperties uintptr
+}
 
 type GlobalDispatch struct {
-	CreateInstance                       func(*InstanceCreateInfo, *AllocationCallbacks, *Instance) Result
-	GetInstanceProcAddr                  func(Instance, *byte) PFN_vkVoidFunction
-	EnumerateInstanceVersion             func(*uint32) Result
-	EnumerateInstanceLayerProperties     func(*uint32, *LayerProperties) Result
-	EnumerateInstanceExtensionProperties func(*byte, *uint32, *ExtensionProperties) Result
+	fp globalDispatchProcs
+}
+
+func (d *GlobalDispatch) commandPointers() map[string]any {
+	return map[string]any{
+		"vkCreateInstance":                       &d.fp.CreateInstance,
+		"vkGetInstanceProcAddr":                  &d.fp.GetInstanceProcAddr,
+		"vkEnumerateInstanceVersion":             &d.fp.EnumerateInstanceVersion,
+		"vkEnumerateInstanceLayerProperties":     &d.fp.EnumerateInstanceLayerProperties,
+		"vkEnumerateInstanceExtensionProperties": &d.fp.EnumerateInstanceExtensionProperties,
+	}
+}
+
+func (d *GlobalDispatch) HasCreateInstance() bool { return d.fp.CreateInstance != 0 }
+func (d *GlobalDispatch) CreateInstance(a0 *InstanceCreateInfo, a1 *AllocationCallbacks, a2 *Instance) Result {
+	r1, _, _ := purego.Syscall6(d.fp.CreateInstance, uintptr(unsafe.Pointer(a0)), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *GlobalDispatch) HasGetInstanceProcAddr() bool { return d.fp.GetInstanceProcAddr != 0 }
+func (d *GlobalDispatch) GetInstanceProcAddr(a0 Instance, a1 *byte) PFN_vkVoidFunction {
+	r1, _, _ := purego.Syscall6(d.fp.GetInstanceProcAddr, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+	return PFN_vkVoidFunction(r1)
+}
+
+func (d *GlobalDispatch) HasEnumerateInstanceVersion() bool {
+	return d.fp.EnumerateInstanceVersion != 0
+}
+func (d *GlobalDispatch) EnumerateInstanceVersion(a0 *uint32) Result {
+	r1, _, _ := purego.Syscall6(d.fp.EnumerateInstanceVersion, uintptr(unsafe.Pointer(a0)), 0, 0, 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *GlobalDispatch) HasEnumerateInstanceLayerProperties() bool {
+	return d.fp.EnumerateInstanceLayerProperties != 0
+}
+func (d *GlobalDispatch) EnumerateInstanceLayerProperties(a0 *uint32, a1 *LayerProperties) Result {
+	r1, _, _ := purego.Syscall6(d.fp.EnumerateInstanceLayerProperties, uintptr(unsafe.Pointer(a0)), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *GlobalDispatch) HasEnumerateInstanceExtensionProperties() bool {
+	return d.fp.EnumerateInstanceExtensionProperties != 0
+}
+func (d *GlobalDispatch) EnumerateInstanceExtensionProperties(a0 *byte, a1 *uint32, a2 *ExtensionProperties) Result {
+	r1, _, _ := purego.Syscall6(d.fp.EnumerateInstanceExtensionProperties, uintptr(unsafe.Pointer(a0)), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+	return Result(r1)
+}
+
+type instanceDispatchProcs struct {
+	DestroyInstance                                  uintptr
+	EnumeratePhysicalDevices                         uintptr
+	GetDeviceProcAddr                                uintptr
+	GetPhysicalDeviceProperties                      uintptr
+	GetPhysicalDeviceQueueFamilyProperties           uintptr
+	GetPhysicalDeviceMemoryProperties                uintptr
+	CreateDevice                                     uintptr
+	EnumerateDeviceExtensionProperties               uintptr
+	DestroySurfaceKHR                                uintptr
+	GetPhysicalDeviceSurfaceSupportKHR               uintptr
+	GetPhysicalDeviceSurfaceCapabilitiesKHR          uintptr
+	GetPhysicalDeviceSurfaceFormatsKHR               uintptr
+	GetPhysicalDeviceSurfacePresentModesKHR          uintptr
+	CreateWaylandSurfaceKHR                          uintptr
+	GetPhysicalDeviceWaylandPresentationSupportKHR   uintptr
+	CreateXlibSurfaceKHR                             uintptr
+	GetPhysicalDeviceXlibPresentationSupportKHR      uintptr
+	CreateXcbSurfaceKHR                              uintptr
+	GetPhysicalDeviceXcbPresentationSupportKHR       uintptr
+	GetPhysicalDeviceFeatures2                       uintptr
+	GetPhysicalDeviceFeatures2KHR                    uintptr
+	GetPhysicalDeviceProperties2                     uintptr
+	GetPhysicalDeviceProperties2KHR                  uintptr
+	GetPhysicalDeviceFormatProperties2               uintptr
+	GetPhysicalDeviceFormatProperties2KHR            uintptr
+	GetPhysicalDeviceImageFormatProperties2          uintptr
+	GetPhysicalDeviceImageFormatProperties2KHR       uintptr
+	GetPhysicalDeviceQueueFamilyProperties2          uintptr
+	GetPhysicalDeviceQueueFamilyProperties2KHR       uintptr
+	GetPhysicalDeviceMemoryProperties2               uintptr
+	GetPhysicalDeviceMemoryProperties2KHR            uintptr
+	GetPhysicalDeviceSparseImageFormatProperties2KHR uintptr
+	GetPhysicalDeviceExternalBufferPropertiesKHR     uintptr
+	GetPhysicalDeviceExternalSemaphorePropertiesKHR  uintptr
+	GetPhysicalDevicePresentRectanglesKHR            uintptr
 }
 
 type InstanceDispatch struct {
-	Instance                                         Instance
-	DestroyInstance                                  func(Instance, *AllocationCallbacks)
-	EnumeratePhysicalDevices                         func(Instance, *uint32, *PhysicalDevice) Result
-	GetDeviceProcAddr                                func(Device, *byte) PFN_vkVoidFunction
-	GetPhysicalDeviceProperties                      func(PhysicalDevice, *PhysicalDeviceProperties)
-	GetPhysicalDeviceQueueFamilyProperties           func(PhysicalDevice, *uint32, *QueueFamilyProperties)
-	GetPhysicalDeviceMemoryProperties                func(PhysicalDevice, *PhysicalDeviceMemoryProperties)
-	CreateDevice                                     func(PhysicalDevice, *DeviceCreateInfo, *AllocationCallbacks, *Device) Result
-	EnumerateDeviceExtensionProperties               func(PhysicalDevice, *byte, *uint32, *ExtensionProperties) Result
-	DestroySurfaceKHR                                func(Instance, SurfaceKHR, *AllocationCallbacks)
-	GetPhysicalDeviceSurfaceSupportKHR               func(PhysicalDevice, uint32, SurfaceKHR, *Bool32) Result
-	GetPhysicalDeviceSurfaceCapabilitiesKHR          func(PhysicalDevice, SurfaceKHR, *SurfaceCapabilitiesKHR) Result
-	GetPhysicalDeviceSurfaceFormatsKHR               func(PhysicalDevice, SurfaceKHR, *uint32, *SurfaceFormatKHR) Result
-	GetPhysicalDeviceSurfacePresentModesKHR          func(PhysicalDevice, SurfaceKHR, *uint32, *PresentModeKHR) Result
-	CreateWaylandSurfaceKHR                          func(Instance, *WaylandSurfaceCreateInfoKHR, *AllocationCallbacks, *SurfaceKHR) Result
-	GetPhysicalDeviceWaylandPresentationSupportKHR   func(PhysicalDevice, uint32, unsafe.Pointer) Bool32
-	CreateXlibSurfaceKHR                             func(Instance, *XlibSurfaceCreateInfoKHR, *AllocationCallbacks, *SurfaceKHR) Result
-	GetPhysicalDeviceXlibPresentationSupportKHR      func(PhysicalDevice, uint32, unsafe.Pointer, uintptr) Bool32
-	CreateXcbSurfaceKHR                              func(Instance, *XcbSurfaceCreateInfoKHR, *AllocationCallbacks, *SurfaceKHR) Result
-	GetPhysicalDeviceXcbPresentationSupportKHR       func(PhysicalDevice, uint32, unsafe.Pointer, uint32) Bool32
-	GetPhysicalDeviceFeatures2                       func(PhysicalDevice, *PhysicalDeviceFeatures2)
-	GetPhysicalDeviceFeatures2KHR                    func(PhysicalDevice, *PhysicalDeviceFeatures2)
-	GetPhysicalDeviceProperties2                     func(PhysicalDevice, *PhysicalDeviceProperties2)
-	GetPhysicalDeviceProperties2KHR                  func(PhysicalDevice, *PhysicalDeviceProperties2)
-	GetPhysicalDeviceFormatProperties2               func(PhysicalDevice, Format, *FormatProperties2)
-	GetPhysicalDeviceFormatProperties2KHR            func(PhysicalDevice, Format, *FormatProperties2)
-	GetPhysicalDeviceImageFormatProperties2          func(PhysicalDevice, *PhysicalDeviceImageFormatInfo2, *ImageFormatProperties2) Result
-	GetPhysicalDeviceImageFormatProperties2KHR       func(PhysicalDevice, *PhysicalDeviceImageFormatInfo2, *ImageFormatProperties2) Result
-	GetPhysicalDeviceQueueFamilyProperties2          func(PhysicalDevice, *uint32, *QueueFamilyProperties2)
-	GetPhysicalDeviceQueueFamilyProperties2KHR       func(PhysicalDevice, *uint32, *QueueFamilyProperties2)
-	GetPhysicalDeviceMemoryProperties2               func(PhysicalDevice, *PhysicalDeviceMemoryProperties2)
-	GetPhysicalDeviceMemoryProperties2KHR            func(PhysicalDevice, *PhysicalDeviceMemoryProperties2)
-	GetPhysicalDeviceSparseImageFormatProperties2KHR func(PhysicalDevice, *PhysicalDeviceSparseImageFormatInfo2, *uint32, *SparseImageFormatProperties2)
-	GetPhysicalDeviceExternalBufferPropertiesKHR     func(PhysicalDevice, *PhysicalDeviceExternalBufferInfo, *ExternalBufferProperties)
-	GetPhysicalDeviceExternalSemaphorePropertiesKHR  func(PhysicalDevice, *PhysicalDeviceExternalSemaphoreInfo, *ExternalSemaphoreProperties)
-	GetPhysicalDevicePresentRectanglesKHR            func(PhysicalDevice, SurfaceKHR, *uint32, *Rect2D) Result
+	Instance Instance
+	fp       instanceDispatchProcs
+}
+
+func (d *InstanceDispatch) commandPointers() map[string]any {
+	return map[string]any{
+		"vkDestroyInstance":                                  &d.fp.DestroyInstance,
+		"vkEnumeratePhysicalDevices":                         &d.fp.EnumeratePhysicalDevices,
+		"vkGetDeviceProcAddr":                                &d.fp.GetDeviceProcAddr,
+		"vkGetPhysicalDeviceProperties":                      &d.fp.GetPhysicalDeviceProperties,
+		"vkGetPhysicalDeviceQueueFamilyProperties":           &d.fp.GetPhysicalDeviceQueueFamilyProperties,
+		"vkGetPhysicalDeviceMemoryProperties":                &d.fp.GetPhysicalDeviceMemoryProperties,
+		"vkCreateDevice":                                     &d.fp.CreateDevice,
+		"vkEnumerateDeviceExtensionProperties":               &d.fp.EnumerateDeviceExtensionProperties,
+		"vkDestroySurfaceKHR":                                &d.fp.DestroySurfaceKHR,
+		"vkGetPhysicalDeviceSurfaceSupportKHR":               &d.fp.GetPhysicalDeviceSurfaceSupportKHR,
+		"vkGetPhysicalDeviceSurfaceCapabilitiesKHR":          &d.fp.GetPhysicalDeviceSurfaceCapabilitiesKHR,
+		"vkGetPhysicalDeviceSurfaceFormatsKHR":               &d.fp.GetPhysicalDeviceSurfaceFormatsKHR,
+		"vkGetPhysicalDeviceSurfacePresentModesKHR":          &d.fp.GetPhysicalDeviceSurfacePresentModesKHR,
+		"vkCreateWaylandSurfaceKHR":                          &d.fp.CreateWaylandSurfaceKHR,
+		"vkGetPhysicalDeviceWaylandPresentationSupportKHR":   &d.fp.GetPhysicalDeviceWaylandPresentationSupportKHR,
+		"vkCreateXlibSurfaceKHR":                             &d.fp.CreateXlibSurfaceKHR,
+		"vkGetPhysicalDeviceXlibPresentationSupportKHR":      &d.fp.GetPhysicalDeviceXlibPresentationSupportKHR,
+		"vkCreateXcbSurfaceKHR":                              &d.fp.CreateXcbSurfaceKHR,
+		"vkGetPhysicalDeviceXcbPresentationSupportKHR":       &d.fp.GetPhysicalDeviceXcbPresentationSupportKHR,
+		"vkGetPhysicalDeviceFeatures2":                       &d.fp.GetPhysicalDeviceFeatures2,
+		"vkGetPhysicalDeviceFeatures2KHR":                    &d.fp.GetPhysicalDeviceFeatures2KHR,
+		"vkGetPhysicalDeviceProperties2":                     &d.fp.GetPhysicalDeviceProperties2,
+		"vkGetPhysicalDeviceProperties2KHR":                  &d.fp.GetPhysicalDeviceProperties2KHR,
+		"vkGetPhysicalDeviceFormatProperties2":               &d.fp.GetPhysicalDeviceFormatProperties2,
+		"vkGetPhysicalDeviceFormatProperties2KHR":            &d.fp.GetPhysicalDeviceFormatProperties2KHR,
+		"vkGetPhysicalDeviceImageFormatProperties2":          &d.fp.GetPhysicalDeviceImageFormatProperties2,
+		"vkGetPhysicalDeviceImageFormatProperties2KHR":       &d.fp.GetPhysicalDeviceImageFormatProperties2KHR,
+		"vkGetPhysicalDeviceQueueFamilyProperties2":          &d.fp.GetPhysicalDeviceQueueFamilyProperties2,
+		"vkGetPhysicalDeviceQueueFamilyProperties2KHR":       &d.fp.GetPhysicalDeviceQueueFamilyProperties2KHR,
+		"vkGetPhysicalDeviceMemoryProperties2":               &d.fp.GetPhysicalDeviceMemoryProperties2,
+		"vkGetPhysicalDeviceMemoryProperties2KHR":            &d.fp.GetPhysicalDeviceMemoryProperties2KHR,
+		"vkGetPhysicalDeviceSparseImageFormatProperties2KHR": &d.fp.GetPhysicalDeviceSparseImageFormatProperties2KHR,
+		"vkGetPhysicalDeviceExternalBufferPropertiesKHR":     &d.fp.GetPhysicalDeviceExternalBufferPropertiesKHR,
+		"vkGetPhysicalDeviceExternalSemaphorePropertiesKHR":  &d.fp.GetPhysicalDeviceExternalSemaphorePropertiesKHR,
+		"vkGetPhysicalDevicePresentRectanglesKHR":            &d.fp.GetPhysicalDevicePresentRectanglesKHR,
+	}
+}
+
+func (d *InstanceDispatch) HasDestroyInstance() bool { return d.fp.DestroyInstance != 0 }
+func (d *InstanceDispatch) DestroyInstance(a0 Instance, a1 *AllocationCallbacks) {
+	purego.Syscall6(d.fp.DestroyInstance, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+}
+
+func (d *InstanceDispatch) HasEnumeratePhysicalDevices() bool {
+	return d.fp.EnumeratePhysicalDevices != 0
+}
+func (d *InstanceDispatch) EnumeratePhysicalDevices(a0 Instance, a1 *uint32, a2 *PhysicalDevice) Result {
+	r1, _, _ := purego.Syscall6(d.fp.EnumeratePhysicalDevices, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *InstanceDispatch) HasGetDeviceProcAddr() bool { return d.fp.GetDeviceProcAddr != 0 }
+func (d *InstanceDispatch) GetDeviceProcAddr(a0 Device, a1 *byte) PFN_vkVoidFunction {
+	r1, _, _ := purego.Syscall6(d.fp.GetDeviceProcAddr, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+	return PFN_vkVoidFunction(r1)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceProperties() bool {
+	return d.fp.GetPhysicalDeviceProperties != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceProperties(a0 PhysicalDevice, a1 *PhysicalDeviceProperties) {
+	purego.Syscall6(d.fp.GetPhysicalDeviceProperties, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceQueueFamilyProperties() bool {
+	return d.fp.GetPhysicalDeviceQueueFamilyProperties != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceQueueFamilyProperties(a0 PhysicalDevice, a1 *uint32, a2 *QueueFamilyProperties) {
+	purego.Syscall6(d.fp.GetPhysicalDeviceQueueFamilyProperties, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceMemoryProperties() bool {
+	return d.fp.GetPhysicalDeviceMemoryProperties != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceMemoryProperties(a0 PhysicalDevice, a1 *PhysicalDeviceMemoryProperties) {
+	purego.Syscall6(d.fp.GetPhysicalDeviceMemoryProperties, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+}
+
+func (d *InstanceDispatch) HasCreateDevice() bool { return d.fp.CreateDevice != 0 }
+func (d *InstanceDispatch) CreateDevice(a0 PhysicalDevice, a1 *DeviceCreateInfo, a2 *AllocationCallbacks, a3 *Device) Result {
+	r1, _, _ := purego.Syscall6(d.fp.CreateDevice, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *InstanceDispatch) HasEnumerateDeviceExtensionProperties() bool {
+	return d.fp.EnumerateDeviceExtensionProperties != 0
+}
+func (d *InstanceDispatch) EnumerateDeviceExtensionProperties(a0 PhysicalDevice, a1 *byte, a2 *uint32, a3 *ExtensionProperties) Result {
+	r1, _, _ := purego.Syscall6(d.fp.EnumerateDeviceExtensionProperties, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *InstanceDispatch) HasDestroySurfaceKHR() bool { return d.fp.DestroySurfaceKHR != 0 }
+func (d *InstanceDispatch) DestroySurfaceKHR(a0 Instance, a1 SurfaceKHR, a2 *AllocationCallbacks) {
+	purego.Syscall6(d.fp.DestroySurfaceKHR, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceSurfaceSupportKHR() bool {
+	return d.fp.GetPhysicalDeviceSurfaceSupportKHR != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceSurfaceSupportKHR(a0 PhysicalDevice, a1 uint32, a2 SurfaceKHR, a3 *Bool32) Result {
+	r1, _, _ := purego.Syscall6(d.fp.GetPhysicalDeviceSurfaceSupportKHR, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceSurfaceCapabilitiesKHR() bool {
+	return d.fp.GetPhysicalDeviceSurfaceCapabilitiesKHR != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceSurfaceCapabilitiesKHR(a0 PhysicalDevice, a1 SurfaceKHR, a2 *SurfaceCapabilitiesKHR) Result {
+	r1, _, _ := purego.Syscall6(d.fp.GetPhysicalDeviceSurfaceCapabilitiesKHR, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceSurfaceFormatsKHR() bool {
+	return d.fp.GetPhysicalDeviceSurfaceFormatsKHR != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceSurfaceFormatsKHR(a0 PhysicalDevice, a1 SurfaceKHR, a2 *uint32, a3 *SurfaceFormatKHR) Result {
+	r1, _, _ := purego.Syscall6(d.fp.GetPhysicalDeviceSurfaceFormatsKHR, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceSurfacePresentModesKHR() bool {
+	return d.fp.GetPhysicalDeviceSurfacePresentModesKHR != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceSurfacePresentModesKHR(a0 PhysicalDevice, a1 SurfaceKHR, a2 *uint32, a3 *PresentModeKHR) Result {
+	r1, _, _ := purego.Syscall6(d.fp.GetPhysicalDeviceSurfacePresentModesKHR, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *InstanceDispatch) HasCreateWaylandSurfaceKHR() bool {
+	return d.fp.CreateWaylandSurfaceKHR != 0
+}
+func (d *InstanceDispatch) CreateWaylandSurfaceKHR(a0 Instance, a1 *WaylandSurfaceCreateInfoKHR, a2 *AllocationCallbacks, a3 *SurfaceKHR) Result {
+	r1, _, _ := purego.Syscall6(d.fp.CreateWaylandSurfaceKHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceWaylandPresentationSupportKHR() bool {
+	return d.fp.GetPhysicalDeviceWaylandPresentationSupportKHR != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceWaylandPresentationSupportKHR(a0 PhysicalDevice, a1 uint32, a2 unsafe.Pointer) Bool32 {
+	r1, _, _ := purego.Syscall6(d.fp.GetPhysicalDeviceWaylandPresentationSupportKHR, uintptr(a0), uintptr(a1), uintptr(a2), 0, 0, 0)
+	return Bool32(r1)
+}
+
+func (d *InstanceDispatch) HasCreateXlibSurfaceKHR() bool { return d.fp.CreateXlibSurfaceKHR != 0 }
+func (d *InstanceDispatch) CreateXlibSurfaceKHR(a0 Instance, a1 *XlibSurfaceCreateInfoKHR, a2 *AllocationCallbacks, a3 *SurfaceKHR) Result {
+	r1, _, _ := purego.Syscall6(d.fp.CreateXlibSurfaceKHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceXlibPresentationSupportKHR() bool {
+	return d.fp.GetPhysicalDeviceXlibPresentationSupportKHR != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceXlibPresentationSupportKHR(a0 PhysicalDevice, a1 uint32, a2 unsafe.Pointer, a3 uintptr) Bool32 {
+	r1, _, _ := purego.Syscall6(d.fp.GetPhysicalDeviceXlibPresentationSupportKHR, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(a3), 0, 0)
+	return Bool32(r1)
+}
+
+func (d *InstanceDispatch) HasCreateXcbSurfaceKHR() bool { return d.fp.CreateXcbSurfaceKHR != 0 }
+func (d *InstanceDispatch) CreateXcbSurfaceKHR(a0 Instance, a1 *XcbSurfaceCreateInfoKHR, a2 *AllocationCallbacks, a3 *SurfaceKHR) Result {
+	r1, _, _ := purego.Syscall6(d.fp.CreateXcbSurfaceKHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceXcbPresentationSupportKHR() bool {
+	return d.fp.GetPhysicalDeviceXcbPresentationSupportKHR != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceXcbPresentationSupportKHR(a0 PhysicalDevice, a1 uint32, a2 unsafe.Pointer, a3 uint32) Bool32 {
+	r1, _, _ := purego.Syscall6(d.fp.GetPhysicalDeviceXcbPresentationSupportKHR, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(a3), 0, 0)
+	return Bool32(r1)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceFeatures2() bool {
+	return d.fp.GetPhysicalDeviceFeatures2 != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceFeatures2(a0 PhysicalDevice, a1 *PhysicalDeviceFeatures2) {
+	purego.Syscall6(d.fp.GetPhysicalDeviceFeatures2, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceFeatures2KHR() bool {
+	return d.fp.GetPhysicalDeviceFeatures2KHR != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceFeatures2KHR(a0 PhysicalDevice, a1 *PhysicalDeviceFeatures2) {
+	purego.Syscall6(d.fp.GetPhysicalDeviceFeatures2KHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceProperties2() bool {
+	return d.fp.GetPhysicalDeviceProperties2 != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceProperties2(a0 PhysicalDevice, a1 *PhysicalDeviceProperties2) {
+	purego.Syscall6(d.fp.GetPhysicalDeviceProperties2, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceProperties2KHR() bool {
+	return d.fp.GetPhysicalDeviceProperties2KHR != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceProperties2KHR(a0 PhysicalDevice, a1 *PhysicalDeviceProperties2) {
+	purego.Syscall6(d.fp.GetPhysicalDeviceProperties2KHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceFormatProperties2() bool {
+	return d.fp.GetPhysicalDeviceFormatProperties2 != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceFormatProperties2(a0 PhysicalDevice, a1 Format, a2 *FormatProperties2) {
+	purego.Syscall6(d.fp.GetPhysicalDeviceFormatProperties2, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceFormatProperties2KHR() bool {
+	return d.fp.GetPhysicalDeviceFormatProperties2KHR != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceFormatProperties2KHR(a0 PhysicalDevice, a1 Format, a2 *FormatProperties2) {
+	purego.Syscall6(d.fp.GetPhysicalDeviceFormatProperties2KHR, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceImageFormatProperties2() bool {
+	return d.fp.GetPhysicalDeviceImageFormatProperties2 != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceImageFormatProperties2(a0 PhysicalDevice, a1 *PhysicalDeviceImageFormatInfo2, a2 *ImageFormatProperties2) Result {
+	r1, _, _ := purego.Syscall6(d.fp.GetPhysicalDeviceImageFormatProperties2, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceImageFormatProperties2KHR() bool {
+	return d.fp.GetPhysicalDeviceImageFormatProperties2KHR != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceImageFormatProperties2KHR(a0 PhysicalDevice, a1 *PhysicalDeviceImageFormatInfo2, a2 *ImageFormatProperties2) Result {
+	r1, _, _ := purego.Syscall6(d.fp.GetPhysicalDeviceImageFormatProperties2KHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceQueueFamilyProperties2() bool {
+	return d.fp.GetPhysicalDeviceQueueFamilyProperties2 != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceQueueFamilyProperties2(a0 PhysicalDevice, a1 *uint32, a2 *QueueFamilyProperties2) {
+	purego.Syscall6(d.fp.GetPhysicalDeviceQueueFamilyProperties2, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceQueueFamilyProperties2KHR() bool {
+	return d.fp.GetPhysicalDeviceQueueFamilyProperties2KHR != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceQueueFamilyProperties2KHR(a0 PhysicalDevice, a1 *uint32, a2 *QueueFamilyProperties2) {
+	purego.Syscall6(d.fp.GetPhysicalDeviceQueueFamilyProperties2KHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceMemoryProperties2() bool {
+	return d.fp.GetPhysicalDeviceMemoryProperties2 != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceMemoryProperties2(a0 PhysicalDevice, a1 *PhysicalDeviceMemoryProperties2) {
+	purego.Syscall6(d.fp.GetPhysicalDeviceMemoryProperties2, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceMemoryProperties2KHR() bool {
+	return d.fp.GetPhysicalDeviceMemoryProperties2KHR != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceMemoryProperties2KHR(a0 PhysicalDevice, a1 *PhysicalDeviceMemoryProperties2) {
+	purego.Syscall6(d.fp.GetPhysicalDeviceMemoryProperties2KHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceSparseImageFormatProperties2KHR() bool {
+	return d.fp.GetPhysicalDeviceSparseImageFormatProperties2KHR != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceSparseImageFormatProperties2KHR(a0 PhysicalDevice, a1 *PhysicalDeviceSparseImageFormatInfo2, a2 *uint32, a3 *SparseImageFormatProperties2) {
+	purego.Syscall6(d.fp.GetPhysicalDeviceSparseImageFormatProperties2KHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceExternalBufferPropertiesKHR() bool {
+	return d.fp.GetPhysicalDeviceExternalBufferPropertiesKHR != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceExternalBufferPropertiesKHR(a0 PhysicalDevice, a1 *PhysicalDeviceExternalBufferInfo, a2 *ExternalBufferProperties) {
+	purego.Syscall6(d.fp.GetPhysicalDeviceExternalBufferPropertiesKHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDeviceExternalSemaphorePropertiesKHR() bool {
+	return d.fp.GetPhysicalDeviceExternalSemaphorePropertiesKHR != 0
+}
+func (d *InstanceDispatch) GetPhysicalDeviceExternalSemaphorePropertiesKHR(a0 PhysicalDevice, a1 *PhysicalDeviceExternalSemaphoreInfo, a2 *ExternalSemaphoreProperties) {
+	purego.Syscall6(d.fp.GetPhysicalDeviceExternalSemaphorePropertiesKHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *InstanceDispatch) HasGetPhysicalDevicePresentRectanglesKHR() bool {
+	return d.fp.GetPhysicalDevicePresentRectanglesKHR != 0
+}
+func (d *InstanceDispatch) GetPhysicalDevicePresentRectanglesKHR(a0 PhysicalDevice, a1 SurfaceKHR, a2 *uint32, a3 *Rect2D) Result {
+	r1, _, _ := purego.Syscall6(d.fp.GetPhysicalDevicePresentRectanglesKHR, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+type deviceDispatchProcs struct {
+	DestroyDevice                          uintptr
+	GetDeviceQueue                         uintptr
+	QueueSubmit                            uintptr
+	QueueWaitIdle                          uintptr
+	DeviceWaitIdle                         uintptr
+	AllocateMemory                         uintptr
+	FreeMemory                             uintptr
+	MapMemory                              uintptr
+	UnmapMemory                            uintptr
+	FlushMappedMemoryRanges                uintptr
+	InvalidateMappedMemoryRanges           uintptr
+	GetBufferMemoryRequirements            uintptr
+	BindBufferMemory                       uintptr
+	GetImageMemoryRequirements             uintptr
+	BindImageMemory                        uintptr
+	CreateFence                            uintptr
+	DestroyFence                           uintptr
+	ResetFences                            uintptr
+	WaitForFences                          uintptr
+	CreateSemaphore                        uintptr
+	DestroySemaphore                       uintptr
+	CreateBuffer                           uintptr
+	DestroyBuffer                          uintptr
+	CreateImage                            uintptr
+	DestroyImage                           uintptr
+	GetImageSubresourceLayout              uintptr
+	CreateImageView                        uintptr
+	DestroyImageView                       uintptr
+	CreateShaderModule                     uintptr
+	DestroyShaderModule                    uintptr
+	CreateGraphicsPipelines                uintptr
+	DestroyPipeline                        uintptr
+	CreatePipelineLayout                   uintptr
+	DestroyPipelineLayout                  uintptr
+	CreateSampler                          uintptr
+	DestroySampler                         uintptr
+	CreateDescriptorSetLayout              uintptr
+	DestroyDescriptorSetLayout             uintptr
+	CreateDescriptorPool                   uintptr
+	DestroyDescriptorPool                  uintptr
+	AllocateDescriptorSets                 uintptr
+	UpdateDescriptorSets                   uintptr
+	CreateCommandPool                      uintptr
+	DestroyCommandPool                     uintptr
+	AllocateCommandBuffers                 uintptr
+	FreeCommandBuffers                     uintptr
+	BeginCommandBuffer                     uintptr
+	EndCommandBuffer                       uintptr
+	ResetCommandBuffer                     uintptr
+	CmdBindPipeline                        uintptr
+	CmdBindDescriptorSets                  uintptr
+	CmdBindIndexBuffer                     uintptr
+	CmdBindVertexBuffers                   uintptr
+	CmdDraw                                uintptr
+	CmdDrawIndexed                         uintptr
+	CmdBlitImage                           uintptr
+	CmdCopyBufferToImage                   uintptr
+	CmdCopyImageToBuffer                   uintptr
+	CmdClearColorImage                     uintptr
+	CmdPipelineBarrier                     uintptr
+	CmdPushConstants                       uintptr
+	CreateSwapchainKHR                     uintptr
+	DestroySwapchainKHR                    uintptr
+	GetSwapchainImagesKHR                  uintptr
+	AcquireNextImageKHR                    uintptr
+	QueuePresentKHR                        uintptr
+	GetMemoryFdKHR                         uintptr
+	GetMemoryFdPropertiesKHR               uintptr
+	GetSemaphoreFdKHR                      uintptr
+	ImportSemaphoreFdKHR                   uintptr
+	BindBufferMemory2KHR                   uintptr
+	BindImageMemory2                       uintptr
+	BindImageMemory2KHR                    uintptr
+	GetDeviceGroupPresentCapabilitiesKHR   uintptr
+	GetDeviceGroupSurfacePresentModesKHR   uintptr
+	AcquireNextImage2KHR                   uintptr
+	GetBufferMemoryRequirements2KHR        uintptr
+	GetImageMemoryRequirements2            uintptr
+	GetImageMemoryRequirements2KHR         uintptr
+	GetImageSparseMemoryRequirements2KHR   uintptr
+	GetSemaphoreCounterValue               uintptr
+	GetSemaphoreCounterValueKHR            uintptr
+	WaitSemaphores                         uintptr
+	WaitSemaphoresKHR                      uintptr
+	SignalSemaphore                        uintptr
+	SignalSemaphoreKHR                     uintptr
+	GetImageDrmFormatModifierPropertiesEXT uintptr
+	CmdSetEvent2KHR                        uintptr
+	CmdResetEvent2KHR                      uintptr
+	CmdWaitEvents2KHR                      uintptr
+	CmdPipelineBarrier2KHR                 uintptr
+	QueueSubmit2KHR                        uintptr
+	CmdWriteTimestamp2KHR                  uintptr
+	CmdBeginRendering                      uintptr
+	CmdBeginRenderingKHR                   uintptr
+	CmdEndRendering                        uintptr
+	CmdEndRenderingKHR                     uintptr
 }
 
 type DeviceDispatch struct {
-	Device                                 Device
-	DestroyDevice                          func(Device, *AllocationCallbacks)
-	GetDeviceQueue                         func(Device, uint32, uint32, *Queue)
-	QueueSubmit                            func(Queue, uint32, *SubmitInfo, Fence) Result
-	QueueWaitIdle                          func(Queue) Result
-	DeviceWaitIdle                         func(Device) Result
-	AllocateMemory                         func(Device, *MemoryAllocateInfo, *AllocationCallbacks, *DeviceMemory) Result
-	FreeMemory                             func(Device, DeviceMemory, *AllocationCallbacks)
-	MapMemory                              func(Device, DeviceMemory, DeviceSize, DeviceSize, MemoryMapFlags, *unsafe.Pointer) Result
-	UnmapMemory                            func(Device, DeviceMemory)
-	FlushMappedMemoryRanges                func(Device, uint32, *MappedMemoryRange) Result
-	InvalidateMappedMemoryRanges           func(Device, uint32, *MappedMemoryRange) Result
-	GetBufferMemoryRequirements            func(Device, Buffer, *MemoryRequirements)
-	BindBufferMemory                       func(Device, Buffer, DeviceMemory, DeviceSize) Result
-	GetImageMemoryRequirements             func(Device, Image, *MemoryRequirements)
-	BindImageMemory                        func(Device, Image, DeviceMemory, DeviceSize) Result
-	CreateFence                            func(Device, *FenceCreateInfo, *AllocationCallbacks, *Fence) Result
-	DestroyFence                           func(Device, Fence, *AllocationCallbacks)
-	ResetFences                            func(Device, uint32, *Fence) Result
-	WaitForFences                          func(Device, uint32, *Fence, Bool32, uint64) Result
-	CreateSemaphore                        func(Device, *SemaphoreCreateInfo, *AllocationCallbacks, *Semaphore) Result
-	DestroySemaphore                       func(Device, Semaphore, *AllocationCallbacks)
-	CreateBuffer                           func(Device, *BufferCreateInfo, *AllocationCallbacks, *Buffer) Result
-	DestroyBuffer                          func(Device, Buffer, *AllocationCallbacks)
-	CreateImage                            func(Device, *ImageCreateInfo, *AllocationCallbacks, *Image) Result
-	DestroyImage                           func(Device, Image, *AllocationCallbacks)
-	GetImageSubresourceLayout              func(Device, Image, *ImageSubresource, *SubresourceLayout)
-	CreateImageView                        func(Device, *ImageViewCreateInfo, *AllocationCallbacks, *ImageView) Result
-	DestroyImageView                       func(Device, ImageView, *AllocationCallbacks)
-	CreateShaderModule                     func(Device, *ShaderModuleCreateInfo, *AllocationCallbacks, *ShaderModule) Result
-	DestroyShaderModule                    func(Device, ShaderModule, *AllocationCallbacks)
-	CreateGraphicsPipelines                func(Device, PipelineCache, uint32, *GraphicsPipelineCreateInfo, *AllocationCallbacks, *Pipeline) Result
-	DestroyPipeline                        func(Device, Pipeline, *AllocationCallbacks)
-	CreatePipelineLayout                   func(Device, *PipelineLayoutCreateInfo, *AllocationCallbacks, *PipelineLayout) Result
-	DestroyPipelineLayout                  func(Device, PipelineLayout, *AllocationCallbacks)
-	CreateSampler                          func(Device, *SamplerCreateInfo, *AllocationCallbacks, *Sampler) Result
-	DestroySampler                         func(Device, Sampler, *AllocationCallbacks)
-	CreateDescriptorSetLayout              func(Device, *DescriptorSetLayoutCreateInfo, *AllocationCallbacks, *DescriptorSetLayout) Result
-	DestroyDescriptorSetLayout             func(Device, DescriptorSetLayout, *AllocationCallbacks)
-	CreateDescriptorPool                   func(Device, *DescriptorPoolCreateInfo, *AllocationCallbacks, *DescriptorPool) Result
-	DestroyDescriptorPool                  func(Device, DescriptorPool, *AllocationCallbacks)
-	AllocateDescriptorSets                 func(Device, *DescriptorSetAllocateInfo, *DescriptorSet) Result
-	UpdateDescriptorSets                   func(Device, uint32, *WriteDescriptorSet, uint32, *CopyDescriptorSet)
-	CreateCommandPool                      func(Device, *CommandPoolCreateInfo, *AllocationCallbacks, *CommandPool) Result
-	DestroyCommandPool                     func(Device, CommandPool, *AllocationCallbacks)
-	AllocateCommandBuffers                 func(Device, *CommandBufferAllocateInfo, *CommandBuffer) Result
-	FreeCommandBuffers                     func(Device, CommandPool, uint32, *CommandBuffer)
-	BeginCommandBuffer                     func(CommandBuffer, *CommandBufferBeginInfo) Result
-	EndCommandBuffer                       func(CommandBuffer) Result
-	ResetCommandBuffer                     func(CommandBuffer, CommandBufferResetFlags) Result
-	CmdBindPipeline                        func(CommandBuffer, PipelineBindPoint, Pipeline)
-	CmdBindDescriptorSets                  func(CommandBuffer, PipelineBindPoint, PipelineLayout, uint32, uint32, *DescriptorSet, uint32, *uint32)
-	CmdBindIndexBuffer                     func(CommandBuffer, Buffer, DeviceSize, IndexType)
-	CmdBindVertexBuffers                   func(CommandBuffer, uint32, uint32, *Buffer, *DeviceSize)
-	CmdDraw                                func(CommandBuffer, uint32, uint32, uint32, uint32)
-	CmdDrawIndexed                         func(CommandBuffer, uint32, uint32, uint32, int32, uint32)
-	CmdBlitImage                           func(CommandBuffer, Image, ImageLayout, Image, ImageLayout, uint32, *ImageBlit, Filter)
-	CmdCopyBufferToImage                   func(CommandBuffer, Buffer, Image, ImageLayout, uint32, *BufferImageCopy)
-	CmdCopyImageToBuffer                   func(CommandBuffer, Image, ImageLayout, Buffer, uint32, *BufferImageCopy)
-	CmdClearColorImage                     func(CommandBuffer, Image, ImageLayout, *ClearColorValue, uint32, *ImageSubresourceRange)
-	CmdPipelineBarrier                     func(CommandBuffer, PipelineStageFlags, PipelineStageFlags, DependencyFlags, uint32, *MemoryBarrier, uint32, *BufferMemoryBarrier, uint32, *ImageMemoryBarrier)
-	CmdPushConstants                       func(CommandBuffer, PipelineLayout, ShaderStageFlags, uint32, uint32, unsafe.Pointer)
-	CreateSwapchainKHR                     func(Device, *SwapchainCreateInfoKHR, *AllocationCallbacks, *SwapchainKHR) Result
-	DestroySwapchainKHR                    func(Device, SwapchainKHR, *AllocationCallbacks)
-	GetSwapchainImagesKHR                  func(Device, SwapchainKHR, *uint32, *Image) Result
-	AcquireNextImageKHR                    func(Device, SwapchainKHR, uint64, Semaphore, Fence, *uint32) Result
-	QueuePresentKHR                        func(Queue, *PresentInfoKHR) Result
-	GetMemoryFdKHR                         func(Device, *MemoryGetFdInfoKHR, *int32) Result
-	GetMemoryFdPropertiesKHR               func(Device, ExternalMemoryHandleTypeFlagBits, int32, *MemoryFdPropertiesKHR) Result
-	GetSemaphoreFdKHR                      func(Device, *SemaphoreGetFdInfoKHR, *int32) Result
-	ImportSemaphoreFdKHR                   func(Device, *ImportSemaphoreFdInfoKHR) Result
-	BindBufferMemory2KHR                   func(Device, uint32, *BindBufferMemoryInfo) Result
-	BindImageMemory2                       func(Device, uint32, *BindImageMemoryInfo) Result
-	BindImageMemory2KHR                    func(Device, uint32, *BindImageMemoryInfo) Result
-	GetDeviceGroupPresentCapabilitiesKHR   func(Device, *DeviceGroupPresentCapabilitiesKHR) Result
-	GetDeviceGroupSurfacePresentModesKHR   func(Device, SurfaceKHR, *DeviceGroupPresentModeFlagsKHR) Result
-	AcquireNextImage2KHR                   func(Device, *AcquireNextImageInfoKHR, *uint32) Result
-	GetBufferMemoryRequirements2KHR        func(Device, *BufferMemoryRequirementsInfo2, *MemoryRequirements2)
-	GetImageMemoryRequirements2            func(Device, *ImageMemoryRequirementsInfo2, *MemoryRequirements2)
-	GetImageMemoryRequirements2KHR         func(Device, *ImageMemoryRequirementsInfo2, *MemoryRequirements2)
-	GetImageSparseMemoryRequirements2KHR   func(Device, *ImageSparseMemoryRequirementsInfo2, *uint32, *SparseImageMemoryRequirements2)
-	GetSemaphoreCounterValue               func(Device, Semaphore, *uint64) Result
-	GetSemaphoreCounterValueKHR            func(Device, Semaphore, *uint64) Result
-	WaitSemaphores                         func(Device, *SemaphoreWaitInfo, uint64) Result
-	WaitSemaphoresKHR                      func(Device, *SemaphoreWaitInfo, uint64) Result
-	SignalSemaphore                        func(Device, *SemaphoreSignalInfo) Result
-	SignalSemaphoreKHR                     func(Device, *SemaphoreSignalInfo) Result
-	GetImageDrmFormatModifierPropertiesEXT func(Device, Image, *ImageDrmFormatModifierPropertiesEXT) Result
-	CmdSetEvent2KHR                        func(CommandBuffer, Event, *DependencyInfo)
-	CmdResetEvent2KHR                      func(CommandBuffer, Event, PipelineStageFlags2)
-	CmdWaitEvents2KHR                      func(CommandBuffer, uint32, *Event, *DependencyInfo)
-	CmdPipelineBarrier2KHR                 func(CommandBuffer, *DependencyInfo)
-	QueueSubmit2KHR                        func(Queue, uint32, *SubmitInfo2, Fence) Result
-	CmdWriteTimestamp2KHR                  func(CommandBuffer, PipelineStageFlags2, QueryPool, uint32)
-	CmdBeginRendering                      func(CommandBuffer, *RenderingInfo)
-	CmdBeginRenderingKHR                   func(CommandBuffer, *RenderingInfo)
-	CmdEndRendering                        func(CommandBuffer)
-	CmdEndRenderingKHR                     func(CommandBuffer)
+	Device Device
+	fp     deviceDispatchProcs
+}
+
+func (d *DeviceDispatch) commandPointers() map[string]any {
+	return map[string]any{
+		"vkDestroyDevice":                          &d.fp.DestroyDevice,
+		"vkGetDeviceQueue":                         &d.fp.GetDeviceQueue,
+		"vkQueueSubmit":                            &d.fp.QueueSubmit,
+		"vkQueueWaitIdle":                          &d.fp.QueueWaitIdle,
+		"vkDeviceWaitIdle":                         &d.fp.DeviceWaitIdle,
+		"vkAllocateMemory":                         &d.fp.AllocateMemory,
+		"vkFreeMemory":                             &d.fp.FreeMemory,
+		"vkMapMemory":                              &d.fp.MapMemory,
+		"vkUnmapMemory":                            &d.fp.UnmapMemory,
+		"vkFlushMappedMemoryRanges":                &d.fp.FlushMappedMemoryRanges,
+		"vkInvalidateMappedMemoryRanges":           &d.fp.InvalidateMappedMemoryRanges,
+		"vkGetBufferMemoryRequirements":            &d.fp.GetBufferMemoryRequirements,
+		"vkBindBufferMemory":                       &d.fp.BindBufferMemory,
+		"vkGetImageMemoryRequirements":             &d.fp.GetImageMemoryRequirements,
+		"vkBindImageMemory":                        &d.fp.BindImageMemory,
+		"vkCreateFence":                            &d.fp.CreateFence,
+		"vkDestroyFence":                           &d.fp.DestroyFence,
+		"vkResetFences":                            &d.fp.ResetFences,
+		"vkWaitForFences":                          &d.fp.WaitForFences,
+		"vkCreateSemaphore":                        &d.fp.CreateSemaphore,
+		"vkDestroySemaphore":                       &d.fp.DestroySemaphore,
+		"vkCreateBuffer":                           &d.fp.CreateBuffer,
+		"vkDestroyBuffer":                          &d.fp.DestroyBuffer,
+		"vkCreateImage":                            &d.fp.CreateImage,
+		"vkDestroyImage":                           &d.fp.DestroyImage,
+		"vkGetImageSubresourceLayout":              &d.fp.GetImageSubresourceLayout,
+		"vkCreateImageView":                        &d.fp.CreateImageView,
+		"vkDestroyImageView":                       &d.fp.DestroyImageView,
+		"vkCreateShaderModule":                     &d.fp.CreateShaderModule,
+		"vkDestroyShaderModule":                    &d.fp.DestroyShaderModule,
+		"vkCreateGraphicsPipelines":                &d.fp.CreateGraphicsPipelines,
+		"vkDestroyPipeline":                        &d.fp.DestroyPipeline,
+		"vkCreatePipelineLayout":                   &d.fp.CreatePipelineLayout,
+		"vkDestroyPipelineLayout":                  &d.fp.DestroyPipelineLayout,
+		"vkCreateSampler":                          &d.fp.CreateSampler,
+		"vkDestroySampler":                         &d.fp.DestroySampler,
+		"vkCreateDescriptorSetLayout":              &d.fp.CreateDescriptorSetLayout,
+		"vkDestroyDescriptorSetLayout":             &d.fp.DestroyDescriptorSetLayout,
+		"vkCreateDescriptorPool":                   &d.fp.CreateDescriptorPool,
+		"vkDestroyDescriptorPool":                  &d.fp.DestroyDescriptorPool,
+		"vkAllocateDescriptorSets":                 &d.fp.AllocateDescriptorSets,
+		"vkUpdateDescriptorSets":                   &d.fp.UpdateDescriptorSets,
+		"vkCreateCommandPool":                      &d.fp.CreateCommandPool,
+		"vkDestroyCommandPool":                     &d.fp.DestroyCommandPool,
+		"vkAllocateCommandBuffers":                 &d.fp.AllocateCommandBuffers,
+		"vkFreeCommandBuffers":                     &d.fp.FreeCommandBuffers,
+		"vkBeginCommandBuffer":                     &d.fp.BeginCommandBuffer,
+		"vkEndCommandBuffer":                       &d.fp.EndCommandBuffer,
+		"vkResetCommandBuffer":                     &d.fp.ResetCommandBuffer,
+		"vkCmdBindPipeline":                        &d.fp.CmdBindPipeline,
+		"vkCmdBindDescriptorSets":                  &d.fp.CmdBindDescriptorSets,
+		"vkCmdBindIndexBuffer":                     &d.fp.CmdBindIndexBuffer,
+		"vkCmdBindVertexBuffers":                   &d.fp.CmdBindVertexBuffers,
+		"vkCmdDraw":                                &d.fp.CmdDraw,
+		"vkCmdDrawIndexed":                         &d.fp.CmdDrawIndexed,
+		"vkCmdBlitImage":                           &d.fp.CmdBlitImage,
+		"vkCmdCopyBufferToImage":                   &d.fp.CmdCopyBufferToImage,
+		"vkCmdCopyImageToBuffer":                   &d.fp.CmdCopyImageToBuffer,
+		"vkCmdClearColorImage":                     &d.fp.CmdClearColorImage,
+		"vkCmdPipelineBarrier":                     &d.fp.CmdPipelineBarrier,
+		"vkCmdPushConstants":                       &d.fp.CmdPushConstants,
+		"vkCreateSwapchainKHR":                     &d.fp.CreateSwapchainKHR,
+		"vkDestroySwapchainKHR":                    &d.fp.DestroySwapchainKHR,
+		"vkGetSwapchainImagesKHR":                  &d.fp.GetSwapchainImagesKHR,
+		"vkAcquireNextImageKHR":                    &d.fp.AcquireNextImageKHR,
+		"vkQueuePresentKHR":                        &d.fp.QueuePresentKHR,
+		"vkGetMemoryFdKHR":                         &d.fp.GetMemoryFdKHR,
+		"vkGetMemoryFdPropertiesKHR":               &d.fp.GetMemoryFdPropertiesKHR,
+		"vkGetSemaphoreFdKHR":                      &d.fp.GetSemaphoreFdKHR,
+		"vkImportSemaphoreFdKHR":                   &d.fp.ImportSemaphoreFdKHR,
+		"vkBindBufferMemory2KHR":                   &d.fp.BindBufferMemory2KHR,
+		"vkBindImageMemory2":                       &d.fp.BindImageMemory2,
+		"vkBindImageMemory2KHR":                    &d.fp.BindImageMemory2KHR,
+		"vkGetDeviceGroupPresentCapabilitiesKHR":   &d.fp.GetDeviceGroupPresentCapabilitiesKHR,
+		"vkGetDeviceGroupSurfacePresentModesKHR":   &d.fp.GetDeviceGroupSurfacePresentModesKHR,
+		"vkAcquireNextImage2KHR":                   &d.fp.AcquireNextImage2KHR,
+		"vkGetBufferMemoryRequirements2KHR":        &d.fp.GetBufferMemoryRequirements2KHR,
+		"vkGetImageMemoryRequirements2":            &d.fp.GetImageMemoryRequirements2,
+		"vkGetImageMemoryRequirements2KHR":         &d.fp.GetImageMemoryRequirements2KHR,
+		"vkGetImageSparseMemoryRequirements2KHR":   &d.fp.GetImageSparseMemoryRequirements2KHR,
+		"vkGetSemaphoreCounterValue":               &d.fp.GetSemaphoreCounterValue,
+		"vkGetSemaphoreCounterValueKHR":            &d.fp.GetSemaphoreCounterValueKHR,
+		"vkWaitSemaphores":                         &d.fp.WaitSemaphores,
+		"vkWaitSemaphoresKHR":                      &d.fp.WaitSemaphoresKHR,
+		"vkSignalSemaphore":                        &d.fp.SignalSemaphore,
+		"vkSignalSemaphoreKHR":                     &d.fp.SignalSemaphoreKHR,
+		"vkGetImageDrmFormatModifierPropertiesEXT": &d.fp.GetImageDrmFormatModifierPropertiesEXT,
+		"vkCmdSetEvent2KHR":                        &d.fp.CmdSetEvent2KHR,
+		"vkCmdResetEvent2KHR":                      &d.fp.CmdResetEvent2KHR,
+		"vkCmdWaitEvents2KHR":                      &d.fp.CmdWaitEvents2KHR,
+		"vkCmdPipelineBarrier2KHR":                 &d.fp.CmdPipelineBarrier2KHR,
+		"vkQueueSubmit2KHR":                        &d.fp.QueueSubmit2KHR,
+		"vkCmdWriteTimestamp2KHR":                  &d.fp.CmdWriteTimestamp2KHR,
+		"vkCmdBeginRendering":                      &d.fp.CmdBeginRendering,
+		"vkCmdBeginRenderingKHR":                   &d.fp.CmdBeginRenderingKHR,
+		"vkCmdEndRendering":                        &d.fp.CmdEndRendering,
+		"vkCmdEndRenderingKHR":                     &d.fp.CmdEndRenderingKHR,
+	}
+}
+
+func (d *DeviceDispatch) HasDestroyDevice() bool { return d.fp.DestroyDevice != 0 }
+func (d *DeviceDispatch) DestroyDevice(a0 Device, a1 *AllocationCallbacks) {
+	purego.Syscall6(d.fp.DestroyDevice, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasGetDeviceQueue() bool { return d.fp.GetDeviceQueue != 0 }
+func (d *DeviceDispatch) GetDeviceQueue(a0 Device, a1 uint32, a2 uint32, a3 *Queue) {
+	purego.Syscall6(d.fp.GetDeviceQueue, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(unsafe.Pointer(a3)), 0, 0)
+}
+
+func (d *DeviceDispatch) HasQueueSubmit() bool { return d.fp.QueueSubmit != 0 }
+func (d *DeviceDispatch) QueueSubmit(a0 Queue, a1 uint32, a2 *SubmitInfo, a3 Fence) Result {
+	r1, _, _ := purego.Syscall6(d.fp.QueueSubmit, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), uintptr(a3), 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasQueueWaitIdle() bool { return d.fp.QueueWaitIdle != 0 }
+func (d *DeviceDispatch) QueueWaitIdle(a0 Queue) Result {
+	r1, _, _ := purego.Syscall6(d.fp.QueueWaitIdle, uintptr(a0), 0, 0, 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasDeviceWaitIdle() bool { return d.fp.DeviceWaitIdle != 0 }
+func (d *DeviceDispatch) DeviceWaitIdle(a0 Device) Result {
+	r1, _, _ := purego.Syscall6(d.fp.DeviceWaitIdle, uintptr(a0), 0, 0, 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasAllocateMemory() bool { return d.fp.AllocateMemory != 0 }
+func (d *DeviceDispatch) AllocateMemory(a0 Device, a1 *MemoryAllocateInfo, a2 *AllocationCallbacks, a3 *DeviceMemory) Result {
+	r1, _, _ := purego.Syscall6(d.fp.AllocateMemory, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasFreeMemory() bool { return d.fp.FreeMemory != 0 }
+func (d *DeviceDispatch) FreeMemory(a0 Device, a1 DeviceMemory, a2 *AllocationCallbacks) {
+	purego.Syscall6(d.fp.FreeMemory, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasMapMemory() bool { return d.fp.MapMemory != 0 }
+func (d *DeviceDispatch) MapMemory(a0 Device, a1 DeviceMemory, a2 DeviceSize, a3 DeviceSize, a4 MemoryMapFlags, a5 *unsafe.Pointer) Result {
+	r1, _, _ := purego.Syscall6(d.fp.MapMemory, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(a3), uintptr(a4), uintptr(unsafe.Pointer(a5)))
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasUnmapMemory() bool { return d.fp.UnmapMemory != 0 }
+func (d *DeviceDispatch) UnmapMemory(a0 Device, a1 DeviceMemory) {
+	purego.Syscall6(d.fp.UnmapMemory, uintptr(a0), uintptr(a1), 0, 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasFlushMappedMemoryRanges() bool { return d.fp.FlushMappedMemoryRanges != 0 }
+func (d *DeviceDispatch) FlushMappedMemoryRanges(a0 Device, a1 uint32, a2 *MappedMemoryRange) Result {
+	r1, _, _ := purego.Syscall6(d.fp.FlushMappedMemoryRanges, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasInvalidateMappedMemoryRanges() bool {
+	return d.fp.InvalidateMappedMemoryRanges != 0
+}
+func (d *DeviceDispatch) InvalidateMappedMemoryRanges(a0 Device, a1 uint32, a2 *MappedMemoryRange) Result {
+	r1, _, _ := purego.Syscall6(d.fp.InvalidateMappedMemoryRanges, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasGetBufferMemoryRequirements() bool {
+	return d.fp.GetBufferMemoryRequirements != 0
+}
+func (d *DeviceDispatch) GetBufferMemoryRequirements(a0 Device, a1 Buffer, a2 *MemoryRequirements) {
+	purego.Syscall6(d.fp.GetBufferMemoryRequirements, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasBindBufferMemory() bool { return d.fp.BindBufferMemory != 0 }
+func (d *DeviceDispatch) BindBufferMemory(a0 Device, a1 Buffer, a2 DeviceMemory, a3 DeviceSize) Result {
+	r1, _, _ := purego.Syscall6(d.fp.BindBufferMemory, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(a3), 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasGetImageMemoryRequirements() bool {
+	return d.fp.GetImageMemoryRequirements != 0
+}
+func (d *DeviceDispatch) GetImageMemoryRequirements(a0 Device, a1 Image, a2 *MemoryRequirements) {
+	purego.Syscall6(d.fp.GetImageMemoryRequirements, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasBindImageMemory() bool { return d.fp.BindImageMemory != 0 }
+func (d *DeviceDispatch) BindImageMemory(a0 Device, a1 Image, a2 DeviceMemory, a3 DeviceSize) Result {
+	r1, _, _ := purego.Syscall6(d.fp.BindImageMemory, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(a3), 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasCreateFence() bool { return d.fp.CreateFence != 0 }
+func (d *DeviceDispatch) CreateFence(a0 Device, a1 *FenceCreateInfo, a2 *AllocationCallbacks, a3 *Fence) Result {
+	r1, _, _ := purego.Syscall6(d.fp.CreateFence, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasDestroyFence() bool { return d.fp.DestroyFence != 0 }
+func (d *DeviceDispatch) DestroyFence(a0 Device, a1 Fence, a2 *AllocationCallbacks) {
+	purego.Syscall6(d.fp.DestroyFence, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasResetFences() bool { return d.fp.ResetFences != 0 }
+func (d *DeviceDispatch) ResetFences(a0 Device, a1 uint32, a2 *Fence) Result {
+	r1, _, _ := purego.Syscall6(d.fp.ResetFences, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasWaitForFences() bool { return d.fp.WaitForFences != 0 }
+func (d *DeviceDispatch) WaitForFences(a0 Device, a1 uint32, a2 *Fence, a3 Bool32, a4 uint64) Result {
+	r1, _, _ := purego.Syscall6(d.fp.WaitForFences, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), uintptr(a3), uintptr(a4), 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasCreateSemaphore() bool { return d.fp.CreateSemaphore != 0 }
+func (d *DeviceDispatch) CreateSemaphore(a0 Device, a1 *SemaphoreCreateInfo, a2 *AllocationCallbacks, a3 *Semaphore) Result {
+	r1, _, _ := purego.Syscall6(d.fp.CreateSemaphore, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasDestroySemaphore() bool { return d.fp.DestroySemaphore != 0 }
+func (d *DeviceDispatch) DestroySemaphore(a0 Device, a1 Semaphore, a2 *AllocationCallbacks) {
+	purego.Syscall6(d.fp.DestroySemaphore, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasCreateBuffer() bool { return d.fp.CreateBuffer != 0 }
+func (d *DeviceDispatch) CreateBuffer(a0 Device, a1 *BufferCreateInfo, a2 *AllocationCallbacks, a3 *Buffer) Result {
+	r1, _, _ := purego.Syscall6(d.fp.CreateBuffer, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasDestroyBuffer() bool { return d.fp.DestroyBuffer != 0 }
+func (d *DeviceDispatch) DestroyBuffer(a0 Device, a1 Buffer, a2 *AllocationCallbacks) {
+	purego.Syscall6(d.fp.DestroyBuffer, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasCreateImage() bool { return d.fp.CreateImage != 0 }
+func (d *DeviceDispatch) CreateImage(a0 Device, a1 *ImageCreateInfo, a2 *AllocationCallbacks, a3 *Image) Result {
+	r1, _, _ := purego.Syscall6(d.fp.CreateImage, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasDestroyImage() bool { return d.fp.DestroyImage != 0 }
+func (d *DeviceDispatch) DestroyImage(a0 Device, a1 Image, a2 *AllocationCallbacks) {
+	purego.Syscall6(d.fp.DestroyImage, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasGetImageSubresourceLayout() bool {
+	return d.fp.GetImageSubresourceLayout != 0
+}
+func (d *DeviceDispatch) GetImageSubresourceLayout(a0 Device, a1 Image, a2 *ImageSubresource, a3 *SubresourceLayout) {
+	purego.Syscall6(d.fp.GetImageSubresourceLayout, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+}
+
+func (d *DeviceDispatch) HasCreateImageView() bool { return d.fp.CreateImageView != 0 }
+func (d *DeviceDispatch) CreateImageView(a0 Device, a1 *ImageViewCreateInfo, a2 *AllocationCallbacks, a3 *ImageView) Result {
+	r1, _, _ := purego.Syscall6(d.fp.CreateImageView, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasDestroyImageView() bool { return d.fp.DestroyImageView != 0 }
+func (d *DeviceDispatch) DestroyImageView(a0 Device, a1 ImageView, a2 *AllocationCallbacks) {
+	purego.Syscall6(d.fp.DestroyImageView, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasCreateShaderModule() bool { return d.fp.CreateShaderModule != 0 }
+func (d *DeviceDispatch) CreateShaderModule(a0 Device, a1 *ShaderModuleCreateInfo, a2 *AllocationCallbacks, a3 *ShaderModule) Result {
+	r1, _, _ := purego.Syscall6(d.fp.CreateShaderModule, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasDestroyShaderModule() bool { return d.fp.DestroyShaderModule != 0 }
+func (d *DeviceDispatch) DestroyShaderModule(a0 Device, a1 ShaderModule, a2 *AllocationCallbacks) {
+	purego.Syscall6(d.fp.DestroyShaderModule, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasCreateGraphicsPipelines() bool { return d.fp.CreateGraphicsPipelines != 0 }
+func (d *DeviceDispatch) CreateGraphicsPipelines(a0 Device, a1 PipelineCache, a2 uint32, a3 *GraphicsPipelineCreateInfo, a4 *AllocationCallbacks, a5 *Pipeline) Result {
+	r1, _, _ := purego.Syscall6(d.fp.CreateGraphicsPipelines, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(unsafe.Pointer(a3)), uintptr(unsafe.Pointer(a4)), uintptr(unsafe.Pointer(a5)))
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasDestroyPipeline() bool { return d.fp.DestroyPipeline != 0 }
+func (d *DeviceDispatch) DestroyPipeline(a0 Device, a1 Pipeline, a2 *AllocationCallbacks) {
+	purego.Syscall6(d.fp.DestroyPipeline, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasCreatePipelineLayout() bool { return d.fp.CreatePipelineLayout != 0 }
+func (d *DeviceDispatch) CreatePipelineLayout(a0 Device, a1 *PipelineLayoutCreateInfo, a2 *AllocationCallbacks, a3 *PipelineLayout) Result {
+	r1, _, _ := purego.Syscall6(d.fp.CreatePipelineLayout, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasDestroyPipelineLayout() bool { return d.fp.DestroyPipelineLayout != 0 }
+func (d *DeviceDispatch) DestroyPipelineLayout(a0 Device, a1 PipelineLayout, a2 *AllocationCallbacks) {
+	purego.Syscall6(d.fp.DestroyPipelineLayout, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasCreateSampler() bool { return d.fp.CreateSampler != 0 }
+func (d *DeviceDispatch) CreateSampler(a0 Device, a1 *SamplerCreateInfo, a2 *AllocationCallbacks, a3 *Sampler) Result {
+	r1, _, _ := purego.Syscall6(d.fp.CreateSampler, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasDestroySampler() bool { return d.fp.DestroySampler != 0 }
+func (d *DeviceDispatch) DestroySampler(a0 Device, a1 Sampler, a2 *AllocationCallbacks) {
+	purego.Syscall6(d.fp.DestroySampler, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasCreateDescriptorSetLayout() bool {
+	return d.fp.CreateDescriptorSetLayout != 0
+}
+func (d *DeviceDispatch) CreateDescriptorSetLayout(a0 Device, a1 *DescriptorSetLayoutCreateInfo, a2 *AllocationCallbacks, a3 *DescriptorSetLayout) Result {
+	r1, _, _ := purego.Syscall6(d.fp.CreateDescriptorSetLayout, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasDestroyDescriptorSetLayout() bool {
+	return d.fp.DestroyDescriptorSetLayout != 0
+}
+func (d *DeviceDispatch) DestroyDescriptorSetLayout(a0 Device, a1 DescriptorSetLayout, a2 *AllocationCallbacks) {
+	purego.Syscall6(d.fp.DestroyDescriptorSetLayout, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasCreateDescriptorPool() bool { return d.fp.CreateDescriptorPool != 0 }
+func (d *DeviceDispatch) CreateDescriptorPool(a0 Device, a1 *DescriptorPoolCreateInfo, a2 *AllocationCallbacks, a3 *DescriptorPool) Result {
+	r1, _, _ := purego.Syscall6(d.fp.CreateDescriptorPool, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasDestroyDescriptorPool() bool { return d.fp.DestroyDescriptorPool != 0 }
+func (d *DeviceDispatch) DestroyDescriptorPool(a0 Device, a1 DescriptorPool, a2 *AllocationCallbacks) {
+	purego.Syscall6(d.fp.DestroyDescriptorPool, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasAllocateDescriptorSets() bool { return d.fp.AllocateDescriptorSets != 0 }
+func (d *DeviceDispatch) AllocateDescriptorSets(a0 Device, a1 *DescriptorSetAllocateInfo, a2 *DescriptorSet) Result {
+	r1, _, _ := purego.Syscall6(d.fp.AllocateDescriptorSets, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasUpdateDescriptorSets() bool { return d.fp.UpdateDescriptorSets != 0 }
+func (d *DeviceDispatch) UpdateDescriptorSets(a0 Device, a1 uint32, a2 *WriteDescriptorSet, a3 uint32, a4 *CopyDescriptorSet) {
+	purego.Syscall6(d.fp.UpdateDescriptorSets, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), uintptr(a3), uintptr(unsafe.Pointer(a4)), 0)
+}
+
+func (d *DeviceDispatch) HasCreateCommandPool() bool { return d.fp.CreateCommandPool != 0 }
+func (d *DeviceDispatch) CreateCommandPool(a0 Device, a1 *CommandPoolCreateInfo, a2 *AllocationCallbacks, a3 *CommandPool) Result {
+	r1, _, _ := purego.Syscall6(d.fp.CreateCommandPool, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasDestroyCommandPool() bool { return d.fp.DestroyCommandPool != 0 }
+func (d *DeviceDispatch) DestroyCommandPool(a0 Device, a1 CommandPool, a2 *AllocationCallbacks) {
+	purego.Syscall6(d.fp.DestroyCommandPool, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasAllocateCommandBuffers() bool { return d.fp.AllocateCommandBuffers != 0 }
+func (d *DeviceDispatch) AllocateCommandBuffers(a0 Device, a1 *CommandBufferAllocateInfo, a2 *CommandBuffer) Result {
+	r1, _, _ := purego.Syscall6(d.fp.AllocateCommandBuffers, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasFreeCommandBuffers() bool { return d.fp.FreeCommandBuffers != 0 }
+func (d *DeviceDispatch) FreeCommandBuffers(a0 Device, a1 CommandPool, a2 uint32, a3 *CommandBuffer) {
+	purego.Syscall6(d.fp.FreeCommandBuffers, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(unsafe.Pointer(a3)), 0, 0)
+}
+
+func (d *DeviceDispatch) HasBeginCommandBuffer() bool { return d.fp.BeginCommandBuffer != 0 }
+func (d *DeviceDispatch) BeginCommandBuffer(a0 CommandBuffer, a1 *CommandBufferBeginInfo) Result {
+	r1, _, _ := purego.Syscall6(d.fp.BeginCommandBuffer, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasEndCommandBuffer() bool { return d.fp.EndCommandBuffer != 0 }
+func (d *DeviceDispatch) EndCommandBuffer(a0 CommandBuffer) Result {
+	r1, _, _ := purego.Syscall6(d.fp.EndCommandBuffer, uintptr(a0), 0, 0, 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasResetCommandBuffer() bool { return d.fp.ResetCommandBuffer != 0 }
+func (d *DeviceDispatch) ResetCommandBuffer(a0 CommandBuffer, a1 CommandBufferResetFlags) Result {
+	r1, _, _ := purego.Syscall6(d.fp.ResetCommandBuffer, uintptr(a0), uintptr(a1), 0, 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasCmdBindPipeline() bool { return d.fp.CmdBindPipeline != 0 }
+func (d *DeviceDispatch) CmdBindPipeline(a0 CommandBuffer, a1 PipelineBindPoint, a2 Pipeline) {
+	purego.Syscall6(d.fp.CmdBindPipeline, uintptr(a0), uintptr(a1), uintptr(a2), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasCmdBindDescriptorSets() bool { return d.fp.CmdBindDescriptorSets != 0 }
+func (d *DeviceDispatch) CmdBindDescriptorSets(a0 CommandBuffer, a1 PipelineBindPoint, a2 PipelineLayout, a3 uint32, a4 uint32, a5 *DescriptorSet, a6 uint32, a7 *uint32) {
+	purego.Syscall15(d.fp.CmdBindDescriptorSets, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(a3), uintptr(a4), uintptr(unsafe.Pointer(a5)), uintptr(a6), uintptr(unsafe.Pointer(a7)), 0, 0, 0, 0, 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasCmdBindIndexBuffer() bool { return d.fp.CmdBindIndexBuffer != 0 }
+func (d *DeviceDispatch) CmdBindIndexBuffer(a0 CommandBuffer, a1 Buffer, a2 DeviceSize, a3 IndexType) {
+	purego.Syscall6(d.fp.CmdBindIndexBuffer, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(a3), 0, 0)
+}
+
+func (d *DeviceDispatch) HasCmdBindVertexBuffers() bool { return d.fp.CmdBindVertexBuffers != 0 }
+func (d *DeviceDispatch) CmdBindVertexBuffers(a0 CommandBuffer, a1 uint32, a2 uint32, a3 *Buffer, a4 *DeviceSize) {
+	purego.Syscall6(d.fp.CmdBindVertexBuffers, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(unsafe.Pointer(a3)), uintptr(unsafe.Pointer(a4)), 0)
+}
+
+func (d *DeviceDispatch) HasCmdDraw() bool { return d.fp.CmdDraw != 0 }
+func (d *DeviceDispatch) CmdDraw(a0 CommandBuffer, a1 uint32, a2 uint32, a3 uint32, a4 uint32) {
+	purego.Syscall6(d.fp.CmdDraw, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(a3), uintptr(a4), 0)
+}
+
+func (d *DeviceDispatch) HasCmdDrawIndexed() bool { return d.fp.CmdDrawIndexed != 0 }
+func (d *DeviceDispatch) CmdDrawIndexed(a0 CommandBuffer, a1 uint32, a2 uint32, a3 uint32, a4 int32, a5 uint32) {
+	purego.Syscall6(d.fp.CmdDrawIndexed, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(a3), uintptr(a4), uintptr(a5))
+}
+
+func (d *DeviceDispatch) HasCmdBlitImage() bool { return d.fp.CmdBlitImage != 0 }
+func (d *DeviceDispatch) CmdBlitImage(a0 CommandBuffer, a1 Image, a2 ImageLayout, a3 Image, a4 ImageLayout, a5 uint32, a6 *ImageBlit, a7 Filter) {
+	purego.Syscall15(d.fp.CmdBlitImage, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(a3), uintptr(a4), uintptr(a5), uintptr(unsafe.Pointer(a6)), uintptr(a7), 0, 0, 0, 0, 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasCmdCopyBufferToImage() bool { return d.fp.CmdCopyBufferToImage != 0 }
+func (d *DeviceDispatch) CmdCopyBufferToImage(a0 CommandBuffer, a1 Buffer, a2 Image, a3 ImageLayout, a4 uint32, a5 *BufferImageCopy) {
+	purego.Syscall6(d.fp.CmdCopyBufferToImage, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(a3), uintptr(a4), uintptr(unsafe.Pointer(a5)))
+}
+
+func (d *DeviceDispatch) HasCmdCopyImageToBuffer() bool { return d.fp.CmdCopyImageToBuffer != 0 }
+func (d *DeviceDispatch) CmdCopyImageToBuffer(a0 CommandBuffer, a1 Image, a2 ImageLayout, a3 Buffer, a4 uint32, a5 *BufferImageCopy) {
+	purego.Syscall6(d.fp.CmdCopyImageToBuffer, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(a3), uintptr(a4), uintptr(unsafe.Pointer(a5)))
+}
+
+func (d *DeviceDispatch) HasCmdClearColorImage() bool { return d.fp.CmdClearColorImage != 0 }
+func (d *DeviceDispatch) CmdClearColorImage(a0 CommandBuffer, a1 Image, a2 ImageLayout, a3 *ClearColorValue, a4 uint32, a5 *ImageSubresourceRange) {
+	purego.Syscall6(d.fp.CmdClearColorImage, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(unsafe.Pointer(a3)), uintptr(a4), uintptr(unsafe.Pointer(a5)))
+}
+
+func (d *DeviceDispatch) HasCmdPipelineBarrier() bool { return d.fp.CmdPipelineBarrier != 0 }
+func (d *DeviceDispatch) CmdPipelineBarrier(a0 CommandBuffer, a1 PipelineStageFlags, a2 PipelineStageFlags, a3 DependencyFlags, a4 uint32, a5 *MemoryBarrier, a6 uint32, a7 *BufferMemoryBarrier, a8 uint32, a9 *ImageMemoryBarrier) {
+	purego.Syscall15(d.fp.CmdPipelineBarrier, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(a3), uintptr(a4), uintptr(unsafe.Pointer(a5)), uintptr(a6), uintptr(unsafe.Pointer(a7)), uintptr(a8), uintptr(unsafe.Pointer(a9)), 0, 0, 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasCmdPushConstants() bool { return d.fp.CmdPushConstants != 0 }
+func (d *DeviceDispatch) CmdPushConstants(a0 CommandBuffer, a1 PipelineLayout, a2 ShaderStageFlags, a3 uint32, a4 uint32, a5 unsafe.Pointer) {
+	purego.Syscall6(d.fp.CmdPushConstants, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(a3), uintptr(a4), uintptr(a5))
+}
+
+func (d *DeviceDispatch) HasCreateSwapchainKHR() bool { return d.fp.CreateSwapchainKHR != 0 }
+func (d *DeviceDispatch) CreateSwapchainKHR(a0 Device, a1 *SwapchainCreateInfoKHR, a2 *AllocationCallbacks, a3 *SwapchainKHR) Result {
+	r1, _, _ := purego.Syscall6(d.fp.CreateSwapchainKHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasDestroySwapchainKHR() bool { return d.fp.DestroySwapchainKHR != 0 }
+func (d *DeviceDispatch) DestroySwapchainKHR(a0 Device, a1 SwapchainKHR, a2 *AllocationCallbacks) {
+	purego.Syscall6(d.fp.DestroySwapchainKHR, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasGetSwapchainImagesKHR() bool { return d.fp.GetSwapchainImagesKHR != 0 }
+func (d *DeviceDispatch) GetSwapchainImagesKHR(a0 Device, a1 SwapchainKHR, a2 *uint32, a3 *Image) Result {
+	r1, _, _ := purego.Syscall6(d.fp.GetSwapchainImagesKHR, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasAcquireNextImageKHR() bool { return d.fp.AcquireNextImageKHR != 0 }
+func (d *DeviceDispatch) AcquireNextImageKHR(a0 Device, a1 SwapchainKHR, a2 uint64, a3 Semaphore, a4 Fence, a5 *uint32) Result {
+	r1, _, _ := purego.Syscall6(d.fp.AcquireNextImageKHR, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(a3), uintptr(a4), uintptr(unsafe.Pointer(a5)))
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasQueuePresentKHR() bool { return d.fp.QueuePresentKHR != 0 }
+func (d *DeviceDispatch) QueuePresentKHR(a0 Queue, a1 *PresentInfoKHR) Result {
+	r1, _, _ := purego.Syscall6(d.fp.QueuePresentKHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasGetMemoryFdKHR() bool { return d.fp.GetMemoryFdKHR != 0 }
+func (d *DeviceDispatch) GetMemoryFdKHR(a0 Device, a1 *MemoryGetFdInfoKHR, a2 *int32) Result {
+	r1, _, _ := purego.Syscall6(d.fp.GetMemoryFdKHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasGetMemoryFdPropertiesKHR() bool {
+	return d.fp.GetMemoryFdPropertiesKHR != 0
+}
+func (d *DeviceDispatch) GetMemoryFdPropertiesKHR(a0 Device, a1 ExternalMemoryHandleTypeFlagBits, a2 int32, a3 *MemoryFdPropertiesKHR) Result {
+	r1, _, _ := purego.Syscall6(d.fp.GetMemoryFdPropertiesKHR, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasGetSemaphoreFdKHR() bool { return d.fp.GetSemaphoreFdKHR != 0 }
+func (d *DeviceDispatch) GetSemaphoreFdKHR(a0 Device, a1 *SemaphoreGetFdInfoKHR, a2 *int32) Result {
+	r1, _, _ := purego.Syscall6(d.fp.GetSemaphoreFdKHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasImportSemaphoreFdKHR() bool { return d.fp.ImportSemaphoreFdKHR != 0 }
+func (d *DeviceDispatch) ImportSemaphoreFdKHR(a0 Device, a1 *ImportSemaphoreFdInfoKHR) Result {
+	r1, _, _ := purego.Syscall6(d.fp.ImportSemaphoreFdKHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasBindBufferMemory2KHR() bool { return d.fp.BindBufferMemory2KHR != 0 }
+func (d *DeviceDispatch) BindBufferMemory2KHR(a0 Device, a1 uint32, a2 *BindBufferMemoryInfo) Result {
+	r1, _, _ := purego.Syscall6(d.fp.BindBufferMemory2KHR, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasBindImageMemory2() bool { return d.fp.BindImageMemory2 != 0 }
+func (d *DeviceDispatch) BindImageMemory2(a0 Device, a1 uint32, a2 *BindImageMemoryInfo) Result {
+	r1, _, _ := purego.Syscall6(d.fp.BindImageMemory2, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasBindImageMemory2KHR() bool { return d.fp.BindImageMemory2KHR != 0 }
+func (d *DeviceDispatch) BindImageMemory2KHR(a0 Device, a1 uint32, a2 *BindImageMemoryInfo) Result {
+	r1, _, _ := purego.Syscall6(d.fp.BindImageMemory2KHR, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasGetDeviceGroupPresentCapabilitiesKHR() bool {
+	return d.fp.GetDeviceGroupPresentCapabilitiesKHR != 0
+}
+func (d *DeviceDispatch) GetDeviceGroupPresentCapabilitiesKHR(a0 Device, a1 *DeviceGroupPresentCapabilitiesKHR) Result {
+	r1, _, _ := purego.Syscall6(d.fp.GetDeviceGroupPresentCapabilitiesKHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasGetDeviceGroupSurfacePresentModesKHR() bool {
+	return d.fp.GetDeviceGroupSurfacePresentModesKHR != 0
+}
+func (d *DeviceDispatch) GetDeviceGroupSurfacePresentModesKHR(a0 Device, a1 SurfaceKHR, a2 *DeviceGroupPresentModeFlagsKHR) Result {
+	r1, _, _ := purego.Syscall6(d.fp.GetDeviceGroupSurfacePresentModesKHR, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasAcquireNextImage2KHR() bool { return d.fp.AcquireNextImage2KHR != 0 }
+func (d *DeviceDispatch) AcquireNextImage2KHR(a0 Device, a1 *AcquireNextImageInfoKHR, a2 *uint32) Result {
+	r1, _, _ := purego.Syscall6(d.fp.AcquireNextImage2KHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasGetBufferMemoryRequirements2KHR() bool {
+	return d.fp.GetBufferMemoryRequirements2KHR != 0
+}
+func (d *DeviceDispatch) GetBufferMemoryRequirements2KHR(a0 Device, a1 *BufferMemoryRequirementsInfo2, a2 *MemoryRequirements2) {
+	purego.Syscall6(d.fp.GetBufferMemoryRequirements2KHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasGetImageMemoryRequirements2() bool {
+	return d.fp.GetImageMemoryRequirements2 != 0
+}
+func (d *DeviceDispatch) GetImageMemoryRequirements2(a0 Device, a1 *ImageMemoryRequirementsInfo2, a2 *MemoryRequirements2) {
+	purego.Syscall6(d.fp.GetImageMemoryRequirements2, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasGetImageMemoryRequirements2KHR() bool {
+	return d.fp.GetImageMemoryRequirements2KHR != 0
+}
+func (d *DeviceDispatch) GetImageMemoryRequirements2KHR(a0 Device, a1 *ImageMemoryRequirementsInfo2, a2 *MemoryRequirements2) {
+	purego.Syscall6(d.fp.GetImageMemoryRequirements2KHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasGetImageSparseMemoryRequirements2KHR() bool {
+	return d.fp.GetImageSparseMemoryRequirements2KHR != 0
+}
+func (d *DeviceDispatch) GetImageSparseMemoryRequirements2KHR(a0 Device, a1 *ImageSparseMemoryRequirementsInfo2, a2 *uint32, a3 *SparseImageMemoryRequirements2) {
+	purego.Syscall6(d.fp.GetImageSparseMemoryRequirements2KHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+}
+
+func (d *DeviceDispatch) HasGetSemaphoreCounterValue() bool {
+	return d.fp.GetSemaphoreCounterValue != 0
+}
+func (d *DeviceDispatch) GetSemaphoreCounterValue(a0 Device, a1 Semaphore, a2 *uint64) Result {
+	r1, _, _ := purego.Syscall6(d.fp.GetSemaphoreCounterValue, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasGetSemaphoreCounterValueKHR() bool {
+	return d.fp.GetSemaphoreCounterValueKHR != 0
+}
+func (d *DeviceDispatch) GetSemaphoreCounterValueKHR(a0 Device, a1 Semaphore, a2 *uint64) Result {
+	r1, _, _ := purego.Syscall6(d.fp.GetSemaphoreCounterValueKHR, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasWaitSemaphores() bool { return d.fp.WaitSemaphores != 0 }
+func (d *DeviceDispatch) WaitSemaphores(a0 Device, a1 *SemaphoreWaitInfo, a2 uint64) Result {
+	r1, _, _ := purego.Syscall6(d.fp.WaitSemaphores, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(a2), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasWaitSemaphoresKHR() bool { return d.fp.WaitSemaphoresKHR != 0 }
+func (d *DeviceDispatch) WaitSemaphoresKHR(a0 Device, a1 *SemaphoreWaitInfo, a2 uint64) Result {
+	r1, _, _ := purego.Syscall6(d.fp.WaitSemaphoresKHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(a2), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasSignalSemaphore() bool { return d.fp.SignalSemaphore != 0 }
+func (d *DeviceDispatch) SignalSemaphore(a0 Device, a1 *SemaphoreSignalInfo) Result {
+	r1, _, _ := purego.Syscall6(d.fp.SignalSemaphore, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasSignalSemaphoreKHR() bool { return d.fp.SignalSemaphoreKHR != 0 }
+func (d *DeviceDispatch) SignalSemaphoreKHR(a0 Device, a1 *SemaphoreSignalInfo) Result {
+	r1, _, _ := purego.Syscall6(d.fp.SignalSemaphoreKHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasGetImageDrmFormatModifierPropertiesEXT() bool {
+	return d.fp.GetImageDrmFormatModifierPropertiesEXT != 0
+}
+func (d *DeviceDispatch) GetImageDrmFormatModifierPropertiesEXT(a0 Device, a1 Image, a2 *ImageDrmFormatModifierPropertiesEXT) Result {
+	r1, _, _ := purego.Syscall6(d.fp.GetImageDrmFormatModifierPropertiesEXT, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasCmdSetEvent2KHR() bool { return d.fp.CmdSetEvent2KHR != 0 }
+func (d *DeviceDispatch) CmdSetEvent2KHR(a0 CommandBuffer, a1 Event, a2 *DependencyInfo) {
+	purego.Syscall6(d.fp.CmdSetEvent2KHR, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasCmdResetEvent2KHR() bool { return d.fp.CmdResetEvent2KHR != 0 }
+func (d *DeviceDispatch) CmdResetEvent2KHR(a0 CommandBuffer, a1 Event, a2 PipelineStageFlags2) {
+	purego.Syscall6(d.fp.CmdResetEvent2KHR, uintptr(a0), uintptr(a1), uintptr(a2), 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasCmdWaitEvents2KHR() bool { return d.fp.CmdWaitEvents2KHR != 0 }
+func (d *DeviceDispatch) CmdWaitEvents2KHR(a0 CommandBuffer, a1 uint32, a2 *Event, a3 *DependencyInfo) {
+	purego.Syscall6(d.fp.CmdWaitEvents2KHR, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+}
+
+func (d *DeviceDispatch) HasCmdPipelineBarrier2KHR() bool { return d.fp.CmdPipelineBarrier2KHR != 0 }
+func (d *DeviceDispatch) CmdPipelineBarrier2KHR(a0 CommandBuffer, a1 *DependencyInfo) {
+	purego.Syscall6(d.fp.CmdPipelineBarrier2KHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasQueueSubmit2KHR() bool { return d.fp.QueueSubmit2KHR != 0 }
+func (d *DeviceDispatch) QueueSubmit2KHR(a0 Queue, a1 uint32, a2 *SubmitInfo2, a3 Fence) Result {
+	r1, _, _ := purego.Syscall6(d.fp.QueueSubmit2KHR, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), uintptr(a3), 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasCmdWriteTimestamp2KHR() bool { return d.fp.CmdWriteTimestamp2KHR != 0 }
+func (d *DeviceDispatch) CmdWriteTimestamp2KHR(a0 CommandBuffer, a1 PipelineStageFlags2, a2 QueryPool, a3 uint32) {
+	purego.Syscall6(d.fp.CmdWriteTimestamp2KHR, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(a3), 0, 0)
+}
+
+func (d *DeviceDispatch) HasCmdBeginRendering() bool { return d.fp.CmdBeginRendering != 0 }
+func (d *DeviceDispatch) CmdBeginRendering(a0 CommandBuffer, a1 *RenderingInfo) {
+	purego.Syscall6(d.fp.CmdBeginRendering, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasCmdBeginRenderingKHR() bool { return d.fp.CmdBeginRenderingKHR != 0 }
+func (d *DeviceDispatch) CmdBeginRenderingKHR(a0 CommandBuffer, a1 *RenderingInfo) {
+	purego.Syscall6(d.fp.CmdBeginRenderingKHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasCmdEndRendering() bool { return d.fp.CmdEndRendering != 0 }
+func (d *DeviceDispatch) CmdEndRendering(a0 CommandBuffer) {
+	purego.Syscall6(d.fp.CmdEndRendering, uintptr(a0), 0, 0, 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasCmdEndRenderingKHR() bool { return d.fp.CmdEndRenderingKHR != 0 }
+func (d *DeviceDispatch) CmdEndRenderingKHR(a0 CommandBuffer) {
+	purego.Syscall6(d.fp.CmdEndRenderingKHR, uintptr(a0), 0, 0, 0, 0, 0)
 }
