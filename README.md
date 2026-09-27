@@ -19,7 +19,7 @@ if err := vulkan.Init(); err != nil {
 
 gd := vulkan.Global()
 var version uint32
-if gd.EnumerateInstanceVersion != nil {
+if gd.HasEnumerateInstanceVersion() {
     if err := vulkan.Check(gd.EnumerateInstanceVersion(&version)); err != nil {
         return err
     }
@@ -27,7 +27,7 @@ if gd.EnumerateInstanceVersion != nil {
 }
 ```
 
-Use `LoadInstanceDispatch(instance)` and `LoadDeviceDispatch(instanceDispatch, device)` after creating Vulkan handles. Optional driver or extension commands may be nil when the loader, driver, enabled API version, or enabled extensions do not expose them; check function fields before use.
+Use `LoadInstanceDispatch(instance)` and `LoadDeviceDispatch(instanceDispatch, device)` after creating Vulkan handles. Dispatch commands are pointer-receiver methods; use `HasX()` (for example, `dd.HasGetMemoryFdKHR()`) before invoking optional commands. Unavailable commands return false from `HasX()`. Package-level `VkXxx` function variables remain available for compatibility.
 
 Run the smoke example on a Vulkan-capable Linux machine:
 

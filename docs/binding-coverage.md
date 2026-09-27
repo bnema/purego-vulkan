@@ -21,7 +21,7 @@ Committed generated files use the `wsi` profile. It includes:
 - `VK_KHR_surface` and `VK_KHR_swapchain`;
 - Linux WSI platform extensions: `VK_KHR_wayland_surface`, `VK_KHR_xcb_surface`, and `VK_KHR_xlib_surface`.
 
-WSI and other extension commands are loaded as optional dispatch fields because availability depends on enabled instance/device extensions and driver support. Core renderer commands remain required for the corresponding dispatch loader.
+WSI and other extension commands are loaded as optional dispatch methods because availability depends on enabled instance/device extensions and driver support. Check `HasX()` before invoking an optional method (for example `deviceDispatch.HasGetMemoryFdKHR()`). Core renderer commands remain required for the corresponding dispatch loader. Integer-class methods use fixed-arity purego syscalls; float-parameter methods use RegisterFunc.
 
 ## Complete profile
 

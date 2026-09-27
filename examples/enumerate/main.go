@@ -34,7 +34,7 @@ func run() error {
 		return err
 	}
 	gd := vulkan.Global()
-	if gd.EnumerateInstanceVersion != nil {
+	if gd.HasEnumerateInstanceVersion() {
 		var version uint32
 		if err := vulkan.Check(gd.EnumerateInstanceVersion(&version)); err != nil {
 			return err
