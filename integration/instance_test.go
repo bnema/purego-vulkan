@@ -40,7 +40,7 @@ func TestEnumeratePhysicalDevices(t *testing.T) {
 
 func TestEnumerateInstanceVersion(t *testing.T) {
 	gd := requireGlobalDispatch(t)
-	if gd.EnumerateInstanceVersion == nil {
+	if !gd.HasEnumerateInstanceVersion() {
 		t.Skip("vkEnumerateInstanceVersion unavailable")
 	}
 	var version uint32
@@ -75,7 +75,7 @@ func requireGlobalDispatch(t *testing.T) *vulkan.GlobalDispatch {
 		t.Skipf("Vulkan loader unavailable: %v", err)
 	}
 	gd := vulkan.Global()
-	if gd == nil || gd.CreateInstance == nil {
+	if gd == nil || !gd.HasCreateInstance() {
 		t.Fatal("global dispatch was not initialized")
 	}
 	return gd
