@@ -101,6 +101,9 @@ type instanceDispatchProcs struct {
 	GetPhysicalDeviceExternalBufferPropertiesKHR     uintptr
 	GetPhysicalDeviceExternalSemaphorePropertiesKHR  uintptr
 	GetPhysicalDevicePresentRectanglesKHR            uintptr
+	CreateDebugUtilsMessengerEXT                     uintptr
+	DestroyDebugUtilsMessengerEXT                    uintptr
+	SubmitDebugUtilsMessageEXT                       uintptr
 }
 
 type InstanceDispatch struct {
@@ -145,6 +148,9 @@ func (d *InstanceDispatch) commandPointers() map[string]any {
 		"vkGetPhysicalDeviceExternalBufferPropertiesKHR":     &d.fp.GetPhysicalDeviceExternalBufferPropertiesKHR,
 		"vkGetPhysicalDeviceExternalSemaphorePropertiesKHR":  &d.fp.GetPhysicalDeviceExternalSemaphorePropertiesKHR,
 		"vkGetPhysicalDevicePresentRectanglesKHR":            &d.fp.GetPhysicalDevicePresentRectanglesKHR,
+		"vkCreateDebugUtilsMessengerEXT":                     &d.fp.CreateDebugUtilsMessengerEXT,
+		"vkDestroyDebugUtilsMessengerEXT":                    &d.fp.DestroyDebugUtilsMessengerEXT,
+		"vkSubmitDebugUtilsMessageEXT":                       &d.fp.SubmitDebugUtilsMessageEXT,
 	}
 }
 
@@ -398,6 +404,28 @@ func (d *InstanceDispatch) GetPhysicalDevicePresentRectanglesKHR(a0 PhysicalDevi
 	return Result(r1)
 }
 
+func (d *InstanceDispatch) HasCreateDebugUtilsMessengerEXT() bool {
+	return d.fp.CreateDebugUtilsMessengerEXT != 0
+}
+func (d *InstanceDispatch) CreateDebugUtilsMessengerEXT(a0 Instance, a1 *DebugUtilsMessengerCreateInfoEXT, a2 *AllocationCallbacks, a3 *DebugUtilsMessengerEXT) Result {
+	r1, _, _ := purego.Syscall6(d.fp.CreateDebugUtilsMessengerEXT, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
+	return Result(r1)
+}
+
+func (d *InstanceDispatch) HasDestroyDebugUtilsMessengerEXT() bool {
+	return d.fp.DestroyDebugUtilsMessengerEXT != 0
+}
+func (d *InstanceDispatch) DestroyDebugUtilsMessengerEXT(a0 Instance, a1 DebugUtilsMessengerEXT, a2 *AllocationCallbacks) {
+	purego.Syscall6(d.fp.DestroyDebugUtilsMessengerEXT, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), 0, 0, 0)
+}
+
+func (d *InstanceDispatch) HasSubmitDebugUtilsMessageEXT() bool {
+	return d.fp.SubmitDebugUtilsMessageEXT != 0
+}
+func (d *InstanceDispatch) SubmitDebugUtilsMessageEXT(a0 Instance, a1 DebugUtilsMessageSeverityFlagBitsEXT, a2 DebugUtilsMessageTypeFlagsEXT, a3 *DebugUtilsMessengerCallbackDataEXT) {
+	purego.Syscall6(d.fp.SubmitDebugUtilsMessageEXT, uintptr(a0), uintptr(a1), uintptr(a2), uintptr(unsafe.Pointer(a3)), 0, 0)
+}
+
 type deviceDispatchProcs struct {
 	DestroyDevice                          uintptr
 	GetDeviceQueue                         uintptr
@@ -479,6 +507,14 @@ type deviceDispatchProcs struct {
 	GetImageMemoryRequirements2            uintptr
 	GetImageMemoryRequirements2KHR         uintptr
 	GetImageSparseMemoryRequirements2KHR   uintptr
+	SetDebugUtilsObjectNameEXT             uintptr
+	SetDebugUtilsObjectTagEXT              uintptr
+	QueueBeginDebugUtilsLabelEXT           uintptr
+	QueueEndDebugUtilsLabelEXT             uintptr
+	QueueInsertDebugUtilsLabelEXT          uintptr
+	CmdBeginDebugUtilsLabelEXT             uintptr
+	CmdEndDebugUtilsLabelEXT               uintptr
+	CmdInsertDebugUtilsLabelEXT            uintptr
 	GetSemaphoreCounterValue               uintptr
 	GetSemaphoreCounterValueKHR            uintptr
 	WaitSemaphores                         uintptr
@@ -489,7 +525,9 @@ type deviceDispatchProcs struct {
 	CmdSetEvent2KHR                        uintptr
 	CmdResetEvent2KHR                      uintptr
 	CmdWaitEvents2KHR                      uintptr
+	CmdPipelineBarrier2                    uintptr
 	CmdPipelineBarrier2KHR                 uintptr
+	QueueSubmit2                           uintptr
 	QueueSubmit2KHR                        uintptr
 	CmdWriteTimestamp2KHR                  uintptr
 	CmdBeginRendering                      uintptr
@@ -585,6 +623,14 @@ func (d *DeviceDispatch) commandPointers() map[string]any {
 		"vkGetImageMemoryRequirements2":            &d.fp.GetImageMemoryRequirements2,
 		"vkGetImageMemoryRequirements2KHR":         &d.fp.GetImageMemoryRequirements2KHR,
 		"vkGetImageSparseMemoryRequirements2KHR":   &d.fp.GetImageSparseMemoryRequirements2KHR,
+		"vkSetDebugUtilsObjectNameEXT":             &d.fp.SetDebugUtilsObjectNameEXT,
+		"vkSetDebugUtilsObjectTagEXT":              &d.fp.SetDebugUtilsObjectTagEXT,
+		"vkQueueBeginDebugUtilsLabelEXT":           &d.fp.QueueBeginDebugUtilsLabelEXT,
+		"vkQueueEndDebugUtilsLabelEXT":             &d.fp.QueueEndDebugUtilsLabelEXT,
+		"vkQueueInsertDebugUtilsLabelEXT":          &d.fp.QueueInsertDebugUtilsLabelEXT,
+		"vkCmdBeginDebugUtilsLabelEXT":             &d.fp.CmdBeginDebugUtilsLabelEXT,
+		"vkCmdEndDebugUtilsLabelEXT":               &d.fp.CmdEndDebugUtilsLabelEXT,
+		"vkCmdInsertDebugUtilsLabelEXT":            &d.fp.CmdInsertDebugUtilsLabelEXT,
 		"vkGetSemaphoreCounterValue":               &d.fp.GetSemaphoreCounterValue,
 		"vkGetSemaphoreCounterValueKHR":            &d.fp.GetSemaphoreCounterValueKHR,
 		"vkWaitSemaphores":                         &d.fp.WaitSemaphores,
@@ -595,7 +641,9 @@ func (d *DeviceDispatch) commandPointers() map[string]any {
 		"vkCmdSetEvent2KHR":                        &d.fp.CmdSetEvent2KHR,
 		"vkCmdResetEvent2KHR":                      &d.fp.CmdResetEvent2KHR,
 		"vkCmdWaitEvents2KHR":                      &d.fp.CmdWaitEvents2KHR,
+		"vkCmdPipelineBarrier2":                    &d.fp.CmdPipelineBarrier2,
 		"vkCmdPipelineBarrier2KHR":                 &d.fp.CmdPipelineBarrier2KHR,
+		"vkQueueSubmit2":                           &d.fp.QueueSubmit2,
 		"vkQueueSubmit2KHR":                        &d.fp.QueueSubmit2KHR,
 		"vkCmdWriteTimestamp2KHR":                  &d.fp.CmdWriteTimestamp2KHR,
 		"vkCmdBeginRendering":                      &d.fp.CmdBeginRendering,
@@ -1073,6 +1121,64 @@ func (d *DeviceDispatch) GetImageSparseMemoryRequirements2KHR(a0 Device, a1 *Ima
 	purego.Syscall6(d.fp.GetImageSparseMemoryRequirements2KHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
 }
 
+func (d *DeviceDispatch) HasSetDebugUtilsObjectNameEXT() bool {
+	return d.fp.SetDebugUtilsObjectNameEXT != 0
+}
+func (d *DeviceDispatch) SetDebugUtilsObjectNameEXT(a0 Device, a1 *DebugUtilsObjectNameInfoEXT) Result {
+	r1, _, _ := purego.Syscall6(d.fp.SetDebugUtilsObjectNameEXT, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasSetDebugUtilsObjectTagEXT() bool {
+	return d.fp.SetDebugUtilsObjectTagEXT != 0
+}
+func (d *DeviceDispatch) SetDebugUtilsObjectTagEXT(a0 Device, a1 *DebugUtilsObjectTagInfoEXT) Result {
+	r1, _, _ := purego.Syscall6(d.fp.SetDebugUtilsObjectTagEXT, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+	return Result(r1)
+}
+
+func (d *DeviceDispatch) HasQueueBeginDebugUtilsLabelEXT() bool {
+	return d.fp.QueueBeginDebugUtilsLabelEXT != 0
+}
+func (d *DeviceDispatch) QueueBeginDebugUtilsLabelEXT(a0 Queue, a1 *DebugUtilsLabelEXT) {
+	purego.Syscall6(d.fp.QueueBeginDebugUtilsLabelEXT, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasQueueEndDebugUtilsLabelEXT() bool {
+	return d.fp.QueueEndDebugUtilsLabelEXT != 0
+}
+func (d *DeviceDispatch) QueueEndDebugUtilsLabelEXT(a0 Queue) {
+	purego.Syscall6(d.fp.QueueEndDebugUtilsLabelEXT, uintptr(a0), 0, 0, 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasQueueInsertDebugUtilsLabelEXT() bool {
+	return d.fp.QueueInsertDebugUtilsLabelEXT != 0
+}
+func (d *DeviceDispatch) QueueInsertDebugUtilsLabelEXT(a0 Queue, a1 *DebugUtilsLabelEXT) {
+	purego.Syscall6(d.fp.QueueInsertDebugUtilsLabelEXT, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasCmdBeginDebugUtilsLabelEXT() bool {
+	return d.fp.CmdBeginDebugUtilsLabelEXT != 0
+}
+func (d *DeviceDispatch) CmdBeginDebugUtilsLabelEXT(a0 CommandBuffer, a1 *DebugUtilsLabelEXT) {
+	purego.Syscall6(d.fp.CmdBeginDebugUtilsLabelEXT, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasCmdEndDebugUtilsLabelEXT() bool {
+	return d.fp.CmdEndDebugUtilsLabelEXT != 0
+}
+func (d *DeviceDispatch) CmdEndDebugUtilsLabelEXT(a0 CommandBuffer) {
+	purego.Syscall6(d.fp.CmdEndDebugUtilsLabelEXT, uintptr(a0), 0, 0, 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasCmdInsertDebugUtilsLabelEXT() bool {
+	return d.fp.CmdInsertDebugUtilsLabelEXT != 0
+}
+func (d *DeviceDispatch) CmdInsertDebugUtilsLabelEXT(a0 CommandBuffer, a1 *DebugUtilsLabelEXT) {
+	purego.Syscall6(d.fp.CmdInsertDebugUtilsLabelEXT, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+}
+
 func (d *DeviceDispatch) HasGetSemaphoreCounterValue() bool {
 	return d.fp.GetSemaphoreCounterValue != 0
 }
@@ -1136,9 +1242,20 @@ func (d *DeviceDispatch) CmdWaitEvents2KHR(a0 CommandBuffer, a1 uint32, a2 *Even
 	purego.Syscall6(d.fp.CmdWaitEvents2KHR, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), uintptr(unsafe.Pointer(a3)), 0, 0)
 }
 
+func (d *DeviceDispatch) HasCmdPipelineBarrier2() bool { return d.fp.CmdPipelineBarrier2 != 0 }
+func (d *DeviceDispatch) CmdPipelineBarrier2(a0 CommandBuffer, a1 *DependencyInfo) {
+	purego.Syscall6(d.fp.CmdPipelineBarrier2, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+}
+
 func (d *DeviceDispatch) HasCmdPipelineBarrier2KHR() bool { return d.fp.CmdPipelineBarrier2KHR != 0 }
 func (d *DeviceDispatch) CmdPipelineBarrier2KHR(a0 CommandBuffer, a1 *DependencyInfo) {
 	purego.Syscall6(d.fp.CmdPipelineBarrier2KHR, uintptr(a0), uintptr(unsafe.Pointer(a1)), 0, 0, 0, 0)
+}
+
+func (d *DeviceDispatch) HasQueueSubmit2() bool { return d.fp.QueueSubmit2 != 0 }
+func (d *DeviceDispatch) QueueSubmit2(a0 Queue, a1 uint32, a2 *SubmitInfo2, a3 Fence) Result {
+	r1, _, _ := purego.Syscall6(d.fp.QueueSubmit2, uintptr(a0), uintptr(a1), uintptr(unsafe.Pointer(a2)), uintptr(a3), 0, 0)
+	return Result(r1)
 }
 
 func (d *DeviceDispatch) HasQueueSubmit2KHR() bool { return d.fp.QueueSubmit2KHR != 0 }

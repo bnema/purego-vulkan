@@ -97,13 +97,11 @@ func TestCompleteProfileSelectsPinnedRegistryCommandCoverageAsOptionalExpansion(
 	for _, name := range []string{
 		"vkCreateSwapchainKHR",
 		"vkQueuePresentKHR",
-		"vkCmdCopyImageToBuffer",
 		"vkCreateRenderPass",
 		"vkCreateFramebuffer",
 		"vkCreatePipelineCache",
 		"vkCreateComputePipelines",
 		"vkCmdSetViewport",
-		"vkCreateDebugUtilsMessengerEXT",
 		"vkCreateQueryPool",
 	} {
 		cmd := sel.CommandByName(name)
@@ -115,7 +113,7 @@ func TestCompleteProfileSelectsPinnedRegistryCommandCoverageAsOptionalExpansion(
 		}
 	}
 
-	for _, name := range []string{"vkCreateInstance", "vkDestroyInstance", "vkCreateDevice", "vkDestroyDevice", "vkCmdCopyBufferToImage"} {
+	for _, name := range []string{"vkCreateInstance", "vkDestroyInstance", "vkCreateDevice", "vkDestroyDevice", "vkCmdCopyBufferToImage", "vkCmdCopyImageToBuffer"} {
 		cmd := sel.CommandByName(name)
 		if cmd == nil {
 			t.Fatalf("complete profile missing required renderer command %s", name)

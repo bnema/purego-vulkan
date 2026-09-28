@@ -200,6 +200,25 @@ func TestLoadDeviceDispatchFallsBackToDynamicRenderingKHRAliases(t *testing.T) {
 	}
 }
 
+func TestPresentationOptionalDispatchAndSubmit2Alias(t *testing.T) {
+	resetDispatchForTest()
+	defer resetDispatchForTest()
+	symbols := requiredDeviceSymbolsExcept("vkQueueSubmit2", "vkCmdPipelineBarrier2")
+	symbols["vkQueueSubmit2KHR"] = 0xa001
+	symbols["vkCmdPipelineBarrier2KHR"] = 0xa002
+	instance := &InstanceDispatch{fp: instanceDispatchProcs{GetDeviceProcAddr: purego.NewCallback(fakeGetDeviceProcAddr(symbols))}}
+	dispatch, err := LoadDeviceDispatch(instance, Device(4))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !dispatch.HasQueueSubmit2() || !dispatch.HasQueueSubmit2KHR() || !dispatch.HasCmdPipelineBarrier2() || !dispatch.HasCmdPipelineBarrier2KHR() {
+		t.Fatal("core/KHR synchronization2 aliases not loaded from KHR entry points")
+	}
+	if dispatch.HasGetSemaphoreFdKHR() || dispatch.HasCreateSwapchainKHR() {
+		t.Fatal("optional commands loaded despite missing entry points")
+	}
+}
+
 func assertRendererDeviceDispatch(t *testing.T, dispatch *DeviceDispatch) {
 	t.Helper()
 	checks := []struct {

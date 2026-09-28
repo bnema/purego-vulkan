@@ -54,6 +54,8 @@ func ResultString(r Result) string {
 		return "VK_ERROR_FRAGMENTED_POOL"
 	case ErrorUnknown:
 		return "VK_ERROR_UNKNOWN"
+	case DebugUtilsMessageSeverityErrorBitEXT:
+		return "VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT"
 	default:
 		return "VK_UNKNOWN_RESULT"
 	}

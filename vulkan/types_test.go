@@ -101,6 +101,80 @@ func TestGeneratedWSILayouts(t *testing.T) {
 
 // TestGeneratedTimelineSemaphoreLayouts checks the 64-bit C ABI layouts declared
 // for the timeline semaphore structures in registry/vk.xml.
+func TestVeyaPresentationLayouts(t *testing.T) {
+	require64BitLayout(t)
+	for _, tc := range []struct {
+		name                             string
+		size, align, wantSize, wantAlign uintptr
+	}{
+		{"PhysicalDeviceDrmPropertiesEXT", unsafe.Sizeof(PhysicalDeviceDrmPropertiesEXT{}), unsafe.Alignof(PhysicalDeviceDrmPropertiesEXT{}), 56, 8},
+		{"DrmFormatModifierPropertiesList2EXT", unsafe.Sizeof(DrmFormatModifierPropertiesList2EXT{}), unsafe.Alignof(DrmFormatModifierPropertiesList2EXT{}), 32, 8},
+		{"DrmFormatModifierProperties2EXT", unsafe.Sizeof(DrmFormatModifierProperties2EXT{}), unsafe.Alignof(DrmFormatModifierProperties2EXT{}), 24, 8},
+		{"DebugUtilsMessengerCreateInfoEXT", unsafe.Sizeof(DebugUtilsMessengerCreateInfoEXT{}), unsafe.Alignof(DebugUtilsMessengerCreateInfoEXT{}), 48, 8},
+	} {
+		if tc.size != tc.wantSize || tc.align != tc.wantAlign {
+			t.Errorf("%s layout size=%d align=%d, want size=%d align=%d", tc.name, tc.size, tc.align, tc.wantSize, tc.wantAlign)
+		}
+	}
+}
+
+// Offsets follow the x86_64 Vulkan C ABI: pointers and 64-bit values align to 8,
+// while VkBool32, enums and flag bits align to 4.
+func TestVeyaPresentationFieldOffsets(t *testing.T) {
+	require64BitLayout(t)
+	for _, tc := range []struct {
+		name      string
+		got, want uintptr
+	}{
+		{"PhysicalDeviceDrmPropertiesEXT.PrimaryMajor", unsafe.Offsetof(PhysicalDeviceDrmPropertiesEXT{}.PrimaryMajor), 24},
+		{"PhysicalDeviceDrmPropertiesEXT.PrimaryMinor", unsafe.Offsetof(PhysicalDeviceDrmPropertiesEXT{}.PrimaryMinor), 32},
+		{"PhysicalDeviceDrmPropertiesEXT.RenderMajor", unsafe.Offsetof(PhysicalDeviceDrmPropertiesEXT{}.RenderMajor), 40},
+		{"PhysicalDeviceDrmPropertiesEXT.RenderMinor", unsafe.Offsetof(PhysicalDeviceDrmPropertiesEXT{}.RenderMinor), 48},
+		{"DrmFormatModifierPropertiesEXT.DrmFormatModifier", unsafe.Offsetof(DrmFormatModifierPropertiesEXT{}.DrmFormatModifier), 0},
+		{"DrmFormatModifierPropertiesEXT.DrmFormatModifierPlaneCount", unsafe.Offsetof(DrmFormatModifierPropertiesEXT{}.DrmFormatModifierPlaneCount), 8},
+		{"DrmFormatModifierPropertiesEXT.DrmFormatModifierTilingFeatures", unsafe.Offsetof(DrmFormatModifierPropertiesEXT{}.DrmFormatModifierTilingFeatures), 12},
+		{"ImageDrmFormatModifierExplicitCreateInfoEXT.DrmFormatModifier", unsafe.Offsetof(ImageDrmFormatModifierExplicitCreateInfoEXT{}.DrmFormatModifier), 16},
+		{"ImageDrmFormatModifierExplicitCreateInfoEXT.DrmFormatModifierPlaneCount", unsafe.Offsetof(ImageDrmFormatModifierExplicitCreateInfoEXT{}.DrmFormatModifierPlaneCount), 24},
+		{"ImageDrmFormatModifierExplicitCreateInfoEXT.PlaneLayouts", unsafe.Offsetof(ImageDrmFormatModifierExplicitCreateInfoEXT{}.PlaneLayouts), 32},
+		{"SubresourceLayout.Offset", unsafe.Offsetof(SubresourceLayout{}.Offset), 0},
+		{"SubresourceLayout.Size", unsafe.Offsetof(SubresourceLayout{}.Size), 8},
+		{"SubresourceLayout.RowPitch", unsafe.Offsetof(SubresourceLayout{}.RowPitch), 16},
+		{"SubresourceLayout.ArrayPitch", unsafe.Offsetof(SubresourceLayout{}.ArrayPitch), 24},
+		{"SubresourceLayout.DepthPitch", unsafe.Offsetof(SubresourceLayout{}.DepthPitch), 32},
+		{"SemaphoreGetFdInfoKHR.Semaphore", unsafe.Offsetof(SemaphoreGetFdInfoKHR{}.Semaphore), 16},
+		{"SemaphoreGetFdInfoKHR.HandleType", unsafe.Offsetof(SemaphoreGetFdInfoKHR{}.HandleType), 24},
+		{"ImportSemaphoreFdInfoKHR.Semaphore", unsafe.Offsetof(ImportSemaphoreFdInfoKHR{}.Semaphore), 16},
+		{"ImportSemaphoreFdInfoKHR.Flags", unsafe.Offsetof(ImportSemaphoreFdInfoKHR{}.Flags), 24},
+		{"ImportSemaphoreFdInfoKHR.HandleType", unsafe.Offsetof(ImportSemaphoreFdInfoKHR{}.HandleType), 28},
+		{"ImportSemaphoreFdInfoKHR.Fd", unsafe.Offsetof(ImportSemaphoreFdInfoKHR{}.Fd), 32},
+		{"MemoryGetFdInfoKHR.Memory", unsafe.Offsetof(MemoryGetFdInfoKHR{}.Memory), 16},
+		{"MemoryGetFdInfoKHR.HandleType", unsafe.Offsetof(MemoryGetFdInfoKHR{}.HandleType), 24},
+		{"ExportMemoryAllocateInfo.HandleTypes", unsafe.Offsetof(ExportMemoryAllocateInfo{}.HandleTypes), 16},
+		{"DebugUtilsMessengerCallbackDataEXT.Flags", unsafe.Offsetof(DebugUtilsMessengerCallbackDataEXT{}.Flags), 16},
+		{"DebugUtilsMessengerCallbackDataEXT.MessageIdName", unsafe.Offsetof(DebugUtilsMessengerCallbackDataEXT{}.MessageIdName), 24},
+		{"DebugUtilsMessengerCallbackDataEXT.MessageIdNumber", unsafe.Offsetof(DebugUtilsMessengerCallbackDataEXT{}.MessageIdNumber), 32},
+		{"DebugUtilsMessengerCallbackDataEXT.Message", unsafe.Offsetof(DebugUtilsMessengerCallbackDataEXT{}.Message), 40},
+		{"DebugUtilsMessengerCallbackDataEXT.QueueLabelCount", unsafe.Offsetof(DebugUtilsMessengerCallbackDataEXT{}.QueueLabelCount), 48},
+		{"DebugUtilsMessengerCallbackDataEXT.QueueLabels", unsafe.Offsetof(DebugUtilsMessengerCallbackDataEXT{}.QueueLabels), 56},
+		{"DebugUtilsMessengerCallbackDataEXT.CmdBufLabelCount", unsafe.Offsetof(DebugUtilsMessengerCallbackDataEXT{}.CmdBufLabelCount), 64},
+		{"DebugUtilsMessengerCallbackDataEXT.CmdBufLabels", unsafe.Offsetof(DebugUtilsMessengerCallbackDataEXT{}.CmdBufLabels), 72},
+		{"DebugUtilsMessengerCallbackDataEXT.ObjectCount", unsafe.Offsetof(DebugUtilsMessengerCallbackDataEXT{}.ObjectCount), 80},
+		{"DebugUtilsMessengerCallbackDataEXT.Objects", unsafe.Offsetof(DebugUtilsMessengerCallbackDataEXT{}.Objects), 88},
+		{"TimelineSemaphoreSubmitInfo.WaitSemaphoreValueCount", unsafe.Offsetof(TimelineSemaphoreSubmitInfo{}.WaitSemaphoreValueCount), 16},
+		{"TimelineSemaphoreSubmitInfo.WaitSemaphoreValues", unsafe.Offsetof(TimelineSemaphoreSubmitInfo{}.WaitSemaphoreValues), 24},
+		{"TimelineSemaphoreSubmitInfo.SignalSemaphoreValueCount", unsafe.Offsetof(TimelineSemaphoreSubmitInfo{}.SignalSemaphoreValueCount), 32},
+		{"TimelineSemaphoreSubmitInfo.SignalSemaphoreValues", unsafe.Offsetof(TimelineSemaphoreSubmitInfo{}.SignalSemaphoreValues), 40},
+		{"SemaphoreSubmitInfo.Semaphore", unsafe.Offsetof(SemaphoreSubmitInfo{}.Semaphore), 16},
+		{"SemaphoreSubmitInfo.Value", unsafe.Offsetof(SemaphoreSubmitInfo{}.Value), 24},
+		{"SemaphoreSubmitInfo.StageMask", unsafe.Offsetof(SemaphoreSubmitInfo{}.StageMask), 32},
+		{"SemaphoreSubmitInfo.DeviceIndex", unsafe.Offsetof(SemaphoreSubmitInfo{}.DeviceIndex), 40},
+	} {
+		if tc.got != tc.want {
+			t.Errorf("%s offset = %d, want %d", tc.name, tc.got, tc.want)
+		}
+	}
+}
+
 func TestGeneratedTimelineSemaphoreLayouts(t *testing.T) {
 	require64BitLayout(t)
 	tests := []struct {

@@ -124,6 +124,17 @@ var VkGetBufferMemoryRequirements2KHR func(Device, *BufferMemoryRequirementsInfo
 var VkGetImageMemoryRequirements2 func(Device, *ImageMemoryRequirementsInfo2, *MemoryRequirements2)
 var VkGetImageMemoryRequirements2KHR func(Device, *ImageMemoryRequirementsInfo2, *MemoryRequirements2)
 var VkGetImageSparseMemoryRequirements2KHR func(Device, *ImageSparseMemoryRequirementsInfo2, *uint32, *SparseImageMemoryRequirements2)
+var VkSetDebugUtilsObjectNameEXT func(Device, *DebugUtilsObjectNameInfoEXT) Result
+var VkSetDebugUtilsObjectTagEXT func(Device, *DebugUtilsObjectTagInfoEXT) Result
+var VkQueueBeginDebugUtilsLabelEXT func(Queue, *DebugUtilsLabelEXT)
+var VkQueueEndDebugUtilsLabelEXT func(Queue)
+var VkQueueInsertDebugUtilsLabelEXT func(Queue, *DebugUtilsLabelEXT)
+var VkCmdBeginDebugUtilsLabelEXT func(CommandBuffer, *DebugUtilsLabelEXT)
+var VkCmdEndDebugUtilsLabelEXT func(CommandBuffer)
+var VkCmdInsertDebugUtilsLabelEXT func(CommandBuffer, *DebugUtilsLabelEXT)
+var VkCreateDebugUtilsMessengerEXT func(Instance, *DebugUtilsMessengerCreateInfoEXT, *AllocationCallbacks, *DebugUtilsMessengerEXT) Result
+var VkDestroyDebugUtilsMessengerEXT func(Instance, DebugUtilsMessengerEXT, *AllocationCallbacks)
+var VkSubmitDebugUtilsMessageEXT func(Instance, DebugUtilsMessageSeverityFlagBitsEXT, DebugUtilsMessageTypeFlagsEXT, *DebugUtilsMessengerCallbackDataEXT)
 var VkGetSemaphoreCounterValue func(Device, Semaphore, *uint64) Result
 var VkGetSemaphoreCounterValueKHR func(Device, Semaphore, *uint64) Result
 var VkWaitSemaphores func(Device, *SemaphoreWaitInfo, uint64) Result
@@ -134,7 +145,9 @@ var VkGetImageDrmFormatModifierPropertiesEXT func(Device, Image, *ImageDrmFormat
 var VkCmdSetEvent2KHR func(CommandBuffer, Event, *DependencyInfo)
 var VkCmdResetEvent2KHR func(CommandBuffer, Event, PipelineStageFlags2)
 var VkCmdWaitEvents2KHR func(CommandBuffer, uint32, *Event, *DependencyInfo)
+var VkCmdPipelineBarrier2 func(CommandBuffer, *DependencyInfo)
 var VkCmdPipelineBarrier2KHR func(CommandBuffer, *DependencyInfo)
+var VkQueueSubmit2 func(Queue, uint32, *SubmitInfo2, Fence) Result
 var VkQueueSubmit2KHR func(Queue, uint32, *SubmitInfo2, Fence) Result
 var VkCmdWriteTimestamp2KHR func(CommandBuffer, PipelineStageFlags2, QueryPool, uint32)
 var VkCmdBeginRendering func(CommandBuffer, *RenderingInfo)
@@ -189,6 +202,9 @@ func instanceCommandPointers() map[string]any {
 		"vkGetPhysicalDeviceExternalBufferPropertiesKHR":     &VkGetPhysicalDeviceExternalBufferPropertiesKHR,
 		"vkGetPhysicalDeviceExternalSemaphorePropertiesKHR":  &VkGetPhysicalDeviceExternalSemaphorePropertiesKHR,
 		"vkGetPhysicalDevicePresentRectanglesKHR":            &VkGetPhysicalDevicePresentRectanglesKHR,
+		"vkCreateDebugUtilsMessengerEXT":                     &VkCreateDebugUtilsMessengerEXT,
+		"vkDestroyDebugUtilsMessengerEXT":                    &VkDestroyDebugUtilsMessengerEXT,
+		"vkSubmitDebugUtilsMessageEXT":                       &VkSubmitDebugUtilsMessageEXT,
 	}
 }
 
@@ -274,6 +290,14 @@ func deviceCommandPointers() map[string]any {
 		"vkGetImageMemoryRequirements2":            &VkGetImageMemoryRequirements2,
 		"vkGetImageMemoryRequirements2KHR":         &VkGetImageMemoryRequirements2KHR,
 		"vkGetImageSparseMemoryRequirements2KHR":   &VkGetImageSparseMemoryRequirements2KHR,
+		"vkSetDebugUtilsObjectNameEXT":             &VkSetDebugUtilsObjectNameEXT,
+		"vkSetDebugUtilsObjectTagEXT":              &VkSetDebugUtilsObjectTagEXT,
+		"vkQueueBeginDebugUtilsLabelEXT":           &VkQueueBeginDebugUtilsLabelEXT,
+		"vkQueueEndDebugUtilsLabelEXT":             &VkQueueEndDebugUtilsLabelEXT,
+		"vkQueueInsertDebugUtilsLabelEXT":          &VkQueueInsertDebugUtilsLabelEXT,
+		"vkCmdBeginDebugUtilsLabelEXT":             &VkCmdBeginDebugUtilsLabelEXT,
+		"vkCmdEndDebugUtilsLabelEXT":               &VkCmdEndDebugUtilsLabelEXT,
+		"vkCmdInsertDebugUtilsLabelEXT":            &VkCmdInsertDebugUtilsLabelEXT,
 		"vkGetSemaphoreCounterValue":               &VkGetSemaphoreCounterValue,
 		"vkGetSemaphoreCounterValueKHR":            &VkGetSemaphoreCounterValueKHR,
 		"vkWaitSemaphores":                         &VkWaitSemaphores,
@@ -284,7 +308,9 @@ func deviceCommandPointers() map[string]any {
 		"vkCmdSetEvent2KHR":                        &VkCmdSetEvent2KHR,
 		"vkCmdResetEvent2KHR":                      &VkCmdResetEvent2KHR,
 		"vkCmdWaitEvents2KHR":                      &VkCmdWaitEvents2KHR,
+		"vkCmdPipelineBarrier2":                    &VkCmdPipelineBarrier2,
 		"vkCmdPipelineBarrier2KHR":                 &VkCmdPipelineBarrier2KHR,
+		"vkQueueSubmit2":                           &VkQueueSubmit2,
 		"vkQueueSubmit2KHR":                        &VkQueueSubmit2KHR,
 		"vkCmdWriteTimestamp2KHR":                  &VkCmdWriteTimestamp2KHR,
 		"vkCmdBeginRendering":                      &VkCmdBeginRendering,
