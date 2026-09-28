@@ -1,8 +1,9 @@
 # Veya presentation binding audit
 
 The external consumer compile fixture is `integration/veya_contract_compile_test.go`;
-`VEYA_VULKAN_PROBE=1 go test ./integration -run TestVeyaHardwareExport -v -count=1`
-requires positive hardware exports (otherwise reports `UNSUPPORTED`, never a positive pass).
+`VEYA_VULKAN_PROBE=1 VEYA_REQUIRE_POSITIVE=1 go test ./integration -run TestVeyaHardwareExport -v -count=1`
+fails unless at least one device exports both FDs. Without `VEYA_REQUIRE_POSITIVE=1`, a machine
+with no capable device skips with `UNSUPPORTED`, which is never a positive pass.
 All symbols below are generated from the pinned Vulkan registry, not handwritten.
 
 | Need | Generated symbols | Status |

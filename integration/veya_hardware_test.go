@@ -96,6 +96,8 @@ func TestVeyaHardwareExport(t *testing.T) {
 			continue
 		}
 		semInfo := vulkan.PhysicalDeviceExternalSemaphoreInfo{SType: vulkan.StructureTypePhysicalDeviceExternalSemaphoreInfo, HandleType: vulkan.ExternalSemaphoreHandleTypeOpaqueFDBit}
+		semType := vulkan.SemaphoreTypeCreateInfo{SType: vulkan.StructureTypeSemaphoreTypeCreateInfo, SemaphoreType: vulkan.SemaphoreTypeTimeline}
+		semInfo.Next = unsafe.Pointer(&semType)
 		semProps := vulkan.ExternalSemaphoreProperties{SType: vulkan.StructureTypeExternalSemaphoreProperties}
 		getExternalSemaphoreProperties(phys, &semInfo, &semProps)
 		if semProps.ExternalSemaphoreFeatures&vulkan.ExternalSemaphoreFeatureExportableBit == 0 || semProps.CompatibleHandleTypes&vulkan.ExternalSemaphoreHandleTypeOpaqueFDBit == 0 {
