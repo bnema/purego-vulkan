@@ -49,6 +49,14 @@ make check
 
 `make check` runs generation, tests, and `git diff --exit-code` to ensure generated files are fresh.
 
+Optional hardware probe (DMA-BUF image export and timeline semaphore FD export on real GPUs):
+
+```sh
+PUREGO_VULKAN_HW_PROBE=1 PUREGO_VULKAN_REQUIRE_POSITIVE=1 go test ./integration -run TestHardwareDMABUFExport -v -count=1
+```
+
+Without `PUREGO_VULKAN_REQUIRE_POSITIVE=1`, a machine with no capable device skips with `UNSUPPORTED`.
+
 The development target is raw Vulkan binding coverage, not framework code. Keep upload orchestration, swapchain ownership, pipeline policy, render-target ownership, and command-buffer recording in the consumer; this module supplies the low-level Vulkan commands and structs needed for CPU-visible staging/upload buffers, buffer/image copies, graphics pipelines, draw calls, dynamic rendering, and Linux WSI.
 
 Coverage profiles:

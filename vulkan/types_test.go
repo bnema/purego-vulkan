@@ -99,9 +99,9 @@ func TestGeneratedWSILayouts(t *testing.T) {
 	}
 }
 
-// TestGeneratedTimelineSemaphoreLayouts checks the 64-bit C ABI layouts declared
-// for the timeline semaphore structures in registry/vk.xml.
-func TestVeyaPresentationLayouts(t *testing.T) {
+// TestGeneratedDMABUFPresentationLayouts checks the 64-bit C ABI layouts of the
+// DRM, format-modifier and debug-utils structures in registry/vk.xml.
+func TestGeneratedDMABUFPresentationLayouts(t *testing.T) {
 	require64BitLayout(t)
 	for _, tc := range []struct {
 		name                             string
@@ -120,7 +120,7 @@ func TestVeyaPresentationLayouts(t *testing.T) {
 
 // Offsets follow the x86_64 Vulkan C ABI: pointers and 64-bit values align to 8,
 // while VkBool32, enums and flag bits align to 4.
-func TestVeyaPresentationFieldOffsets(t *testing.T) {
+func TestGeneratedDMABUFPresentationFieldOffsets(t *testing.T) {
 	require64BitLayout(t)
 	for _, tc := range []struct {
 		name      string
@@ -175,6 +175,8 @@ func TestVeyaPresentationFieldOffsets(t *testing.T) {
 	}
 }
 
+// TestGeneratedTimelineSemaphoreLayouts checks the 64-bit C ABI layouts declared
+// for the timeline semaphore structures in registry/vk.xml.
 func TestGeneratedTimelineSemaphoreLayouts(t *testing.T) {
 	require64BitLayout(t)
 	tests := []struct {
