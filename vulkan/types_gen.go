@@ -116,6 +116,8 @@ type PipelineStageFlags2 uint64
 
 type PipelineStageFlags2KHR = PipelineStageFlags2
 
+type FormatFeatureFlags2 uint64
+
 type RenderingFlags uint32
 
 type RenderingFlagsKHR = RenderingFlags
@@ -153,6 +155,14 @@ type ExternalSemaphoreFeatureFlagsKHR = ExternalSemaphoreFeatureFlags
 type SemaphoreImportFlags uint32
 
 type SemaphoreImportFlagsKHR = SemaphoreImportFlags
+
+type DebugUtilsMessageSeverityFlagsEXT uint32
+
+type DebugUtilsMessageTypeFlagsEXT uint32
+
+type DebugUtilsMessengerCreateFlagsEXT uint32
+
+type DebugUtilsMessengerCallbackDataFlagsEXT uint32
 
 type SubmitFlags uint32
 
@@ -211,6 +221,8 @@ type PipelineCache uint64
 type SurfaceKHR uint64
 
 type SwapchainKHR uint64
+
+type DebugUtilsMessengerEXT uint64
 
 type AttachmentLoadOp int32
 
@@ -336,6 +348,8 @@ type DescriptorPoolCreateFlagBits int32
 
 type DependencyFlagBits int32
 
+type ObjectType int32
+
 type PipelineLayoutCreateFlagBits int32
 
 type ResolveModeFlagBits int32
@@ -355,6 +369,8 @@ type AccessFlagBits2KHR = AccessFlagBits2
 type PipelineStageFlagBits2 int32
 
 type PipelineStageFlagBits2KHR = PipelineStageFlagBits2
+
+type FormatFeatureFlagBits2 int32
 
 type RenderingFlagBits int32
 
@@ -396,6 +412,10 @@ type DeviceGroupPresentModeFlagBitsKHR int32
 
 type SwapchainCreateFlagBitsKHR int32
 
+type DebugUtilsMessageSeverityFlagBitsEXT int32
+
+type DebugUtilsMessageTypeFlagBitsEXT int32
+
 type SubmitFlagBits int32
 
 type SubmitFlagBitsKHR = SubmitFlagBits
@@ -411,6 +431,8 @@ type PFN_vkAllocationFunction uintptr
 type PFN_vkFreeFunction uintptr
 
 type PFN_vkVoidFunction uintptr
+
+type PFN_vkDebugUtilsMessengerCallbackEXT uintptr
 
 type Offset2D struct {
 	X int32
@@ -1674,6 +1696,56 @@ type MemoryDedicatedAllocateInfo struct {
 
 type MemoryDedicatedAllocateInfoKHR = MemoryDedicatedAllocateInfo
 
+type DebugUtilsObjectNameInfoEXT struct {
+	SType        StructureType
+	Next         unsafe.Pointer
+	ObjectType   ObjectType
+	ObjectHandle uint64
+	ObjectName   *byte
+}
+
+type DebugUtilsObjectTagInfoEXT struct {
+	SType        StructureType
+	Next         unsafe.Pointer
+	ObjectType   ObjectType
+	ObjectHandle uint64
+	TagName      uint64
+	TagSize      uintptr
+	Tag          unsafe.Pointer
+}
+
+type DebugUtilsLabelEXT struct {
+	SType     StructureType
+	Next      unsafe.Pointer
+	LabelName *byte
+	Color     [4]float32
+}
+
+type DebugUtilsMessengerCreateInfoEXT struct {
+	SType           StructureType
+	Next            unsafe.Pointer
+	Flags           DebugUtilsMessengerCreateFlagsEXT
+	MessageSeverity DebugUtilsMessageSeverityFlagsEXT
+	MessageType     DebugUtilsMessageTypeFlagsEXT
+	PfnUserCallback PFN_vkDebugUtilsMessengerCallbackEXT
+	UserData        unsafe.Pointer
+}
+
+type DebugUtilsMessengerCallbackDataEXT struct {
+	SType            StructureType
+	Next             unsafe.Pointer
+	Flags            DebugUtilsMessengerCallbackDataFlagsEXT
+	MessageIdName    *byte
+	MessageIdNumber  int32
+	Message          *byte
+	QueueLabelCount  uint32
+	QueueLabels      *DebugUtilsLabelEXT
+	CmdBufLabelCount uint32
+	CmdBufLabels     *DebugUtilsLabelEXT
+	ObjectCount      uint32
+	Objects          *DebugUtilsObjectNameInfoEXT
+}
+
 type PhysicalDeviceTimelineSemaphoreFeatures struct {
 	SType             StructureType
 	Next              unsafe.Pointer
@@ -1882,6 +1954,19 @@ type PhysicalDeviceDrmPropertiesEXT struct {
 	PrimaryMinor int64
 	RenderMajor  int64
 	RenderMinor  int64
+}
+
+type DrmFormatModifierPropertiesList2EXT struct {
+	SType                       StructureType
+	Next                        unsafe.Pointer
+	DrmFormatModifierCount      uint32
+	DrmFormatModifierProperties *DrmFormatModifierProperties2EXT
+}
+
+type DrmFormatModifierProperties2EXT struct {
+	DrmFormatModifier               uint64
+	DrmFormatModifierPlaneCount     uint32
+	DrmFormatModifierTilingFeatures FormatFeatureFlags2
 }
 
 type PipelineRenderingCreateInfo struct {

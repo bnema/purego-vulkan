@@ -101,6 +101,23 @@ func TestGeneratedWSILayouts(t *testing.T) {
 
 // TestGeneratedTimelineSemaphoreLayouts checks the 64-bit C ABI layouts declared
 // for the timeline semaphore structures in registry/vk.xml.
+func TestVeyaPresentationLayouts(t *testing.T) {
+	require64BitLayout(t)
+	for _, tc := range []struct {
+		name                             string
+		size, align, wantSize, wantAlign uintptr
+	}{
+		{"PhysicalDeviceDrmPropertiesEXT", unsafe.Sizeof(PhysicalDeviceDrmPropertiesEXT{}), unsafe.Alignof(PhysicalDeviceDrmPropertiesEXT{}), 56, 8},
+		{"DrmFormatModifierPropertiesList2EXT", unsafe.Sizeof(DrmFormatModifierPropertiesList2EXT{}), unsafe.Alignof(DrmFormatModifierPropertiesList2EXT{}), 32, 8},
+		{"DrmFormatModifierProperties2EXT", unsafe.Sizeof(DrmFormatModifierProperties2EXT{}), unsafe.Alignof(DrmFormatModifierProperties2EXT{}), 24, 8},
+		{"DebugUtilsMessengerCreateInfoEXT", unsafe.Sizeof(DebugUtilsMessengerCreateInfoEXT{}), unsafe.Alignof(DebugUtilsMessengerCreateInfoEXT{}), 48, 8},
+	} {
+		if tc.size != tc.wantSize || tc.align != tc.wantAlign {
+			t.Errorf("%s layout size=%d align=%d, want size=%d align=%d", tc.name, tc.size, tc.align, tc.wantSize, tc.wantAlign)
+		}
+	}
+}
+
 func TestGeneratedTimelineSemaphoreLayouts(t *testing.T) {
 	require64BitLayout(t)
 	tests := []struct {

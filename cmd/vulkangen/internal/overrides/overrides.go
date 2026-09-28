@@ -94,6 +94,11 @@ var InitialCommands = []string{
 	"vkCmdPushConstants",
 	"vkCmdBeginRendering",
 	"vkCmdEndRendering",
+	"vkCmdCopyImageToBuffer",
+	"vkCmdPipelineBarrier2",
+	"vkQueueSubmit2",
+	"vkCreateDebugUtilsMessengerEXT",
+	"vkDestroyDebugUtilsMessengerEXT",
 }
 
 var RequiredExtensions = []string{
@@ -112,6 +117,7 @@ var RequiredExtensions = []string{
 	"VK_KHR_synchronization2",
 	"VK_EXT_queue_family_foreign",
 	"VK_KHR_dynamic_rendering",
+	"VK_EXT_debug_utils",
 }
 
 var CommandOverrides = map[string]model.CommandOverride{
@@ -123,6 +129,10 @@ var CommandOverrides = map[string]model.CommandOverride{
 	"vkImportSemaphoreFdKHR":                   {Dispatch: model.DispatchDevice, Optional: true},
 	"vkGetSemaphoreFdKHR":                      {Dispatch: model.DispatchDevice, Optional: true},
 	"vkGetImageDrmFormatModifierPropertiesEXT": {Dispatch: model.DispatchDevice, Optional: true},
+	"vkCreateDebugUtilsMessengerEXT":           {Dispatch: model.DispatchInstance, Optional: true},
+	"vkDestroyDebugUtilsMessengerEXT":          {Dispatch: model.DispatchInstance, Optional: true},
+	"vkCmdPipelineBarrier2":                    {Dispatch: model.DispatchDevice, Optional: true},
+	"vkQueueSubmit2":                           {Dispatch: model.DispatchDevice, Optional: true},
 }
 
 type Profile string
@@ -160,10 +170,11 @@ func rendererSelection() model.SelectionConfig {
 		RootTypes: []string{
 			"VkMemoryDedicatedRequirements",
 			"VkMemoryDedicatedAllocateInfo",
+			"VkDrmFormatModifierPropertiesList2EXT",
 		},
 		Commands:         append([]string(nil), InitialCommands...),
 		Extensions:       append([]string(nil), RequiredExtensions...),
-		CoreVersions:     []string{"VK_VERSION_1_0", "VK_VERSION_1_1", "VK_VERSION_1_2"},
+		CoreVersions:     []string{"VK_VERSION_1_0", "VK_VERSION_1_1", "VK_VERSION_1_2", "VK_VERSION_1_3"},
 		CommandOverrides: cloneCommandOverrides(),
 	}
 }

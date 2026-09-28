@@ -85,6 +85,9 @@ func RegisterInstance(handle uintptr, lookup LookupFunc, fptrs map[string]any) e
 	registerOptional([]string{"vkGetPhysicalDeviceExternalBufferPropertiesKHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkGetPhysicalDeviceExternalSemaphorePropertiesKHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkGetPhysicalDevicePresentRectanglesKHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkCreateDebugUtilsMessengerEXT"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkDestroyDebugUtilsMessengerEXT"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkSubmitDebugUtilsMessageEXT"}, handle, lookup, fptrs)
 	return nil
 }
 
@@ -293,6 +296,14 @@ func RegisterDevice(handle uintptr, lookup LookupFunc, fptrs map[string]any) err
 		return err
 	}
 	registerOptional([]string{"vkGetImageSparseMemoryRequirements2KHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkSetDebugUtilsObjectNameEXT"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkSetDebugUtilsObjectTagEXT"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkQueueBeginDebugUtilsLabelEXT"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkQueueEndDebugUtilsLabelEXT"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkQueueInsertDebugUtilsLabelEXT"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkCmdBeginDebugUtilsLabelEXT"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkCmdEndDebugUtilsLabelEXT"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkCmdInsertDebugUtilsLabelEXT"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkGetSemaphoreCounterValue", "vkGetSemaphoreCounterValueKHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkWaitSemaphores", "vkWaitSemaphoresKHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkSignalSemaphore", "vkSignalSemaphoreKHR"}, handle, lookup, fptrs)
@@ -300,8 +311,8 @@ func RegisterDevice(handle uintptr, lookup LookupFunc, fptrs map[string]any) err
 	registerOptional([]string{"vkCmdSetEvent2KHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkCmdResetEvent2KHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkCmdWaitEvents2KHR"}, handle, lookup, fptrs)
-	registerOptional([]string{"vkCmdPipelineBarrier2KHR"}, handle, lookup, fptrs)
-	registerOptional([]string{"vkQueueSubmit2KHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkCmdPipelineBarrier2", "vkCmdPipelineBarrier2KHR"}, handle, lookup, fptrs)
+	registerOptional([]string{"vkQueueSubmit2", "vkQueueSubmit2KHR"}, handle, lookup, fptrs)
 	registerOptional([]string{"vkCmdWriteTimestamp2KHR"}, handle, lookup, fptrs)
 	if err := registerRequired([]string{"vkCmdBeginRendering", "vkCmdBeginRenderingKHR"}, handle, lookup, fptrs); err != nil {
 		return err
