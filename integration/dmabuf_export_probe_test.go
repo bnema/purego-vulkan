@@ -13,10 +13,11 @@ import (
 	"github.com/bnema/purego-vulkan/vulkan"
 )
 
-// Run with VEYA_VULKAN_PROBE=1; set VEYA_REQUIRE_POSITIVE=1 to require a successful export.
-func TestVeyaHardwareExport(t *testing.T) {
-	if os.Getenv("VEYA_VULKAN_PROBE") != "1" {
-		t.Skip("set VEYA_VULKAN_PROBE=1")
+// TestHardwareDMABUFExport checks DMA-BUF image export and timeline semaphore FD export on real devices.
+// Run with PUREGO_VULKAN_HW_PROBE=1; set PUREGO_VULKAN_REQUIRE_POSITIVE=1 to require a successful export.
+func TestHardwareDMABUFExport(t *testing.T) {
+	if os.Getenv("PUREGO_VULKAN_HW_PROBE") != "1" {
+		t.Skip("set PUREGO_VULKAN_HW_PROBE=1")
 	}
 	if err := vulkan.Init(); err != nil {
 		if strings.Contains(err.Error(), "resolve vkGetInstanceProcAddr") || strings.Contains(err.Error(), "dispatch") {
@@ -287,8 +288,8 @@ func mustResult(t *testing.T, op string, r vulkan.Result) {
 
 func unsupportedProbe(t *testing.T, reason string) {
 	t.Helper()
-	if os.Getenv("VEYA_REQUIRE_POSITIVE") == "1" {
-		t.Fatalf("UNSUPPORTED: %s (VEYA_REQUIRE_POSITIVE=1)", reason)
+	if os.Getenv("PUREGO_VULKAN_REQUIRE_POSITIVE") == "1" {
+		t.Fatalf("UNSUPPORTED: %s (PUREGO_VULKAN_REQUIRE_POSITIVE=1)", reason)
 	}
 	t.Skipf("UNSUPPORTED: %s", reason)
 }
