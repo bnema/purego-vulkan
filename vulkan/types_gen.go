@@ -352,6 +352,12 @@ type ObjectType int32
 
 type PipelineLayoutCreateFlagBits int32
 
+type QueueGlobalPriority int32
+
+type QueueGlobalPriorityKHR = QueueGlobalPriority
+
+type QueueGlobalPriorityEXT = QueueGlobalPriority
+
 type ResolveModeFlagBits int32
 
 type SemaphoreType int32
@@ -1695,6 +1701,33 @@ type MemoryDedicatedAllocateInfo struct {
 }
 
 type MemoryDedicatedAllocateInfoKHR = MemoryDedicatedAllocateInfo
+
+type DeviceQueueGlobalPriorityCreateInfo struct {
+	SType          StructureType
+	Next           unsafe.Pointer
+	GlobalPriority QueueGlobalPriority
+}
+
+type DeviceQueueGlobalPriorityCreateInfoKHR = DeviceQueueGlobalPriorityCreateInfo
+
+type DeviceQueueGlobalPriorityCreateInfoEXT = DeviceQueueGlobalPriorityCreateInfo
+
+type PhysicalDeviceGlobalPriorityQueryFeatures struct {
+	SType               StructureType
+	Next                unsafe.Pointer
+	GlobalPriorityQuery Bool32
+}
+
+type PhysicalDeviceGlobalPriorityQueryFeaturesKHR = PhysicalDeviceGlobalPriorityQueryFeatures
+
+type QueueFamilyGlobalPriorityProperties struct {
+	SType         StructureType
+	Next          unsafe.Pointer
+	PriorityCount uint32
+	Priorities    [MaxGlobalPrioritySize]QueueGlobalPriority
+}
+
+type QueueFamilyGlobalPriorityPropertiesKHR = QueueFamilyGlobalPriorityProperties
 
 type DebugUtilsObjectNameInfoEXT struct {
 	SType        StructureType

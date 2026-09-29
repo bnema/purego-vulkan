@@ -356,3 +356,17 @@ func testSelectedRegistryNoUnsafe() *model.SelectedRegistry {
 		},
 	}
 }
+
+func TestEmitStringsSkipsAliasedResults(t *testing.T) {
+	sel := &model.SelectedRegistry{Constants: []model.SelectedConstant{
+		{Name: "VK_ERROR_NOT_PERMITTED_EXT", Value: "-1000174001", Extends: "VkResult"},
+		{Name: "VK_ERROR_NOT_PERMITTED_KHR", Value: "-1000174001", Extends: "VkResult"},
+	}}
+	out, err := EmitStrings(sel)
+	if err != nil {
+		t.Fatalf("EmitStrings() error = %v", err)
+	}
+	if !strings.Contains(out, "case ErrorNotPermittedEXT:") || strings.Contains(out, "case ErrorNotPermittedKHR:") {
+		t.Fatalf("EmitStrings() must keep only the first alias\n%s", out)
+	}
+}
