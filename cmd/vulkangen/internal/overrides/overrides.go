@@ -118,6 +118,8 @@ var RequiredExtensions = []string{
 	"VK_EXT_queue_family_foreign",
 	"VK_KHR_dynamic_rendering",
 	"VK_EXT_debug_utils",
+	"VK_EXT_global_priority",
+	"VK_KHR_global_priority",
 }
 
 var CommandOverrides = map[string]model.CommandOverride{

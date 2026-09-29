@@ -154,8 +154,17 @@ func EmitStrings(sel *model.SelectedRegistry) (string, error) {
 	var b bytes.Buffer
 	writeHeader(&b, "vulkan")
 	b.WriteString("func ResultString(r Result) string {\n\tswitch r {\n")
+	// Promoted extensions alias the same value (VK_ERROR_NOT_PERMITTED_EXT
+	// and _KHR): the first name wins, a switch cannot repeat a case.
+	seen := map[string]bool{}
 	for _, c := range sel.Constants {
 		if c.Extends == "VkResult" || strings.Contains(c.Name, "_ERROR_") || strings.HasPrefix(c.Name, "VK_SUCCESS") {
+			if c.Value != "" {
+				if seen[c.Value] {
+					continue
+				}
+				seen[c.Value] = true
+			}
 			fmt.Fprintf(&b, "\tcase %s:\n\t\treturn %q\n", constName(c.Name), c.Name)
 		}
 	}
