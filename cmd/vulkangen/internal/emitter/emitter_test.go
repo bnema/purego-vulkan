@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bnema/purego-vulkan/cmd/vulkangen/internal/model"
+	"bnema.dev/purego-vulkan/cmd/vulkangen/internal/model"
 )
 
 func TestEmitTypes(t *testing.T) {

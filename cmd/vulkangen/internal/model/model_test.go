@@ -4,9 +4,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/bnema/purego-vulkan/cmd/vulkangen/internal/model"
-	"github.com/bnema/purego-vulkan/cmd/vulkangen/internal/overrides"
-	"github.com/bnema/purego-vulkan/cmd/vulkangen/internal/parser"
+	"bnema.dev/purego-vulkan/cmd/vulkangen/internal/model"
+	"bnema.dev/purego-vulkan/cmd/vulkangen/internal/overrides"
+	"bnema.dev/purego-vulkan/cmd/vulkangen/internal/parser"
 )
 
 func TestNormalizeClassifiesDispatchableAndNonDispatchableHandles(t *testing.T) {

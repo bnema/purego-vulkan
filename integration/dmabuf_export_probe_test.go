@@ -6,11 +6,11 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/bnema/purego"
+	"bnema.dev/purego"
 	"testing"
 	"unsafe"
 
-	"github.com/bnema/purego-vulkan/vulkan"
+	"bnema.dev/purego-vulkan/vulkan"
 )
 
 // TestHardwareDMABUFExport checks DMA-BUF image export and timeline semaphore FD export on real devices.

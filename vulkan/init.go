@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/bnema/purego-vulkan/internal/capi"
-	internalloader "github.com/bnema/purego-vulkan/internal/loader"
+	"bnema.dev/purego-vulkan/internal/capi"
+	internalloader "bnema.dev/purego-vulkan/internal/loader"
 )
 
 type config struct {

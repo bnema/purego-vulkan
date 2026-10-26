@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bnema/purego-vulkan/cmd/vulkangen/internal/model"
+	"bnema.dev/purego-vulkan/cmd/vulkangen/internal/model"
 )
 
 func EmitTypes(sel *model.SelectedRegistry) (string, error) {
@@ -143,7 +143,7 @@ func EmitCommands(sel *model.SelectedRegistry) (string, error) {
 func EmitDispatch(sel *model.SelectedRegistry) (string, error) {
 	var b bytes.Buffer
 	writeHeader(&b, "vulkan")
-	b.WriteString("import (\n\t\"unsafe\"\n\t\"github.com/bnema/purego\"\n)\n\n")
+	b.WriteString("import (\n\t\"unsafe\"\n\t\"bnema.dev/purego\"\n)\n\n")
 	writeDispatchStruct(&b, "GlobalDispatch", "", commandsByDispatch(sel, model.DispatchGlobal))
 	writeDispatchStruct(&b, "InstanceDispatch", "Instance Instance", commandsByDispatch(sel, model.DispatchInstance))
 	writeDispatchStruct(&b, "DeviceDispatch", "Device Device", commandsByDispatch(sel, model.DispatchDevice))

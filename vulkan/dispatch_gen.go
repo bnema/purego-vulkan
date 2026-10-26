@@ -3,7 +3,7 @@
 package vulkan
 
 import (
-	"github.com/bnema/purego"
+	"bnema.dev/purego"
 	"unsafe"
 )
 

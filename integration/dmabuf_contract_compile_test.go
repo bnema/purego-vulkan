@@ -1,6 +1,6 @@
 package integration_test
 
-import "github.com/bnema/purego-vulkan/vulkan"
+import "bnema.dev/purego-vulkan/vulkan"
 
 // Compile-time consumer coverage: keep the names and method sets used by a DMA-BUF presentation path
 // visible to an external package without initializing a Vulkan loader.

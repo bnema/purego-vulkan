@@ -1,5 +1,5 @@
-module github.com/bnema/purego-vulkan
+module bnema.dev/purego-vulkan
 
 go 1.25.0
 
-require github.com/bnema/purego v0.13.0-bnema.1
+require bnema.dev/purego v0.13.0-bnema.3

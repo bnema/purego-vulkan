@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/bnema/purego-vulkan/internal/capi"
+	"bnema.dev/purego-vulkan/internal/capi"
 )
 
 type Error struct {

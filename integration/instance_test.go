@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/bnema/purego-vulkan/vulkan"
+	"bnema.dev/purego-vulkan/vulkan"
 )
 
 var compositorCriticalExtensions = []string{

@@ -6,7 +6,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/bnema/purego-vulkan/vulkan"
+	"bnema.dev/purego-vulkan/vulkan"
 )
 
 var criticalExtensions = []string{

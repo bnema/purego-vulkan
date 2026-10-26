@@ -6,10 +6,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/bnema/purego-vulkan/cmd/vulkangen/internal/emitter"
-	"github.com/bnema/purego-vulkan/cmd/vulkangen/internal/model"
-	"github.com/bnema/purego-vulkan/cmd/vulkangen/internal/overrides"
-	"github.com/bnema/purego-vulkan/cmd/vulkangen/internal/parser"
+	"bnema.dev/purego-vulkan/cmd/vulkangen/internal/emitter"
+	"bnema.dev/purego-vulkan/cmd/vulkangen/internal/model"
+	"bnema.dev/purego-vulkan/cmd/vulkangen/internal/overrides"
+	"bnema.dev/purego-vulkan/cmd/vulkangen/internal/parser"
 )
 
 type config struct {

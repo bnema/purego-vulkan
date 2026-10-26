@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/bnema/purego-vulkan/cmd/vulkangen/internal/model"
+	"bnema.dev/purego-vulkan/cmd/vulkangen/internal/model"
 )
 
 // ParseFile decodes a Vulkan registry XML file into the generator's raw model.

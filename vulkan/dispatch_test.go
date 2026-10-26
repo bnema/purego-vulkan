@@ -1,7 +1,7 @@
 package vulkan
 
 import (
-	"github.com/bnema/purego"
+	"bnema.dev/purego"
 	"reflect"
 	"strings"
 	"testing"

@@ -3,8 +3,8 @@ package integration_test
 import (
 	"testing"
 
-	"github.com/bnema/purego"
-	"github.com/bnema/purego-vulkan/vulkan"
+	"bnema.dev/purego"
+	"bnema.dev/purego-vulkan/vulkan"
 )
 
 func TestInitWithSystemLoader(t *testing.T) {

@@ -4,7 +4,7 @@
 
 ## Loader and dispatch design
 
-`vulkan.Init` opens `libvulkan.so.1` through `github.com/bnema/purego`, resolves `vkGetInstanceProcAddr` with `dlsym`, registers it, and loads global commands. Failed initialization is retryable, so callers can supply `vulkan.WithLibraryPath` after a default lookup failure.
+`vulkan.Init` opens `libvulkan.so.1` through `bnema.dev/purego`, resolves `vkGetInstanceProcAddr` with `dlsym`, registers it, and loads global commands. Failed initialization is retryable, so callers can supply `vulkan.WithLibraryPath` after a default lookup failure.
 
 Vulkan commands are loaded through Vulkan dispatch rather than as a flat `dlsym` table:
 

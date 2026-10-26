@@ -1,7 +1,7 @@
 package integration_test
 
 import (
-	"github.com/bnema/purego-vulkan/vulkan"
+	"bnema.dev/purego-vulkan/vulkan"
 	"testing"
 )
 

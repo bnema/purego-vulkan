@@ -5,7 +5,7 @@ import (
 	"maps"
 	"strings"
 
-	"github.com/bnema/purego-vulkan/cmd/vulkangen/internal/model"
+	"bnema.dev/purego-vulkan/cmd/vulkangen/internal/model"
 )
 
 var InitialCommands = []string{

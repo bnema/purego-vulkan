@@ -2,7 +2,7 @@
 
 Linux-first Vulkan bindings for Go without cgo.
 
-`purego-vulkan` loads the system Vulkan loader (`libvulkan.so.1`) through `github.com/bnema/purego` and generates its raw Vulkan API surface from the pinned Khronos registry at `registry/vk.xml`.
+`purego-vulkan` loads the system Vulkan loader (`libvulkan.so.1`) through `bnema.dev/purego` and generates its raw Vulkan API surface from the pinned Khronos registry at `registry/vk.xml`.
 
 The package is intentionally low-level. It exposes Vulkan ABI types, constants, command signatures, result helpers, and explicit global/instance/device dispatch tables for compositor and renderer code that owns its rendering architecture.
 
@@ -82,7 +82,7 @@ git diff --exit-code
 ## Consumer integration
 
 ```sh
-go get github.com/bnema/purego-vulkan@latest
+go get bnema.dev/purego-vulkan@latest
 ```
 
 To work on the bindings and a consumer together, use a Go workspace (`go work init . ../purego-vulkan`) instead of a `replace` directive. Rendering policy, image import and presentation belong in the consumer; do not copy generated files into it.

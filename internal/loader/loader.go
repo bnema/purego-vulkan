@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bnema/purego"
+	"bnema.dev/purego"
 )
 
 // SharedLibrary is a dlopen handle paired with the path that succeeded.
@@ -22,17 +22,17 @@ type LookupFunc func(handle uintptr, symbol string) (uintptr, error)
 // CloseFunc closes a shared library handle.
 type CloseFunc func(handle uintptr) error
 
-// PuregoOpen opens a shared library through github.com/bnema/purego.
+// PuregoOpen opens a shared library through bnema.dev/purego.
 func PuregoOpen(path string, mode int) (uintptr, error) {
 	return purego.Dlopen(path, mode)
 }
 
-// PuregoLookup resolves a shared library symbol through github.com/bnema/purego.
+// PuregoLookup resolves a shared library symbol through bnema.dev/purego.
 func PuregoLookup(handle uintptr, symbol string) (uintptr, error) {
 	return purego.Dlsym(handle, symbol)
 }
 
-// PuregoClose closes a shared library through github.com/bnema/purego.
+// PuregoClose closes a shared library through bnema.dev/purego.
 func PuregoClose(handle uintptr) error {
 	return purego.Dlclose(handle)
 }

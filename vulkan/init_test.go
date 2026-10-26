@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	internalloader "github.com/bnema/purego-vulkan/internal/loader"
+	internalloader "bnema.dev/purego-vulkan/internal/loader"
 )
 
 func TestInitRunsOnlyOnce(t *testing.T) {
